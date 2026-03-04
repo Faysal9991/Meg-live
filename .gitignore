@@ -1,0 +1,127 @@
+# -----------------------------
+
+# Flutter / Dart / Pub
+
+# -----------------------------
+
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+
+# Generated files
+
+**/doc/api/
+**/ios/Flutter/.last_build_id
+
+# -----------------------------
+
+# Android
+
+# -----------------------------
+
+android/.gradle/
+android/app/build/
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/local.properties
+android/key.properties
+
+# Signing keys (VERY IMPORTANT)
+
+*.jks
+*.keystore
+
+# -----------------------------
+
+# iOS
+
+# -----------------------------
+
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Pods/
+ios/.symlinks/
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/DerivedData/
+
+# -----------------------------
+
+# macOS
+
+# -----------------------------
+
+macos/Flutter/ephemeral/
+macos/Pods/
+macos/DerivedData/
+
+# -----------------------------
+
+# Web
+
+# -----------------------------
+
+build/web/
+
+# -----------------------------
+
+# Windows / Linux
+
+# -----------------------------
+
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+
+# -----------------------------
+
+# IDE Files
+
+# -----------------------------
+
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# -----------------------------
+
+# System Files
+
+# -----------------------------
+
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.pyc
+
+# -----------------------------
+
+# Misc
+
+# -----------------------------
+
+*.class
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# Symbolication
+
+app.*.symbols
+
+# Obfuscation
+
+app.*.map.json
