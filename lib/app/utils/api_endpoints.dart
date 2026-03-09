@@ -18,18 +18,25 @@ const kLogoutUrl = '$_baseUrl/auth/logout/';
 const kChangePasswordUpdateUrl = '$_baseUrl/auth/change-password-update/';
 
 // Contribution
-// const kTopContributorRankingListUrl =
-//     '$_baseUrl/balance/top-contributor-ranking-list/';
+ const kTopContributorRankingListUrl =
+   '$_baseUrl/balance/top-contributor-ranking-list/';
+
 String kContributionRankingListUrl(int userId) =>
     '$_baseUrl/balance/contribution-ranking-list/$userId/';
+    
 String kContributionHistoryDeleteUrl =
     '$_baseUrl/balance/contribution-history-delete/';
+const kWithdrawRequestListUrl = '$_baseUrl/balance/withdraw-request-list/';
+const kWithdrawRequestCreateUrl = '$_baseUrl/balance/withdraw-request-create/';
+const kWithdrawPackageListUrl = '$_baseUrl/balance/withdraw-package-list/';
+const kPaymentMethodListUrl = '$_baseUrl/balance/payment-method-list/';
 // String kContributionByContributorIdRetrieveUrl(int channelId) =>
 //     '$_baseUrl/balance/contribution-by-contributor-id-retrieve/$channelId/';
 
 // Manual Agents
 const kManualAgentListUrl = '$_baseUrl/business/manual-agent-list/';
 const kAgentListUrl = '$_baseUrl/business/agent-list/';
+const kBannerListUrl = '$_baseUrl/business/banner-list/';
 
 // Host Request
 const kHostRequestCreateUrl = '$_baseUrl/business/host-request-create/';
@@ -72,6 +79,7 @@ String kProfileRetrieveUrl(int userId) =>
     '$_baseUrl/profiles/profile-retrieve/$userId/';
 String kProfileForUserInfoRetrieveUrl(int userId) =>
     '$_baseUrl/profiles/profile-for-user-info-retrieve/$userId/';
+const kTopHostListUrl = '$_baseUrl/profiles/top-host-list/';
 String kFollowerListUrl = '$_baseUrl/profiles/follower-list/';
 // # Perform both add and remove
 String kFollowerCreateUrl(int uid) =>
@@ -136,6 +144,8 @@ const kPurchasedVvIPPackageListUrl =
 // VIP
 const kPurchasedVIPPackageListUrl =
     '$_baseUrl/products/purchased-vip-package-list/';
+const kPurchasedKingPackageListUrl =
+    '$_baseUrl/products/purchased-king-package-list/';
 
 // Gift stuffs
 const kGiftListUrl = '$_baseUrl/products/gift-list/';

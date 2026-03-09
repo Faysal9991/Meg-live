@@ -16,14 +16,18 @@ class VVIPPackageView extends StatefulWidget {
 }
 
 class _VVIPPackageViewState extends State<VVIPPackageView> {
-  final VVIPorVipPackageController _vvipOrVipPackageController = Get.put(
-    VVIPorVipPackageController(),
-  );
+  late final VVIPorVipPackageController _vvipOrVipPackageController;
 
   @override
   void initState() {
     super.initState();
-    _vvipOrVipPackageController.loadAllVVIPPackageList();
+    _vvipOrVipPackageController = Get.isRegistered<VVIPorVipPackageController>()
+        ? Get.find<VVIPorVipPackageController>()
+        : Get.put(VVIPorVipPackageController());
+    if (_vvipOrVipPackageController.listAllVvipPackage.isEmpty &&
+        _vvipOrVipPackageController.purchasedVVipPackage.value.isEmpty) {
+      _vvipOrVipPackageController.loadAllVVIPPackageList();
+    }
   }
 
   @override

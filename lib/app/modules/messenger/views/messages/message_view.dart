@@ -80,6 +80,13 @@ class _MessagesViewState extends State<MessagesView>
   }
 
   AppBar buildAppBar() {
+    final popupBackgroundColor = Theme.of(context).colorScheme.primary;
+    final popupTextColor =
+        ThemeData.estimateBrightnessForColor(popupBackgroundColor) ==
+            Brightness.dark
+        ? Colors.white
+        : Colors.black;
+    final appBarIconColor = Theme.of(context).colorScheme.onSurface;
     return AppBar(
       automaticallyImplyLeading: false,
       title: Row(
@@ -194,8 +201,8 @@ class _MessagesViewState extends State<MessagesView>
             return Container();
           }
           return PopupMenuButton<Choice>(
-            icon: const Icon(Icons.menu_open_outlined, color: Colors.white),
-            color: Theme.of(context).primaryColor,
+            icon: Icon(Icons.menu_open_outlined, color: appBarIconColor),
+            color: popupBackgroundColor,
             onSelected: (Choice choice) {
               _selectPupupMenuItem(choice, context);
             },
@@ -204,10 +211,10 @@ class _MessagesViewState extends State<MessagesView>
                 return PopupMenuItem<Choice>(
                   value: choice,
                   child: ListTile(
-                    leading: Icon(choice.icon, color: Colors.white),
+                    leading: Icon(choice.icon, color: popupTextColor),
                     title: Text(
                       choice.title,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: popupTextColor),
                     ),
                   ),
                 );

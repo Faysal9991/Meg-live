@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:isolate';
+import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -7,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
+import 'package:doyel_live/app/modules/live_streaming/models/top_host.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/prepare_to_live_view.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/streaming_list_view.dart';
 import 'package:doyel_live/app/modules/messenger/views/messenger_view.dart';
@@ -20,9 +22,11 @@ import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/firebase_functions.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/helper_functions.dart';
 import 'package:doyel_live/app/widgets/custom_tab_bar.dart';
+import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:new_version_plus/new_version_plus.dart';
+import 'package:in_app_update/in_app_update.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:get/get.dart';
 import '../controllers/nav_controller.dart';
@@ -55,32 +59,33 @@ Widget _loadView({required int index}) {
   return Container();
 }
 
-List<IconData> _icons = [
-  Icons.home,
-  Icons.search,
-  MdiIcons.video,
-  MdiIcons.chat,
-  Icons.person,
+const List<CustomTabItem> _navItems = [
+  CustomTabItem(
+    label: 'Home',
+    activeIcon: EvaIcons.home,
+    inactiveIcon: EvaIcons.homeOutline,
+  ),
+  CustomTabItem(
+    label: 'Search',
+    activeIcon: EvaIcons.search,
+    inactiveIcon: EvaIcons.searchOutline,
+  ),
+  CustomTabItem(
+    label: 'Live',
+    activeIcon: EvaIcons.video,
+    inactiveIcon: EvaIcons.videoOutline,
+  ),
+  CustomTabItem(
+    label: 'Chat',
+    activeIcon: EvaIcons.messageSquare,
+    inactiveIcon: EvaIcons.messageSquareOutline,
+  ),
+  CustomTabItem(
+    label: 'Profile',
+    activeIcon: EvaIcons.person,
+    inactiveIcon: EvaIcons.personOutline,
+  ),
 ];
-
-_advancedStatusCheck({required BuildContext context}) async {
-  // Instantiate NewVersion manager object (Using GCP Console app as example)
-  final newVersion = NewVersionPlus();
-  final status = await newVersion.getVersionStatus();
-
-  if (status != null && status.canUpdate == true) {
-    newVersion.showUpdateDialog(
-      context: context,
-      versionStatus: status,
-      allowDismissal: false,
-      dialogTitle: "Update Available",
-      dialogText:
-          "Please update the app from ${status.localVersion} to ${status.storeVersion}",
-      launchModeVersion: LaunchModeVersion.external,
-      updateButtonText: 'Update',
-    );
-  }
-}
 
 class _NavViewState extends State<NavView> with WidgetsBindingObserver {
   late LiveStreamingController _livekitStreamingController;
@@ -88,6 +93,8 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
   late NavController _navController;
   late AuthController _authController;
   bool isFirstTime = true, _isDisposed = false;
+  bool _checkingForceUpdate = false;
+  bool _showingForceUpdateDialog = false;
 
   late NetworkConnectivity _networkConnectivity;
 
@@ -148,7 +155,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Same fetching during internet reconnection
-      _livekitStreamingController.tryToLoadLiveRoomList();
+      _livekitStreamingController.refreshStreamingHomeFeed();
     });
 
     _authController.preferences.getBool('internet', defaultValue: false).listen(
@@ -174,18 +181,13 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
   }
 
   void _performDuringInternetConnection() {
+    _checkAndForceUpdate();
+
     if (!_livekitStreamingController.isStreamingWebSocketConnected.value) {
       _livekitStreamingController.isStreamingWebSocketConnected.value = true;
-
-      // For only Temporary hide
-      try {
-        _advancedStatusCheck(context: context);
-      } catch (e) {
-        //
-      }
       // _livekitStreamingController.initLiveListStateChanges();
       if (!isFirstTime) {
-        _livekitStreamingController.tryToLoadLiveRoomList();
+        _livekitStreamingController.refreshStreamingHomeFeed();
       }
       _livekitStreamingController.initWebSocketClient();
 
@@ -216,6 +218,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
       case AppLifecycleState.resumed:
         _isDisposed = false;
         _initializeNetworkConnectivity();
+        _checkAndForceUpdate();
 
         // print("app in resumed");
         break;
@@ -326,6 +329,249 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     });
   }
 
+  Future<void> _checkAndForceUpdate() async {
+    if (!mounted || _checkingForceUpdate || !GetPlatform.isAndroid) {
+      return;
+    }
+    _checkingForceUpdate = true;
+    try {
+      final AppUpdateInfo updateInfo = await InAppUpdate.checkForUpdate();
+      if (updateInfo.updateAvailability != UpdateAvailability.updateAvailable) {
+        return;
+      }
+
+      if (updateInfo.immediateUpdateAllowed) {
+        try {
+          await InAppUpdate.performImmediateUpdate();
+          return;
+        } catch (_) {
+          // Fallback to a hard-blocking dialog if immediate update fails.
+        }
+      }
+
+      await _showForceUpdateDialog();
+    } catch (_) {
+      // Silent fail to avoid crashing app startup on Play services issues.
+    } finally {
+      _checkingForceUpdate = false;
+    }
+  }
+
+  Future<void> _showForceUpdateDialog() async {
+    if (!mounted || _showingForceUpdateDialog) {
+      return;
+    }
+    _showingForceUpdateDialog = true;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PopScope(
+          canPop: false,
+          child: AlertDialog(
+            title: const Text('Update Required'),
+            content: const Text(
+              'A new version is available on Play Store. Please update to continue using Doyel Live.',
+            ),
+            actions: [
+              FilledButton(
+                onPressed: _openPlayStoreListing,
+                child: const Text('Update Now'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    _showingForceUpdateDialog = false;
+  }
+
+  Future<void> _openPlayStoreListing() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    final packageName = packageInfo.packageName;
+    final marketUri = Uri.parse('market://details?id=$packageName');
+    final webUri = Uri.parse(
+      'https://play.google.com/store/apps/details?id=$packageName',
+    );
+
+    final openedMarket = await launchUrl(
+      marketUri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!openedMarket) {
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _showTopHostsBottomSheet() async {
+    _livekitStreamingController.loadTopHostList();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: SizedBox(
+            height: MediaQuery.of(sheetContext).size.height * 0.72,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.workspace_premium,
+                        color: Colors.amber,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Top Hosts',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      Obx(() {
+                        return IconButton(
+                          tooltip: 'Refresh',
+                          onPressed:
+                              _livekitStreamingController
+                                  .loadingTopHostList
+                                  .value
+                              ? null
+                              : _livekitStreamingController.loadTopHostList,
+                          icon:
+                              _livekitStreamingController
+                                  .loadingTopHostList
+                                  .value
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.refresh),
+                        );
+                      }),
+                      IconButton(
+                        tooltip: 'Close',
+                        onPressed: () => Navigator.of(sheetContext).pop(),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Obx(() {
+                      final loading =
+                          _livekitStreamingController.loadingTopHostList.value;
+                      final hosts = _livekitStreamingController.topHostList;
+                      if (loading && hosts.isEmpty) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (hosts.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No top hosts found.',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        );
+                      }
+                      return ListView.separated(
+                        itemCount: hosts.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (_, index) =>
+                            _buildTopHostSheetItem(host: hosts[index]),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTopHostSheetItem({required TopHost host}) {
+    final hasImage = host.profileImage != null && host.profileImage!.isNotEmpty;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F7F7),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: Colors.black12,
+            backgroundImage: hasImage ? NetworkImage(host.profileImage!) : null,
+            child: hasImage ? null : const Icon(Icons.person),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  host.fullName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'UID #${host.uid}',
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _formatTopHostSeconds(host.seconds),
+                  style: const TextStyle(
+                    color: Colors.deepOrange,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.workspace_premium, color: Colors.amber, size: 22),
+        ],
+      ),
+    );
+  }
+
+  String _formatTopHostSeconds(int seconds) {
+    final duration = Duration(seconds: seconds);
+    String twoDigits(int value) => value.toString().padLeft(2, '0');
+    return [
+      twoDigits(duration.inHours),
+      twoDigits(duration.inMinutes.remainder(60)),
+      twoDigits(duration.inSeconds.remainder(60)),
+    ].join(':');
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -334,9 +580,10 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
           return true;
         },
         child: DefaultTabController(
-          length: _icons.length,
+          length: _navItems.length,
           child: Obx(() {
             return Scaffold(
+              extendBody: true,
               appBar: _navController.pageIndex.value != LIVE_STREAM
                   ? AppBar(
                       leading: Center(
@@ -350,6 +597,16 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                         'Doyel Live',
                         style: TextStyle(color: Colors.black),
                       ),
+                      actions: [
+                        IconButton(
+                          tooltip: 'Top Hosts',
+                          onPressed: _showTopHostsBottomSheet,
+                          icon: const Icon(
+                            Icons.workspace_premium,
+                            color: Colors.amber,
+                          ),
+                        ),
+                      ],
                       backgroundColor: Colors.white,
                     )
                   : null,
@@ -376,58 +633,87 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                   // }),
                 ],
               ),
-              bottomNavigationBar: Container(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                color: Colors.white,
-                child: CustomTabBar(
-                  icons: _icons,
-                  selectedIndex: _navController.pageIndex.value,
-                  onTap: (index) async {
-                    if (index == _navController.pageIndex.value) {
-                      return;
-                    }
-
-                    // 2 is the broadcast streaming
-                    // if (index == CHATS) {
-                    //   Navigator.of(context).pushNamedAndRemoveUntil(
-                    //       Routes.CHAT, (Route<dynamic> route) => false);
-                    // } else
-
-                    if (index != LIVE_STREAM) {
-                      _navController.setPageIndex(index: index);
-                    } else {
-                      // if (_authController.showingLiveStreamingWidget.value) {
-                      //   Get.snackbar(
-                      //     'Not allowed',
-                      //     "You have to end recent streaming.",
-                      //     backgroundColor: Colors.orange,
-                      //     colorText: Colors.white,
-                      //     snackPosition: SnackPosition.BOTTOM,
-                      //     duration: const Duration(seconds: 2),
-                      //   );
-                      //   return;
-                      // }
-                      // if (_authController.showingCallWidget.value) {
-                      //   Get.snackbar(
-                      //     'Not allowed',
-                      //     "You are already in call.",
-                      //     backgroundColor: Colors.orange,
-                      //     colorText: Colors.white,
-                      //     snackPosition: SnackPosition.BOTTOM,
-                      //     duration: const Duration(seconds: 2),
-                      //   );
-                      //   return;
-                      // }
-                      await availableCameras().then(
-                        (value) => Get.to(
-                          () => PrepareToLiveView(
-                            camera: value[1],
-                            // onUpdateLiveStreamStatus: onUpdateLiveStreamStatus,
-                          ),
+              bottomNavigationBar: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.72),
+                            Colors.white.withValues(alpha: 0.52),
+                          ],
                         ),
-                      );
-                    }
-                  },
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.45),
+                          width: 1.1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 24,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: CustomTabBar(
+                        items: _navItems,
+                        selectedIndex: _navController.pageIndex.value,
+                        onTap: (index) async {
+                          if (index == _navController.pageIndex.value) {
+                            return;
+                          }
+
+                          // 2 is the broadcast streaming
+                          // if (index == CHATS) {
+                          //   Navigator.of(context).pushNamedAndRemoveUntil(
+                          //       Routes.CHAT, (Route<dynamic> route) => false);
+                          // } else
+
+                          if (index != LIVE_STREAM) {
+                            _navController.setPageIndex(index: index);
+                          } else {
+                            // if (_authController.showingLiveStreamingWidget.value) {
+                            //   Get.snackbar(
+                            //     'Not allowed',
+                            //     "You have to end recent streaming.",
+                            //     backgroundColor: Colors.orange,
+                            //     colorText: Colors.white,
+                            //     snackPosition: SnackPosition.BOTTOM,
+                            //     duration: const Duration(seconds: 2),
+                            //   );
+                            //   return;
+                            // }
+                            // if (_authController.showingCallWidget.value) {
+                            //   Get.snackbar(
+                            //     'Not allowed',
+                            //     "You are already in call.",
+                            //     backgroundColor: Colors.orange,
+                            //     colorText: Colors.white,
+                            //     snackPosition: SnackPosition.BOTTOM,
+                            //     duration: const Duration(seconds: 2),
+                            //   );
+                            //   return;
+                            // }
+                            await availableCameras().then(
+                              (value) => Get.to(
+                                () => PrepareToLiveView(
+                                  camera: value[1],
+                                  // onUpdateLiveStreamStatus: onUpdateLiveStreamStatus,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ),
                 ),
               ),
             );

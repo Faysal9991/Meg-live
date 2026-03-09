@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/messenger/controllers/messenger_controller.dart';
+import 'package:doyel_live/app/theme/app_theme.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/fcm_notifications.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/notification_message.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -80,15 +81,7 @@ void main() async {
       initialRoute: AppPages.INITIAL,
       getPages: AppPages.routes,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: const Color(0xFF007C00),
-        ),
-        primaryColor: const Color(0xFF007C00),
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        scaffoldBackgroundColor: const Color(0xFFF0F2F5),
-        fontFamily: 'Roboto',
-      ),
+      theme: AppTheme.lightTheme,
     ),
   );
 }

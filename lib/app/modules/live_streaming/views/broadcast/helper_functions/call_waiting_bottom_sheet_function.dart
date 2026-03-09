@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
+import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
 import 'package:doyel_live/app/modules/live_streaming/utlls/liveroom_isolation_actions.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_info_bottom_sheet_function.dart';
 import 'package:flutter/material.dart';
@@ -187,17 +188,20 @@ void showCallWaitingBottomSheet({
                                         authController.profile.value.user!.uid!,
                                   };
                                   onUpdateAction(actionData);
-                                  dynamic submissionData = {
-                                    'action': 'remove_user_from_calling_group',
-                                    'channel_id': int.parse(
-                                      streamingController.channelName.value,
-                                    ),
-                                    'uid':
-                                        authController.profile.value.user!.uid!,
-                                  };
-
                                   LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                                    submissionData: submissionData,
+                                    submissionData:
+                                        LiveRoomUpdateRequest.removeUserFromCallingGroup(
+                                          channelId: int.parse(
+                                            streamingController
+                                                .channelName
+                                                .value,
+                                          ),
+                                          uid: authController
+                                              .profile
+                                              .value
+                                              .user!
+                                              .uid!,
+                                        ),
                                   );
                                 },
                                 style: ElevatedButton.styleFrom(
@@ -443,16 +447,14 @@ class _callRequestItem extends StatelessWidget {
                         };
                         onUpdateAction(callerData);
 
-                        dynamic submissionData = {
-                          'action': 'add_user_to_calling_group',
-                          'channel_id': int.parse(
-                            streamingController.channelName.value,
-                          ),
-                          'uid': data['uid'],
-                        };
-
                         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                          submissionData: submissionData,
+                          submissionData:
+                              LiveRoomUpdateRequest.addUserToCallingGroup(
+                                channelId: int.parse(
+                                  streamingController.channelName.value,
+                                ),
+                                uid: int.parse(data['uid'].toString()),
+                              ),
                         );
                       },
                     ),
@@ -659,16 +661,14 @@ class _guestLiveItem extends StatelessWidget {
                         };
                         onUpdateAction(actionData);
 
-                        dynamic submissionData = {
-                          'action': 'remove_user_from_calling_group',
-                          'channel_id': int.parse(
-                            streamingController.channelName.value,
-                          ),
-                          'uid': data['uid'],
-                        };
-
                         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                          submissionData: submissionData,
+                          submissionData:
+                              LiveRoomUpdateRequest.removeUserFromCallingGroup(
+                                channelId: int.parse(
+                                  streamingController.channelName.value,
+                                ),
+                                uid: int.parse(data['uid'].toString()),
+                              ),
                         );
                       },
                     ),

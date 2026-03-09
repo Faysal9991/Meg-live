@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
+import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
 import 'package:doyel_live/app/modules/live_streaming/utlls/liveroom_isolation_actions.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_info_bottom_sheet_function.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_interact/user_interact_bottom_sheet_funtion.dart';
@@ -409,13 +410,12 @@ class RoomDisplayLayout {
                         };
                         onUpdateAction(actionData);
 
-                        dynamic submissionData = {
-                          'action': 'remove_user_from_calling_group',
-                          'channel_id': int.parse(channelName),
-                          'uid': data['uid'],
-                        };
                         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                          submissionData: submissionData,
+                          submissionData:
+                              LiveRoomUpdateRequest.removeUserFromCallingGroup(
+                                channelId: int.parse(channelName),
+                                uid: int.parse(data['uid'].toString()),
+                              ),
                         );
                       }
                     },

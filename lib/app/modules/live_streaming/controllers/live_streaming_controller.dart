@@ -8,13 +8,19 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
+import 'package:doyel_live/app/modules/live_streaming/models/home_banner.dart';
+import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
+import 'package:doyel_live/app/modules/live_streaming/models/live_streaming_gift_request.dart';
+import 'package:doyel_live/app/modules/live_streaming/models/top_host.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/participant_info.dart';
 import 'package:doyel_live/app/modules/messenger/controllers/messenger_controller.dart';
+import 'package:doyel_live/app/modules/live_streaming/utlls/live_room_update_api.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:livekit_client/livekit_client.dart';
 import 'package:doyel_live/app/routes/app_pages.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
+import 'package:doyel_live/app/utils/api_logger.dart';
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
@@ -33,16 +39,23 @@ enum HomeTabEnum {
 }
 
 class LiveStreamingController extends GetxController {
+  LiveStreamingController({Dio? dio}) : _dio = dio ?? Dio();
+
   final AuthController _authController = Get.find();
+  final Dio _dio;
   // final loadingCommentSend = false.obs;
   final loadingLiveRoomList = false.obs;
   final loadingGfitList = false.obs;
   final loadingGiftSend = (-1).obs;
   final loadingParticipantList = false.obs;
   final loadingContributionRankingList = false.obs;
+  final loadingBannerList = false.obs;
+  final loadingTopHostList = false.obs;
 
   final countryName = ''.obs;
   final phoneCode = ''.obs;
+  final RxList<HomeBanner> bannerList = <HomeBanner>[].obs;
+  final RxList<TopHost> topHostList = <TopHost>[].obs;
   final RxList<dynamic> listNormalGift = <dynamic>[].obs;
   final RxList<dynamic> listAnimatedGift = <dynamic>[].obs;
 
@@ -124,6 +137,8 @@ class LiveStreamingController extends GetxController {
 
   final loadingRoom = 0.obs;
   int topContributorsIntervalMinutes = -1;
+  Timer? _liveRoomHeartbeatTimer;
+  bool _heartbeatInFlight = false;
 
   final selectedGift = {
     'gift_type': '',
@@ -136,7 +151,10 @@ class LiveStreamingController extends GetxController {
   }.obs;
 
   Rx<HomeTabEnum> selectedHomeTabEnum = HomeTabEnum.ALL_LIVES.obs;
-  final MessengerController _messengerController = Get.find();
+  final MessengerController _messengerController =
+      Get.isRegistered<MessengerController>()
+      ? Get.find<MessengerController>()
+      : Get.put(MessengerController());
 
   void setHomeTabEnumSelection({required HomeTabEnum homeTabEnum}) {
     selectedHomeTabEnum.value = homeTabEnum;
@@ -197,7 +215,8 @@ class LiveStreamingController extends GetxController {
 
   @override
   void onClose() {
-    webSocketClientForStreaming!.close();
+    webSocketClientForStreaming?.close();
+    stopLiveRoomHeartbeat();
     if (_timerAnimatedGiftSendAnimcation != null) {
       _timerAnimatedGiftSendAnimcation?.cancel();
     }
@@ -208,6 +227,72 @@ class LiveStreamingController extends GetxController {
     disposetopContributorRankingList();
 
     super.onClose();
+  }
+
+  Map<String, String> _publicHeaders() {
+    return {
+       'accept': '*/*',
+      'Authorization': 'Token ${_authController.token.value}',
+      'X-Api-Key': DRF_API_KEY,
+    };
+  }
+
+  Map<String, String> _authHeaders() {
+    return {
+      'accept': '*/*',
+      'Authorization': 'Token ${_authController.token.value}',
+      'X-Api-Key': DRF_API_KEY,
+    };
+  }
+
+  Future<LiveRoomUpdateResult> sendLiveRoomUpdate(
+    LiveRoomUpdateRequest request,
+  ) async {
+
+   return sendLiveRoomUpdateRequest(dio: _dio, request: request);
+  }
+
+  void startLiveRoomHeartbeat({
+    required int channelId,
+    required Future<void> Function() onRoomMissing,
+  }) {
+    stopLiveRoomHeartbeat();
+    _sendHeartbeat(channelId: channelId, onRoomMissing: onRoomMissing);
+    _liveRoomHeartbeatTimer = Timer.periodic(
+      const Duration(seconds: 20),
+      (_) => _sendHeartbeat(channelId: channelId, onRoomMissing: onRoomMissing),
+    );
+  }
+
+  void stopLiveRoomHeartbeat() {
+    _liveRoomHeartbeatTimer?.cancel();
+    _liveRoomHeartbeatTimer = null;
+    _heartbeatInFlight = false;
+  }
+
+  Future<void> _sendHeartbeat({
+    required int channelId,
+    required Future<void> Function() onRoomMissing,
+  }) async {
+    if (_heartbeatInFlight) {
+      return;
+    }
+    _heartbeatInFlight = true;
+    try {
+      final request = LiveRoomUpdateRequest.heartbeat(channelId: channelId);
+      final firstAttempt = await sendLiveRoomUpdate(request);
+      if (firstAttempt.isNotFound) {
+        final secondAttempt = await sendLiveRoomUpdate(request);
+        if (secondAttempt.isNotFound) {
+          stopLiveRoomHeartbeat();
+          await onRoomMissing();
+        }
+      }
+    } catch (_) {
+      // Keep the heartbeat alive for transient failures.
+    } finally {
+      _heartbeatInFlight = false;
+    }
   }
 
   dynamic getLiveData({required String channelId}) async {
@@ -241,7 +326,7 @@ class LiveStreamingController extends GetxController {
     } else if (Platform.isIOS) {
       IosDeviceInfo iosDeviceInfo = await deviceInfo.iosInfo;
       // uniqueDeviceId = iosDeviceInfo.identifierForVendor!;
-      deviceName = iosDeviceInfo.utsname.machine!; // e.g. "iPod7,1"
+      deviceName = iosDeviceInfo.utsname.machine; // e.g. "iPod7,1"
     }
     deviceName = deviceName.replaceAll(' ', '_');
 
@@ -808,7 +893,6 @@ class LiveStreamingController extends GetxController {
   }
 
   Future<dynamic> createLiveKitToken({required String channelName}) async {
-    var dio = Dio();
     dynamic data = {
       'channel_name': channelName,
       'identity': _authController.profile.value.user!.uid!.toString(),
@@ -824,21 +908,26 @@ class LiveStreamingController extends GetxController {
     // };
 
     try {
-      Response response = await dio.post(
+      ApiLogger.hit(
+      method: 'post======>',
+      url: kLiveKitEngineCheckAndTokenCreateUrl,
+      body: data,
+    );
+
+      Response response = await _dio.post(
         kLiveKitEngineCheckAndTokenCreateUrl,
-        options: Options(
-          headers: {
-            'accept': '*/*',
-            // 'Authorization': 'Token ${_authController.token.value}',
-            'X-Api-Key': DRF_API_KEY,
-          },
-        ),
+        options: Options(headers: _publicHeaders()),
         // data: data2,
         data: data,
       );
 
       // print('Data 1');
       // print(response.data);
+      ApiLogger.response(
+      method: 'post=====response=>',
+      url: kLiveKitEngineCheckAndTokenCreateUrl,
+      data: response.data, statusCode: response.statusCode,
+    );
       return response.data;
 
       // String engine = response.data['engine'];
@@ -912,19 +1001,12 @@ class LiveStreamingController extends GetxController {
       return;
     }
     _fromLiveRoom = fromLiveRoom;
-    var dio = Dio();
     loadingParticipantList.value = true;
 
     try {
-      final response = await dio.get(
+      final response = await _dio.get(
         kLiveKitParicipantListUrl(channelName: channelName),
-        options: Options(
-          headers: {
-            'accept': '*/*',
-            'Authorization': 'Token ${_authController.token.value}',
-            'X-Api-Key': DRF_API_KEY,
-          },
-        ),
+        options: Options(headers: _authHeaders()),
       );
       int? statusCode = response.statusCode;
       loadingParticipantList.value = false;
@@ -957,17 +1039,111 @@ class LiveStreamingController extends GetxController {
     }
   }
 
+  Future<void> refreshStreamingHomeFeed() async {
+    await Future.wait([
+      loadBannerList(),
+      loadTopHostList(),
+      tryToLoadLiveRoomList(),
+    ]);
+  }
+
+  Future<void> loadBannerList() async {
+    if (loadingBannerList.value) {
+      return;
+    }
+    loadingBannerList.value = true;
+    ApiLogger.hit(method: 'GET', url: kBannerListUrl);
+    try {
+      final response = await _dio.get(
+        kBannerListUrl,
+        options: Options(headers: _publicHeaders()),
+      );
+      ApiLogger.response(
+        method: 'GET',
+        url: kBannerListUrl,
+        statusCode: response.statusCode,
+        data: response.data,
+      );
+      if (response.statusCode == 200) {
+        final data = response.data['banner_list'] as List? ?? const [];
+        bannerList.assignAll(
+          data
+              .map(
+                (dynamic item) =>
+                    HomeBanner.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList(),
+        );
+      }
+    } catch (error, stackTrace) {
+      ApiLogger.error(
+        method: 'GET',
+        url: kBannerListUrl,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    } finally {
+      loadingBannerList.value = false;
+    }
+  }
+
+  Future<void> loadTopHostList() async {
+    if (loadingTopHostList.value) {
+      return;
+    }
+    loadingTopHostList.value = true;
+    ApiLogger.hit(method: 'GET', url: kTopHostListUrl);
+    try {
+      final response = await _dio.get(
+        kTopHostListUrl,
+        options: Options(headers: _publicHeaders()),
+      );
+      ApiLogger.response(
+        method: 'GET',
+        url: kTopHostListUrl,
+        statusCode: response.statusCode,
+        data: response.data,
+      );
+      if (response.statusCode == 200) {
+        final data = response.data['top_hosts'] as List? ?? const [];
+        topHostList.assignAll(
+          data
+              .map(
+                (dynamic item) =>
+                    TopHost.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList(),
+        );
+      }else{
+        ApiLogger.error(
+          method: 'GET',
+          url: kTopHostListUrl,
+          error: 'Unexpected status code: ${response.statusCode}--{${response.data}}',
+          stackTrace: StackTrace.current,
+        );
+      }
+    } catch (error, stackTrace) {
+      ApiLogger.error(
+        method: 'GET',
+        url: kTopHostListUrl,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    } finally {
+      loadingTopHostList.value = false;
+    }
+  }
+
   // Live Room
-  void tryToLoadLiveRoomList() async {
+  Future<void> tryToLoadLiveRoomList() async {
     if (loadingLiveRoomList.value) {
       return;
     }
 
     loadingLiveRoomList.value = true;
-    var dio = Dio();
 
     try {
-      final response = await dio.get(
+      final response = await _dio.get(
         kLiveRoomListUrl,
         options: Options(
           headers: {
@@ -988,24 +1164,13 @@ class LiveStreamingController extends GetxController {
     }
   }
 
-  // Live Room
-  void tryToUpdateLiveRoom({required dynamic data}) async {
-    var dio = Dio();
-
+  Future<LiveRoomUpdateResult> tryToUpdateLiveRoom({
+    required LiveRoomUpdateRequest request,
+  }) async {
     try {
-      await dio.put(
-        kLiveRoomUpdateUrl,
-        options: Options(
-          headers: {
-            'accept': '*/*',
-            // 'Authorization': 'Token ${_authController.token.value}',
-            'X-Api-Key': DRF_API_KEY,
-          },
-        ),
-        data: data,
-      );
-    } catch (e) {
-      //
+      return await sendLiveRoomUpdate(request);
+    } catch (_) {
+      return const LiveRoomUpdateResult(statusCode: 500);
     }
   }
 
@@ -1013,22 +1178,15 @@ class LiveStreamingController extends GetxController {
     required String channelId,
     required List<int> callerIds,
   }) async {
-    var dio = Dio();
     dynamic data = {
       'call_type': callType.value,
       'caller_ids': callerIds,
       'my_uid': _authController.profile.value.user!.uid!,
     };
     try {
-      final response = await dio.post(
+      final response = await _dio.post(
         kGroupCallerCreateUrl(channelId: channelId),
-        options: Options(
-          headers: {
-            'accept': '*/*',
-            'Authorization': 'Token ${_authController.token.value}',
-            'X-Api-Key': DRF_API_KEY,
-          },
-        ),
+        options: Options(headers: _authHeaders()),
         data: data,
       );
       int? statusCode = response.statusCode;
@@ -1057,18 +1215,11 @@ class LiveStreamingController extends GetxController {
     }
     loadingContributionRankingList.value = true;
     contributionRankingList.clear();
-    var dio = Dio();
 
     try {
-      final response = await dio.get(
+      final response = await _dio.get(
         kContributionRankingListUrl(userId),
-        options: Options(
-          headers: {
-            'accept': '*/*',
-            'Authorization': 'Token ${_authController.token.value}',
-            'X-Api-Key': DRF_API_KEY,
-          },
-        ),
+        options: Options(headers: _authHeaders()),
       );
       int? statusCode = response.statusCode;
       loadingContributionRankingList.value = false;
@@ -1081,17 +1232,10 @@ class LiveStreamingController extends GetxController {
   }
 
   void tryToNotifyFollowerAboutLiveStreaming() async {
-    var dio = Dio();
     try {
-      await dio.post(
+      await _dio.post(
         kLiveStreamingNotifyFollowersCreateUrl,
-        options: Options(
-          headers: {
-            'accept': '*/*',
-            'Authorization': 'Token ${_authController.token.value}',
-            'X-Api-Key': DRF_API_KEY,
-          },
-        ),
+        options: Options(headers: _authHeaders()),
       );
     } catch (e) {
       //
@@ -1099,17 +1243,10 @@ class LiveStreamingController extends GetxController {
   }
 
   void tryToDeleteContributionHistory() async {
-    var dio = Dio();
     try {
-      await dio.delete(
+      await _dio.delete(
         kContributionHistoryDeleteUrl,
-        options: Options(
-          headers: {
-            'accept': '*/*',
-            'Authorization': 'Token ${_authController.token.value}',
-            'X-Api-Key': DRF_API_KEY,
-          },
-        ),
+        options: Options(headers: _authHeaders()),
       );
     } catch (e) {
       //
@@ -1121,17 +1258,10 @@ class LiveStreamingController extends GetxController {
       return;
     }
     loadingGfitList.value = true;
-    var dio = Dio();
     try {
-      final response = await dio.get(
+      final response = await _dio.get(
         kGiftListUrl,
-        options: Options(
-          headers: {
-            'accept': '*/*',
-            'Authorization': 'Token ${_authController.token.value}',
-            'X-Api-Key': DRF_API_KEY,
-          },
-        ),
+        options: Options(headers: _authHeaders()),
       );
       int? statusCode = response.statusCode;
       loadingGfitList.value = false;
@@ -1173,24 +1303,27 @@ class LiveStreamingController extends GetxController {
 
     Profile myProfile = _authController.profile.value;
 
-    dynamic data = {
-      'room_name': channelName,
-      'sender_uid': myProfile.user!.uid!,
-      'receiver_uids': receiverUids,
-      'full_name': myProfile.full_name,
-      'receiver_full_name': receiverFullNames,
-      'profile_image': myProfile.profile_image ?? myProfile.photo_url,
-      'level': myProfile.level,
-      'gift_type': giftType,
-      'gift_id': giftId,
-      'total_diamonds': totalDiamonds,
-      'diamonds': diamonds,
-      'vat': vat,
-      'gift_image': giftImage,
-      'gif': gif,
-      'audio': audio,
-      'vvip_or_vip_preference': myProfile.vvip_or_vip_preference,
-    };
+    final request = LiveStreamingGiftRequest(
+      roomName: channelName,
+      senderUid: myProfile.user!.uid!,
+      receiverUids: receiverUids
+          .map((dynamic uid) => int.tryParse(uid.toString()) ?? 0)
+          .where((int uid) => uid != 0)
+          .toList(),
+      giftType: giftType,
+      giftId: giftId,
+      totalDiamonds: totalDiamonds,
+      diamonds: diamonds,
+      vat: vat,
+      fullName: myProfile.full_name ?? '',
+      receiverFullName: receiverFullNames,
+      profileImage: myProfile.profile_image ?? myProfile.photo_url,
+      level: myProfile.level,
+      giftImage: giftImage,
+      gif: gif,
+      audio: audio,
+      vvipOrVipPreference: myProfile.vvip_or_vip_preference,
+    );
     //  '${data['full_name']} sends ${data['diamonds']} diamonds to ${data['receiver_full_name']}';
     // dynamic globalSocketData = {
     //   'type': 'gift',
@@ -1208,18 +1341,25 @@ class LiveStreamingController extends GetxController {
     //   'vat': vat,
     // };
 
-    var dio = Dio();
     try {
-      final response = await dio.post(
+      ApiLogger.hit(
+        method: 'POST',
+        url: kLiveStreamingGiftCreateUrl,
+        body: request.toJson(),
+      );
+      final response = await _dio.post(
         kLiveStreamingGiftCreateUrl,
-        data: data,
+        data: request.toJson(),
         options: Options(
-          headers: {
-            'accept': '*/*',
-            'Authorization': 'Token ${_authController.token.value}',
-            'X-Api-Key': DRF_API_KEY,
-          },
+          headers: _authHeaders(),
+          validateStatus: (status) => status != null && status < 500,
         ),
+      );
+      ApiLogger.response(
+        method: 'POST',
+        url: kLiveStreamingGiftCreateUrl,
+        statusCode: response.statusCode,
+        data: response.data,
       );
       int? statusCode = response.statusCode;
       loadingGiftSend.value = -1;
@@ -1277,7 +1417,13 @@ class LiveStreamingController extends GetxController {
           durationInSeconds: 2,
         );
       }
-    } catch (e) {
+    } catch (error, stackTrace) {
+      ApiLogger.error(
+        method: 'POST',
+        url: kLiveStreamingGiftCreateUrl,
+        error: error,
+        stackTrace: stackTrace,
+      );
       loadingGiftSend.value = -1;
       // Get.snackbar(
       //   'Failed',
@@ -1537,7 +1683,6 @@ void loadLiveRoomList(List<dynamic> args) {
 
 void _fetchTopRatedAgentList(List<dynamic> args) async {
   SendPort sendPort = args[0];
-  String token = args[1];
   var dio = Dio();
   try {
     final response = await dio.get(

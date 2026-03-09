@@ -6,6 +6,8 @@ import 'package:doyel_live/app/modules/business/views/agent/hosts/hosts_view.dar
 import 'package:doyel_live/app/modules/business/views/host_requst_view.dart';
 import 'package:doyel_live/app/modules/business/views/moderator/moderator_view.dart';
 import 'package:doyel_live/app/modules/business/views/reseller/reseller_view.dart';
+import 'package:doyel_live/app/modules/balance/views/withdraw_requests_view.dart';
+import 'package:doyel_live/app/modules/products/views/king_package_view.dart';
 import 'package:doyel_live/app/modules/products/views/vip_package_view.dart';
 import 'package:doyel_live/app/modules/products/views/vvip_package_view.dart';
 import 'package:doyel_live/app/modules/profile/views/block_list_view.dart';
@@ -365,6 +367,16 @@ class ProfileView extends GetView<ProfileController> {
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   ),
                   ListTile(
+                    onTap: () => Get.to(() => const KingPackageView()),
+                    dense: true,
+                    leading: const Icon(Icons.workspace_premium),
+                    title: const Text(
+                      'King Package',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
+                  ListTile(
                     onTap: () => Get.to(() => const VIPPackageView()),
                     dense: true,
                     leading: const Icon(Icons.important_devices_rounded),
@@ -427,6 +439,16 @@ class ProfileView extends GetView<ProfileController> {
                             size: 16,
                           ),
                         ),
+                  ListTile(
+                    onTap: () => Get.to(() => const WithdrawRequestsView()),
+                    dense: true,
+                    leading: const Icon(Icons.account_balance_wallet_outlined),
+                    title: const Text(
+                      'Withdraw Requests',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
                 ],
               ),
             ),

@@ -7,6 +7,7 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
+import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
 import 'package:doyel_live/app/modules/live_streaming/utlls/livekit_stuffs.dart';
 import 'package:doyel_live/app/modules/live_streaming/utlls/liveroom_isolation_actions.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/display/initial_renderer_room_display_layout.dart';
@@ -325,8 +326,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       // if (_isDisposed) {
       //   return;
       // }
-     print('Received type message: $message');
-print('Message runtimeType: ${message.runtimeType}');
+      print('Received type message: $message');
+      print('Message runtimeType: ${message.runtimeType}');
       dynamic data = jsonDecode(message)['message'];
       if (data['gzip'] != null) {
         List<int> gzipDecodedBytes = gzip.decode(data['gzip'].cast<int>());
@@ -517,6 +518,12 @@ print('Message runtimeType: ${message.runtimeType}');
             ...data['group_callers'],
           ]);
           break;
+        case "switch_position":
+          _applyPositionSwitch(
+            sourceUid: _toInt(data['uid']),
+            targetUid: _toInt(data['target_uid']),
+          );
+          break;
         case "participant_joined":
           dynamic userJoinedData = data;
           if (userJoinedData != null) {
@@ -652,13 +659,12 @@ print('Message runtimeType: ${message.runtimeType}');
                 -1) {
               dynamic actionData = {"action": "end_call", "uid": data['uid']};
               onUpdateAction(actionData);
-              dynamic submissionData = {
-                'action': 'remove_user_from_calling_group',
-                'channel_id': int.parse(widget.channelName),
-                'uid': data['uid'],
-              };
               LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                submissionData: submissionData,
+                submissionData:
+                    LiveRoomUpdateRequest.removeUserFromCallingGroup(
+                      channelId: int.parse(widget.channelName),
+                      uid: int.parse(data['uid'].toString()),
+                    ),
               );
             }
             // _onCallEnd(context);
@@ -936,15 +942,13 @@ print('Message runtimeType: ${message.runtimeType}');
     // _closeEverything();
 
     (() {
+      _livekitStreamingController.stopLiveRoomHeartbeat();
       _closeLiveRoom();
       if (widget.isBroadcaster) {
-        dynamic submissionData = {
-          'action': 'delete_live_room',
-          'channel_id': int.parse(widget.channelName),
-        };
-
         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-          submissionData: submissionData,
+          submissionData: LiveRoomUpdateRequest.deleteLiveRoom(
+            channelId: int.parse(widget.channelName),
+          ),
         );
       }
     })();
@@ -1112,15 +1116,13 @@ print('Message runtimeType: ${message.runtimeType}');
                                             title: 'Moderator access',
                                             content: 'Do you wanna close Live?',
                                             onConfirm: () {
-                                              dynamic submissionData = {
-                                                'action': 'delete_live_room',
-                                                'channel_id': int.parse(
-                                                  widget.channelName,
-                                                ),
-                                              };
-
                                               LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                                                submissionData: submissionData,
+                                                submissionData:
+                                                    LiveRoomUpdateRequest.deleteLiveRoom(
+                                                      channelId: int.parse(
+                                                        widget.channelName,
+                                                      ),
+                                                    ),
                                               );
 
                                               dynamic userData = {
@@ -1989,6 +1991,36 @@ print('Message runtimeType: ${message.runtimeType}');
                           );
                         },
                       ),
+                      !widget.isBroadcaster
+                          ? Container()
+                          : Obx(() {
+                              final isExpanded = _livekitStreamingController
+                                  .expandMediaController
+                                  .value;
+                              final activeCallCount =
+                                  _livekitStreamingController
+                                      .listActiveCall
+                                      .length;
+                              if (!isExpanded || activeCallCount < 2) {
+                                return Container();
+                              }
+                              return RawMaterialButton(
+                                onPressed: _onHostSwitchPosition,
+                                shape: const CircleBorder(),
+                                elevation: 2.0,
+                                fillColor: Colors.black38,
+                                padding: const EdgeInsets.all(6.0),
+                                constraints: const BoxConstraints(
+                                  minWidth: 32,
+                                  minHeight: 32,
+                                ),
+                                child: const Icon(
+                                  Icons.swap_horiz,
+                                  color: Colors.white70,
+                                  size: 22.0,
+                                ),
+                              );
+                            }),
                       // Allow Comment and Emoji sends
                       !widget.isBroadcaster
                           ? Container()
@@ -2011,14 +2043,15 @@ print('Message runtimeType: ${message.runtimeType}');
                                     'action': 'allow_comment_emoji_send',
                                     'allow_send': !allowSend,
                                   });
-                                  dynamic submissionData = {
-                                    'action': 'allow_comment_emoji_send',
-                                    'channel_id': int.parse(widget.channelName),
-                                    'allow_send': !allowSend,
-                                  };
-
                                   LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                                    submissionData: submissionData,
+                                    submissionData:
+                                        LiveRoomUpdateRequest.fromMap({
+                                          'action': 'allow_comment_emoji_send',
+                                          'channel_id': int.parse(
+                                            widget.channelName,
+                                          ),
+                                          'allow_send': !allowSend,
+                                        }),
                                   );
                                 },
                                 shape: const CircleBorder(),
@@ -2205,7 +2238,7 @@ print('Message runtimeType: ${message.runtimeType}');
       if (defaultTargetPlatform == TargetPlatform.android) {
         await [
           // Permission.microphone,
-         // Permission.camera,
+          // Permission.camera,
           Permission.bluetooth,
           Permission.bluetoothConnect,
         ].request();
@@ -2259,6 +2292,43 @@ print('Message runtimeType: ${message.runtimeType}');
 
     await _room!.prepareConnection(_serverUrl, token);
 
+    Map<String, dynamic>? pendingLiveData;
+    if (widget.isBroadcaster) {
+      final myProfile = _authController.profile.value;
+      pendingLiveData = {
+        "id": 16,
+        "channel_id": _myUid,
+        "title": widget.fullName,
+        "is_pk": false,
+        "is_video": true,
+        "is_locked": false,
+        "allow_send": true,
+        "cm_flt_nm": null,
+        "owner_profile": {
+          "uid": _myUid,
+          "full_name": widget.fullName,
+          "profile_image": widget.profileImage,
+          "cover_image": null,
+          "vvip_or_vip_gif": widget.vVipOrVipPreference['vvip_or_vip_gif'],
+          "diamonds": myProfile.diamonds,
+          "blocks": myProfile.blocks,
+          // "designation": "agent"
+        },
+        "group_caller_ids": [
+          {'uid': _myUid, 'position': 1},
+        ],
+        "reacts": 0,
+        "viewers_count": 0,
+        "locked_datetime": null,
+        "engine": _engineName,
+        "created_datetime": DateTime.now().toIso8601String(),
+      };
+
+      LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
+        submissionData: LiveRoomUpdateRequest.addLiveRoom(pendingLiveData),
+      );
+    }
+
     await _room!
         .connect(
           _serverUrl,
@@ -2300,44 +2370,9 @@ print('Message runtimeType: ${message.runtimeType}');
                 // }
               }
 
-              Profile myProfile = _authController.profile.value;
-
-              var liveData = {
-                "id": 16,
-                "channel_id": _myUid,
-                "title": widget.fullName,
-                "is_pk": false,
-                "is_video": true,
-                "is_locked": false,
-                "allow_send": true,
-                "cm_flt_nm": null,
-                "owner_profile": {
-                  "uid": _myUid,
-                  "full_name": widget.fullName,
-                  "profile_image": widget.profileImage,
-                  "cover_image": null,
-                  "vvip_or_vip_gif":
-                      widget.vVipOrVipPreference['vvip_or_vip_gif'],
-                  "diamonds": myProfile.diamonds,
-                  "blocks": myProfile.blocks,
-                  // "designation": "agent"
-                },
-                "group_caller_ids": [
-                  {'uid': _myUid, 'position': 1},
-                ],
-                "reacts": 0,
-                "viewers_count": 0,
-                "locked_datetime": null,
-                "engine": _engineName,
-                "created_datetime": DateTime.now().toIso8601String(),
-              };
+              final liveData = pendingLiveData ?? <String, dynamic>{};
               _livekitStreamingController.channelName.value = _myUid.toString();
               _livekitStreamingController.liveStreamData.value = liveData;
-
-              liveData['action'] = 'add_live_room';
-              LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                submissionData: liveData,
-              );
 
               // One time History
               LiveRoomIsolationActions.useIsolateToDeleteContributionHistory(
@@ -2357,6 +2392,12 @@ print('Message runtimeType: ${message.runtimeType}');
             );
 
             _livekitStreamingController.busyConnectingEngine.value = false;
+            if (widget.isBroadcaster) {
+              _livekitStreamingController.startLiveRoomHeartbeat(
+                channelId: int.parse(widget.channelName),
+                onRoomMissing: _handleMissingLiveRoomHeartbeat,
+              );
+            }
             _renderParticipants();
 
             // For only participant
@@ -2706,14 +2747,11 @@ print('Message runtimeType: ${message.runtimeType}');
           _room!.remoteParticipants.length;
 
       if (widget.isBroadcaster) {
-        dynamic submissionData = {
-          'action': 'update_viewers_count',
-          'channel_id': int.parse(widget.channelName),
-          'viewers_count': _room!.remoteParticipants.length,
-        };
-
         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-          submissionData: submissionData,
+          submissionData: LiveRoomUpdateRequest.updateViewersCount(
+            channelId: int.parse(widget.channelName),
+            viewersCount: _room!.remoteParticipants.length,
+          ),
         );
       }
 
@@ -2725,13 +2763,11 @@ print('Message runtimeType: ${message.runtimeType}');
           _room!.remoteParticipants.length;
 
       if (widget.isBroadcaster) {
-        dynamic submissionData = {
-          'action': 'update_viewers_count',
-          'channel_id': int.parse(widget.channelName),
-          'viewers_count': _room!.remoteParticipants.length,
-        };
         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-          submissionData: submissionData,
+          submissionData: LiveRoomUpdateRequest.updateViewersCount(
+            channelId: int.parse(widget.channelName),
+            viewersCount: _room!.remoteParticipants.length,
+          ),
         );
       }
 
@@ -3106,14 +3142,11 @@ print('Message runtimeType: ${message.runtimeType}');
         dynamic actionData = {"action": "end_call", "uid": _myUid};
         onUpdateAction(actionData);
 
-        dynamic submissionData = {
-          'action': 'remove_user_from_calling_group',
-          'channel_id': int.parse(widget.channelName),
-          'uid': _myUid,
-        };
-
         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-          submissionData: submissionData,
+          submissionData: LiveRoomUpdateRequest.removeUserFromCallingGroup(
+            channelId: int.parse(widget.channelName),
+            uid: _myUid,
+          ),
         );
       } else {
         // _onCallEnd(context);
@@ -3251,6 +3284,25 @@ print('Message runtimeType: ${message.runtimeType}');
     // }
   }
 
+  Future<void> _handleMissingLiveRoomHeartbeat() async {
+    if (_isDisposed) {
+      return;
+    }
+    _closeEverything();
+    Get.defaultDialog(
+      title: 'Restart Stream',
+      middleText:
+          'Live room was not found on the server. Please restart the stream.',
+      barrierDismissible: false,
+      textConfirm: 'OK',
+      onConfirm: () {
+        if (Get.isDialogOpen == true) {
+          Get.back();
+        }
+      },
+    );
+  }
+
   String _printDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
@@ -3288,6 +3340,7 @@ print('Message runtimeType: ${message.runtimeType}');
   void _closeEverything() async {
     // // destroy sdk and leave channel
     _authController.setShowingOverlay(overlay: true);
+    _livekitStreamingController.stopLiveRoomHeartbeat();
 
     _closeLiveRoom();
 
@@ -3543,6 +3596,79 @@ print('Message runtimeType: ${message.runtimeType}');
     } catch (error) {
       return;
     }
+  }
+
+  void _onHostSwitchPosition() {
+    if (!widget.isBroadcaster) {
+      return;
+    }
+    final activeCalls = _livekitStreamingController.listActiveCall;
+    if (activeCalls.length < 2) {
+      rShowSnackBar(
+        context: context,
+        title: 'Need at least 2 active callers to switch position.',
+        color: Colors.orange,
+        durationInSeconds: 1,
+      );
+      return;
+    }
+
+    final hostUid = _toInt(widget.channelName) ?? _myUid;
+    final hostIndex = activeCalls.indexWhere(
+      (element) => _toInt(element['uid']) == hostUid,
+    );
+    if (hostIndex < 0) {
+      return;
+    }
+
+    final targetIndex = (hostIndex + 1) % activeCalls.length;
+    if (targetIndex == hostIndex) {
+      return;
+    }
+    final targetUid = _toInt(activeCalls[targetIndex]['uid']);
+    if (targetUid == null) {
+      return;
+    }
+
+    onUpdateAction({
+      'action': 'switch_position',
+      'uid': hostUid,
+      'target_uid': targetUid,
+    });
+  }
+
+  void _applyPositionSwitch({
+    required int? sourceUid,
+    required int? targetUid,
+  }) {
+    if (sourceUid == null || targetUid == null) {
+      return;
+    }
+    final activeCalls = _livekitStreamingController.listActiveCall;
+    final sourceIndex = activeCalls.indexWhere(
+      (element) => _toInt(element['uid']) == sourceUid,
+    );
+    final targetIndex = activeCalls.indexWhere(
+      (element) => _toInt(element['uid']) == targetUid,
+    );
+    if (sourceIndex < 0 || targetIndex < 0 || sourceIndex == targetIndex) {
+      return;
+    }
+
+    final sourceData = activeCalls[sourceIndex];
+    activeCalls[sourceIndex] = activeCalls[targetIndex];
+    activeCalls[targetIndex] = sourceData;
+    activeCalls.refresh();
+  }
+
+  int? _toInt(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
   }
 
   Widget _giftSendAnimationView({required dynamic data}) {
