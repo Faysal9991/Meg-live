@@ -18,12 +18,12 @@ const kLogoutUrl = '$_baseUrl/auth/logout/';
 const kChangePasswordUpdateUrl = '$_baseUrl/auth/change-password-update/';
 
 // Contribution
- const kTopContributorRankingListUrl =
-   '$_baseUrl/balance/top-contributor-ranking-list/';
+const kTopContributorRankingListUrl =
+    '$_baseUrl/balance/top-contributor-ranking-list/';
 
 String kContributionRankingListUrl(int userId) =>
     '$_baseUrl/balance/contribution-ranking-list/$userId/';
-    
+
 String kContributionHistoryDeleteUrl =
     '$_baseUrl/balance/contribution-history-delete/';
 const kWithdrawRequestListUrl = '$_baseUrl/balance/withdraw-request-list/';
@@ -144,6 +144,7 @@ const kPurchasedVvIPPackageListUrl =
 // VIP
 const kPurchasedVIPPackageListUrl =
     '$_baseUrl/products/purchased-vip-package-list/';
+const kPurchasedKingPackageUrl = '$_baseUrl/products/purchased-king-package/';
 const kPurchasedKingPackageListUrl =
     '$_baseUrl/products/purchased-king-package-list/';
 

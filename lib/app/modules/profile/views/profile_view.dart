@@ -29,6 +29,12 @@ class ProfileView extends GetView<ProfileController> {
   final AuthController _authController = Get.find();
   @override
   Widget build(BuildContext context) {
+    final profile = _authController.profile.value;
+    final isAgent = profile.is_agent ?? false;
+    final isModerator = profile.is_moderator ?? false;
+    final isReseller = profile.is_reseller ?? false;
+    final isHost = profile.is_host ?? false;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: SingleChildScrollView(
@@ -188,7 +194,7 @@ class ProfileView extends GetView<ProfileController> {
                         constraints: const BoxConstraints(maxWidth: 200),
                         child: Obx(() {
                           return Text(
-                            '${_authController.profile.value.user!.phone}',
+                            _authController.profile.value.user?.phone ?? '',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -316,7 +322,8 @@ class ProfileView extends GetView<ProfileController> {
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   ),
                   Obx(() {
-                    if (!_authController.profile.value.is_moderator!) {
+                    if (!(_authController.profile.value.is_moderator ??
+                        false)) {
                       return Container();
                     }
                     return ListTile(
@@ -331,7 +338,7 @@ class ProfileView extends GetView<ProfileController> {
                     );
                   }),
                   Obx(() {
-                    if (!_authController.profile.value.is_reseller!) {
+                    if (!(_authController.profile.value.is_reseller ?? false)) {
                       return Container();
                     }
                     return ListTile(
@@ -386,7 +393,7 @@ class ProfileView extends GetView<ProfileController> {
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   ),
-                  !_authController.profile.value.is_agent!
+                  !isAgent
                       ? Container()
                       : ListTile(
                           onTap: () => Get.to(
@@ -406,10 +413,7 @@ class ProfileView extends GetView<ProfileController> {
                             size: 16,
                           ),
                         ),
-                  _authController.profile.value.is_agent! ||
-                          _authController.profile.value.is_moderator! ||
-                          _authController.profile.value.is_reseller! ||
-                          _authController.profile.value.is_host!
+                  isAgent || isModerator || isReseller || isHost
                       ? Container()
                       : ListTile(
                           onTap: () => Get.to(() => const HostRequstView()),
@@ -424,7 +428,7 @@ class ProfileView extends GetView<ProfileController> {
                             size: 16,
                           ),
                         ),
-                  !_authController.profile.value.is_host!
+                  !isHost
                       ? Container()
                       : ListTile(
                           onTap: () => Get.to(() => AgentForHostView()),

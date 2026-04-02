@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
+import 'package:doyel_live/app/modules/products/models/king_package_catalog_state.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -35,7 +35,9 @@ class _KingPackageViewState extends State<KingPackageView> {
     return SafeArea(
       child: Obx(
         () => LoadingOverlay(
-          isLoading: _packageController.loadingAllKingPackageList.value,
+          isLoading:
+              _packageController.loadingAllKingPackageList.value ||
+              _packageController.purchasingKingPackage.value,
           progressIndicator: SpinKitCubeGrid(
             color: Theme.of(context).primaryColor,
             size: 50.0,
@@ -69,11 +71,10 @@ class _KingPackageViewState extends State<KingPackageView> {
                                 ),
                                 _buildPackageItem(
                                   context: context,
-                                  data: _packageController
+                                  packageItem: _packageController
                                       .purchasedKingPackage
                                       .value!
-                                      .kingPackage!
-                                      .raw,
+                                      .kingPackage!,
                                   isPurchased: true,
                                   expirationDateTime: _packageController
                                       .purchasedKingPackage
@@ -101,11 +102,10 @@ class _KingPackageViewState extends State<KingPackageView> {
                         shrinkWrap: true,
                         itemCount: _packageController.listAllKingPackage.length,
                         itemBuilder: (context, index) {
-                          final data =
-                              _packageController.listAllKingPackage[index].raw;
                           return _buildPackageItem(
                             context: context,
-                            data: data,
+                            packageItem:
+                                _packageController.listAllKingPackage[index],
                           );
                         },
                         separatorBuilder: (_, __) => const SizedBox(height: 8),
@@ -123,10 +123,11 @@ class _KingPackageViewState extends State<KingPackageView> {
 
   Widget _buildPackageItem({
     required BuildContext context,
-    required Map<String, dynamic> data,
+    required KingPackageItem packageItem,
     bool isPurchased = false,
     String? expirationDateTime,
   }) {
+    final data = packageItem.raw;
     return Card(
       margin: EdgeInsets.zero,
       elevation: 5,
@@ -147,34 +148,78 @@ class _KingPackageViewState extends State<KingPackageView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${data['price']} BDT',
+              '${_packageController.kingPackageDiamondCost(packageItem)} Diamonds',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             !isPurchased ? Text('${data['days']} days validity') : Container(),
             !isPurchased
                 ? rPrimaryElevatedButton(
-                    onPressed: () {
-                      Get.defaultDialog(
-                        title: 'Contact to Purchase',
-                        content: SizedBox(
-                          height: MediaQuery.of(context).size.height * .4,
-                          width: MediaQuery.of(context).size.width,
-                          child: SingleChildScrollView(
-                            child: Html(
-                              shrinkWrap: true,
-                              data:
-                                  _packageController
-                                      .kingPackageOrderingInfo['context'] ??
-                                  'No contact info',
-                            ),
-                          ),
-                        ),
-                        onCancel: () => Get.close,
-                        textCancel: 'Close',
-                      );
+                    onPressed: () async {
+                      final requiredDiamonds = _packageController
+                          .kingPackageDiamondCost(packageItem);
+                      if (!_packageController.hasEnoughDiamondsForKingPackage(
+                        packageItem,
+                      )) {
+                        rShowSnackBar(
+                          context: context,
+                          title:
+                              'You need $requiredDiamonds diamonds, but you have ${_packageController.currentDiamondBalance}.',
+                          color: Colors.red,
+                          durationInSeconds: 5,
+                        );
+                        return;
+                      }
+
+                      final statusCode = await _packageController
+                          .purchaseKingPackage(packageItem: packageItem);
+                      if (!context.mounted) {
+                        return;
+                      }
+
+                      if (statusCode == 200 || statusCode == 201) {
+                        rShowSnackBar(
+                          context: context,
+                          title: 'King package purchased successfully.',
+                          color: Colors.green,
+                          durationInSeconds: 3,
+                        );
+                        return;
+                      }
+
+                      if (statusCode == 203) {
+                        rShowSnackBar(
+                          context: context,
+                          title:
+                              'You do not have enough diamonds to purchase this package.',
+                          color: Colors.red,
+                          durationInSeconds: 5,
+                        );
+                        return;
+                      }
+
+                      if (statusCode == 204) {
+                        Get.defaultDialog(
+                          title: 'Locked',
+                          middleText: 'Your diamonds has been locked.',
+                          titleStyle: const TextStyle(color: Colors.red),
+                        );
+                        return;
+                      }
+
+                      if (statusCode != -1) {
+                        rShowSnackBar(
+                          context: context,
+                          title: 'Something went wrong. Please try again.',
+                          color: Colors.red,
+                        );
+                      }
                     },
                     primaryColor: Colors.white54,
-                    buttonText: 'Purchase',
+                    buttonText:
+                        _packageController.purchasingKingPackageId.value ==
+                            packageItem.id
+                        ? 'Purchasing...'
+                        : 'Purchase',
                     fontSize: 14.0,
                     buttonTextColor: Colors.black,
                     borderRadius: 60.0,

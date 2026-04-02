@@ -25,14 +25,12 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final list = _livekitStreamingController.topSlidingAgentRankingList
-          .take(8)
-          .toList(growable: false);
-
+      final list = _livekitStreamingController.topSlidingAgentRankingList;
+          
+          
       if (list.isEmpty) {
         return const SizedBox.shrink();
       }
-
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -60,25 +58,26 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               return _agentCard(data: list[index], serial: index + 1);
             },
           ),
-          if (list.length > 1) ...[
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(list.length, (index) {
-                final active = _currentIndex == index;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: active ? 14 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: active ? AppColors.onPrimary : AppColors.white24,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                );
-              }),
-            ),
-          ],
+          // if (list.length > 1) ...[
+          //   const SizedBox(height: 8),
+          //   Row(
+          //     mainAxisAlignment: MainAxisAlignment.center,
+          //     children: List.generate(list.length, (index) {
+          //       final active = _currentIndex == index;
+          //       return AnimatedContainer(
+          //         duration: const Duration(milliseconds: 220),
+          //         margin: const EdgeInsets.symmetric(horizontal: 3),
+          //         width: active ? 14 : 6,
+          //         height: 6,
+          //         decoration: BoxDecoration(
+          //           color: active ? AppColors.onPrimary : AppColors.white24,
+          //           borderRadius: BorderRadius.circular(20),
+          //         ),
+          //       );
+          //     }),
+          //   ),
+          // ],
+      
         ],
       );
     });

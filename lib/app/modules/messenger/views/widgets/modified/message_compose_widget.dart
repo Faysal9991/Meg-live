@@ -45,7 +45,7 @@ class _MessagesComposeState extends State<MessagesCompose>
                 padding: const EdgeInsets.only(left: 8.0),
                 child: TextField(
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.black,
                   ),
                   controller: _textController,
                   textAlignVertical: TextAlignVertical.center,
