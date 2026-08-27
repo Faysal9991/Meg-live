@@ -189,12 +189,12 @@ class ApiLogger {
   }
 
   static void _field(String label, String value, String valueColor) {
-    _write('$_bold$blue║ $label:$_reset $valueColor$value$_reset');
+    _write('$_bold$_blue║ $label:$_reset $valueColor$value$_reset');
   }
 
   static void _payload(String label, dynamic value, String color) {
     final formatted = _stringify(_sanitize(value));
-    _write('$_bold$blue║ $label:$_reset');
+    _write('$_bold$_blue║ $label:$_reset');
 
     for (final line in formatted.split('\n')) {
       _write('$color║   $line$_reset');
