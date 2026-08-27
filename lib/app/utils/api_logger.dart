@@ -145,7 +145,10 @@ class ApiLogger {
   static void info(String message, {String? tag, dynamic data}) {
     if (!kDebugMode) return;
 
-    _header('ℹ️ ${tag?.trim().isNotEmpty == true ? tag!.trim() : 'INFO'}', _cyan);
+    _header(
+      'ℹ️ ${tag?.trim().isNotEmpty == true ? tag!.trim() : 'INFO'}',
+      _cyan,
+    );
     _field('TIME', _timestamp(), _dim);
     _payload('MESSAGE', message, _cyan);
     if (data != null) {
@@ -157,7 +160,10 @@ class ApiLogger {
   static void warning(String message, {String? tag, dynamic data}) {
     if (!kDebugMode) return;
 
-    _header('⚠️ ${tag?.trim().isNotEmpty == true ? tag!.trim() : 'WARNING'}', _yellow);
+    _header(
+      '⚠️ ${tag?.trim().isNotEmpty == true ? tag!.trim() : 'WARNING'}',
+      _yellow,
+    );
     _field('TIME', _timestamp(), _dim);
     _payload('MESSAGE', message, _yellow);
     if (data != null) {
@@ -167,13 +173,19 @@ class ApiLogger {
   }
 
   static void _header(String title, String color) {
-    _write('$_bold$color╔══════════════════════════════════════════════════════════════$ _reset');
+    _write(
+      '$_bold$color╔══════════════════════════════════════════════════════════════$_reset',
+    );
     _write('$_bold$color║ $title$_reset');
-    _write('$_bold$color╠══════════════════════════════════════════════════════════════$_reset');
+    _write(
+      '$_bold$color╠══════════════════════════════════════════════════════════════$_reset',
+    );
   }
 
   static void _footer(String color) {
-    _write('$_bold$color╚══════════════════════════════════════════════════════════════$_reset');
+    _write(
+      '$_bold$color╚══════════════════════════════════════════════════════════════$_reset',
+    );
   }
 
   static void _field(String label, String value, String valueColor) {
