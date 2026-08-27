@@ -47,7 +47,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                   const SizedBox(height: 64),
                   Center(
                     child: Image.asset(
-                      'assets/logos/doyel_live.jpeg',
+                      'assets/logos/biho.png',
                       width: 130,
                       height: 130,
                     ),

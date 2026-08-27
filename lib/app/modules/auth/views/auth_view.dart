@@ -21,11 +21,7 @@ class AuthView extends GetView<AuthController> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.asset(
-              'assets/logos/doyel_live.jpeg',
-              width: 150,
-              height: 150,
-            ),
+            Image.asset('assets/logos/biho.png', width: 150, height: 150),
             const SizedBox(height: 16),
             const Center(
               child: Text(

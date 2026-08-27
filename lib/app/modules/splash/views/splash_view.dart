@@ -16,11 +16,7 @@ class SplashView extends GetView<SplashController> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(
-                'assets/logos/doyel_live.jpeg',
-                width: 100,
-                height: 100,
-              ),
+              Image.asset('assets/logos/biho.png', width: 100, height: 100),
               const SizedBox(height: 16),
               const Text(
                 'Biho Live',

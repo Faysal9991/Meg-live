@@ -2292,7 +2292,7 @@
 //       if (_livekitStreamingController.listRenderView.isEmpty) {
 //         return Center(
 //           child: Image.asset(
-//             'assets/logos/doyel_live.png',
+//             'assets/logos/biho.png',
 //             width: 100,
 //             height: 100,
 //           ),
@@ -3019,7 +3019,7 @@
 //                           view == null
 //                               ? Center(
 //                                   child: Image.asset(
-//                                     'assets/logos/doyel_live.png',
+//                                     'assets/logos/biho.png',
 //                                     width: 32,
 //                                     height: 32,
 //                                   ),

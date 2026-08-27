@@ -593,7 +593,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                   ? AppBar(
                       leading: Center(
                         child: Image.asset(
-                          'assets/logos/doyel_live.png',
+                          'assets/logos/biho.png',
                           width: 46,
                           height: 46,
                         ),

@@ -134,7 +134,7 @@ class RoomDisplayLayout {
                           view == null
                               ? Center(
                                   child: Image.asset(
-                                    'assets/logos/doyel_live.png',
+                                    'assets/logos/biho.png',
                                     width: 32,
                                     height: 32,
                                   ),
@@ -399,64 +399,64 @@ class RoomDisplayLayout {
             }
 
             return Positioned(
-                  top: 4,
-                  right: 4,
-                  child: InkWell(
-                    onTap: () {
-                      String action = 'end_call';
-                      if (livekitStreamingController.pkState.value) {
-                        action = 'end_pk_call';
-                        dynamic activeData = {
-                          'room_name': '${channelName}_actions',
-                          'action': action,
-                          'uid': data['uid'],
-                          'full_name': data['full_name'],
-                          'profile_image': data['profile_image'],
-                          'diamonds': data['diamonds'],
-                          'level': data['level'],
-                          'followers': data['followers'],
-                          // 'blocks': data['blocks'],
-                          'muted': data['muted'],
-                          'video_disabled': data['video_disabled'],
-                        };
-                        onUpdateAction(activeData);
-                      } else {
-                        dynamic actionData = {
-                          "action": "end_call",
-                          "uid": data['uid'],
-                        };
-                        onUpdateAction(actionData);
+              top: 4,
+              right: 4,
+              child: InkWell(
+                onTap: () {
+                  String action = 'end_call';
+                  if (livekitStreamingController.pkState.value) {
+                    action = 'end_pk_call';
+                    dynamic activeData = {
+                      'room_name': '${channelName}_actions',
+                      'action': action,
+                      'uid': data['uid'],
+                      'full_name': data['full_name'],
+                      'profile_image': data['profile_image'],
+                      'diamonds': data['diamonds'],
+                      'level': data['level'],
+                      'followers': data['followers'],
+                      // 'blocks': data['blocks'],
+                      'muted': data['muted'],
+                      'video_disabled': data['video_disabled'],
+                    };
+                    onUpdateAction(activeData);
+                  } else {
+                    dynamic actionData = {
+                      "action": "end_call",
+                      "uid": data['uid'],
+                    };
+                    onUpdateAction(actionData);
 
-                        LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                          submissionData:
-                              LiveRoomUpdateRequest.removeUserFromCallingGroup(
-                                channelId: int.parse(channelName),
-                                uid: int.parse(data['uid'].toString()),
-                              ),
-                        );
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4.0),
-                      margin: const EdgeInsets.all(4.0),
-                      decoration: BoxDecoration(
+                    LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
+                      submissionData:
+                          LiveRoomUpdateRequest.removeUserFromCallingGroup(
+                            channelId: int.parse(channelName),
+                            uid: int.parse(data['uid'].toString()),
+                          ),
+                    );
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(4.0),
+                  margin: const EdgeInsets.all(4.0),
+                  decoration: BoxDecoration(
                     // color: AppColors.error.withOpacity(.6),
                     color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(100),
-                        border: VIDEO_AS_CONTAINER
+                    borderRadius: BorderRadius.circular(100),
+                    border: VIDEO_AS_CONTAINER
                         ? Border.all(color: AppColors.onMediaSubtle)
-                            : null,
-                      ),
-                      child: Icon(
-                        Icons.close,
+                        : null,
+                  ),
+                  child: Icon(
+                    Icons.close,
                     // color: AppColors.surface,
                     color: AppColors.error,
-                        size: livekitStreamingController.pkState.value
-                            ? 16.0
-                            : 12.0,
-                      ),
-                    ),
+                    size: livekitStreamingController.pkState.value
+                        ? 16.0
+                        : 12.0,
                   ),
+                ),
+              ),
             );
           }),
 
