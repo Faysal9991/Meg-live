@@ -1,7 +1,7 @@
 name: doyel_live
 description: "Live Streaming App."
 publish_to: 'none'
-version: 1.5.0+24
+version: 1.5.2+26
 
 environment:
   sdk: ^3.8.0
@@ -54,6 +54,7 @@ dependencies:
   android_id: ^0.4.0
   eva_icons_flutter: ^3.1.0
   flutter_local_notifications: ^19.4.1
+  flutter_neumorphic_plus: ^3.5.0
 
 # dependency_overrides: 
 #   # flutter_webrtc: 0.12.7

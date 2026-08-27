@@ -70,7 +70,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           //         width: active ? 14 : 6,
           //         height: 6,
           //         decoration: BoxDecoration(
-          //           color: active ? AppColors.onPrimary : AppColors.white24,
+          //           color: active ? AppColors.onPrimary : AppColors.onMediaSubtle,
           //           borderRadius: BorderRadius.circular(20),
           //         ),
           //       );
@@ -96,15 +96,15 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF102133), Color(0xFF174F62), Color(0xFF2F7D78)],
+          colors: [AppColors.primaryDark, AppColors.accentDark, AppColors.accent],
           begin: Alignment.topLeft,
           end: Alignment.topRight,
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.white24),
+        border: Border.all(color: AppColors.onMediaSubtle),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x33000000),
+            color: AppColors.overlayLight,
             blurRadius: 18,
             offset: Offset(0, 6),
           ),
@@ -151,7 +151,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: AppColors.white70,
+                          color: AppColors.onMediaMuted,
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                         ),
@@ -177,10 +177,10 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.amber.withValues(alpha: 0.2),
+                                color: AppColors.premium.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(999),
                                 border: Border.all(
-                                  color: Colors.amber.withValues(alpha: 0.65),
+                                  color: AppColors.premium.withValues(alpha: 0.65),
                                 ),
                               ),
                               child: const Row(
@@ -188,14 +188,14 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                                 children: [
                                   Icon(
                                     Icons.workspace_premium,
-                                    color: Colors.amber,
+                                    color: AppColors.premium,
                                     size: 12,
                                   ),
                                   SizedBox(width: 4),
                                   Text(
                                     'Owner',
                                     style: TextStyle(
-                                      color: Colors.amber,
+                                      color: AppColors.premium,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -232,7 +232,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               border: Border.all(width: 2, color: AppColors.onPrimary),
               boxShadow: const [
                 BoxShadow(
-                  color: AppColors.black38,
+                  color: AppColors.overlay,
                   blurRadius: 8,
                   offset: Offset(0, 3),
                 ),
@@ -242,7 +242,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               borderRadius: BorderRadius.circular(100),
               child: imageUrl.isEmpty
                   ? Container(
-                      color: AppColors.black26,
+                      color: AppColors.overlayMedium,
                       alignment: Alignment.center,
                       child: const Icon(
                         Icons.person,
@@ -262,7 +262,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         ),
                       ),
                       errorWidget: (_, __, ___) => Container(
-                        color: AppColors.black26,
+                        color: AppColors.overlayMedium,
                         alignment: Alignment.center,
                         child: const Icon(
                           Icons.person,
@@ -281,7 +281,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               height: 24,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Colors.amber.shade600,
+                color: AppColors.premium,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: AppColors.onPrimary, width: 1.2),
               ),
@@ -306,7 +306,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
       decoration: BoxDecoration(
         color: AppColors.white12,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.white24),
+        border: Border.all(color: AppColors.onMediaSubtle),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -314,7 +314,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           const Text(
             'TOP',
             style: TextStyle(
-              color: AppColors.white70,
+              color: AppColors.onMediaMuted,
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.7,
@@ -324,7 +324,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           Text(
             topLabel,
             style: const TextStyle(
-              color: Colors.amber,
+              color: AppColors.premium,
               fontSize: 14,
               fontWeight: FontWeight.w800,
             ),

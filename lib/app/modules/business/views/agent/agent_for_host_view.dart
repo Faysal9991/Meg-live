@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
@@ -77,7 +78,7 @@ class _AgentForHostViewState extends State<AgentForHostView> {
                           height: 50,
                           fit: BoxFit.cover,
                           placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(color: Colors.red),
+                            child: CircularProgressIndicator(color: AppColors.error),
                           ),
                         ),
                       ),
@@ -97,9 +98,9 @@ class _AgentForHostViewState extends State<AgentForHostView> {
               // Displaying LoadingSpinner to indicate waiting state
               return const Center(
                 child: SpinKitWaveSpinner(
-                  trackColor: Colors.grey,
-                  waveColor: Colors.redAccent,
-                  color: Colors.white,
+                  trackColor: AppColors.textSecondary,
+                  waveColor: AppColors.error,
+                  color: AppColors.surface,
                   size: 50.0,
                 ),
               );

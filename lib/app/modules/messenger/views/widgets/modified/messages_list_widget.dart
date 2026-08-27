@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -206,7 +207,7 @@ class _MessagesListState extends State<MessagesList> {
                               Get.snackbar(
                                 "Can't delete message",
                                 "Chat is blocked",
-                                backgroundColor: Colors.black,
+                                backgroundColor: AppColors.textPrimary,
                               );
                               return;
                             }
@@ -223,8 +224,8 @@ class _MessagesListState extends State<MessagesList> {
                                 content: const Text('Will remove for both'),
                                 title: 'Delete',
                                 textConfirm: 'Confirm',
-                                confirmTextColor: Colors.white,
-                                buttonColor: Colors.red,
+                                confirmTextColor: AppColors.surface,
+                                buttonColor: AppColors.error,
                                 onConfirm: () async {
                                   // await FirebaseFirestore.instance
                                   //     .runTransaction(
@@ -355,8 +356,8 @@ class _MessagesListState extends State<MessagesList> {
     //                               content: const Text('Will remove for both'),
     //                               title: 'Delete',
     //                               textConfirm: 'Confirm',
-    //                               confirmTextColor: Colors.white,
-    //                               buttonColor: Colors.red,
+    //                               confirmTextColor: AppColors.surface,
+    //                               buttonColor: AppColors.error,
     //                               onConfirm: () async {
     //                                 await FirebaseFirestore.instance
     //                                     .runTransaction(

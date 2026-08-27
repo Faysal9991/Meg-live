@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/modules/messenger/views/widgets/chat_list_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -36,7 +37,7 @@ class MessengerView extends GetView<MessengerController> {
                   child: Text(
                     'Messages',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.surface,
                     ),
                   ),
                 ),

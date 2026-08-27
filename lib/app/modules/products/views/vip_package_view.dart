@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
@@ -143,7 +144,7 @@ class _VIPPackageViewState extends State<VIPPackageView> {
               '${data['price']} BDT',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                // color: Colors.white,
+                // color: AppColors.surface,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -152,7 +153,7 @@ class _VIPPackageViewState extends State<VIPPackageView> {
                 ? Text(
                     '${data['days']} days validity',
                     // style: const TextStyle(
-                    //   color: Colors.white,
+                    //   color: AppColors.surface,
                     // ),
                   )
                 : Container(),
@@ -179,10 +180,10 @@ class _VIPPackageViewState extends State<VIPPackageView> {
                         textCancel: 'Close',
                       );
                     },
-                    primaryColor: Colors.white54,
+                    primaryColor: AppColors.onMediaMuted,
                     buttonText: 'Purchase',
                     fontSize: 14.0,
-                    buttonTextColor: Colors.black,
+                    buttonTextColor: AppColors.textPrimary,
                     borderRadius: 60.0,
                     // fixedSize: const Size(154, 38),
                   )

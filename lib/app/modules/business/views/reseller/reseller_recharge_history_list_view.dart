@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -32,7 +33,7 @@ class _ResellerRechargeHistoryListViewState
           Obx(() {
             return _businessController.loadingResellerRechargeHistoryList.value
                 ? const SpinKitCircle(
-                    color: Colors.red,
+                    color: AppColors.error,
                   )
                 : _businessController.resellerRechargeHistoryList.isEmpty
                     ? const Card(
@@ -43,7 +44,7 @@ class _ResellerRechargeHistoryListViewState
                             "No history",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.orange,
+                              color: AppColors.warning,
                               fontSize: 16,
                             ),
                           ),
@@ -98,7 +99,7 @@ class _ResellerRechargeHistoryListViewState
                                           );
                                           Navigator.of(context).pop();
                                         },
-                                        confirmTextColor: Colors.white,
+                                        confirmTextColor: AppColors.surface,
                                         onCancel: () =>
                                             Navigator.of(context).pop(),
                                       );

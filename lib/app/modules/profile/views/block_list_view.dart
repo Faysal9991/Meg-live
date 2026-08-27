@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -46,7 +47,7 @@ class _BlockListViewState extends State<BlockListView> {
                   ? const Center(
                       child: Text(
                         'No block',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(color: AppColors.error),
                       ),
                     )
                   : Padding(
@@ -100,9 +101,9 @@ class BlockItem extends StatelessWidget {
         // color: Theme.of(context).primaryColor.withOpacity(.5),
         gradient: LinearGradient(
           colors: [
-            Colors.orange.withOpacity(.5),
-            Theme.of(context).primaryColor.withOpacity(.5),
-            Colors.black38,
+            AppColors.warning.withValues(alpha: .5),
+            Theme.of(context).primaryColor.withValues(alpha: .5),
+            AppColors.overlay,
           ],
           begin: Alignment.bottomLeft,
           end: Alignment.topRight,
@@ -141,7 +142,9 @@ class BlockItem extends StatelessWidget {
                           height: 46,
                           fit: BoxFit.cover,
                           placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(color: Colors.red),
+                            child: CircularProgressIndicator(
+                              color: AppColors.error,
+                            ),
                           ),
                         ),
                       ),
@@ -153,13 +156,16 @@ class BlockItem extends StatelessWidget {
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: Colors.green,
+                    color: AppColors.success,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Center(
                     child: Text(
                       '${data['level'] != null ? data['level']['level'] : 0}',
-                      style: const TextStyle(color: Colors.white, fontSize: 8),
+                      style: const TextStyle(
+                        color: AppColors.surface,
+                        fontSize: 8,
+                      ),
                     ),
                   ),
                 ),
@@ -173,7 +179,7 @@ class BlockItem extends StatelessWidget {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            // color: Colors.white,
+            // color: AppColors.surface,
           ),
         ),
         trailing: ElevatedButton(
@@ -203,7 +209,7 @@ class BlockItem extends StatelessWidget {
             return profileController.loadingPerformBlock.value !=
                     data['user']['uid']
                 ? const Text('Unblock')
-                : const CircularProgressIndicator(color: Colors.red);
+                : const CircularProgressIndicator(color: AppColors.error);
           }),
         ),
       ),

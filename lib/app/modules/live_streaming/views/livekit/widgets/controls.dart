@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -286,7 +287,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                     child: const ListTile(
                       leading: Icon(
                         EvaIcons.micOff,
-                        color: Colors.white,
+                        color: AppColors.surface,
                       ),
                       title: Text('Mute Microphone'),
                     ),
@@ -300,11 +301,11 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                                   widget.room.selectedAudioInputDeviceId)
                               ? const Icon(
                                   EvaIcons.checkmarkSquare,
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                 )
                               : const Icon(
                                   EvaIcons.square,
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                 ),
                           title: Text(device.label),
                         ),
@@ -330,7 +331,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                     child: ListTile(
                       leading: Icon(
                         EvaIcons.speaker,
-                        color: Colors.white,
+                        color: AppColors.surface,
                       ),
                       title: Text('Select Audio Output'),
                     ),
@@ -344,11 +345,11 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                                   widget.room.selectedAudioOutputDeviceId)
                               ? const Icon(
                                   EvaIcons.checkmarkSquare,
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                 )
                               : const Icon(
                                   EvaIcons.square,
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                 ),
                           title: Text(device.label),
                         ),
@@ -360,7 +361,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
             ),
           if (!kIsWeb && Platform.isAndroid)
             IconButton(
-              disabledColor: Colors.grey,
+              disabledColor: AppColors.textSecondary,
               // onPressed: Hardware.instance.canSwitchSpeakerphone
               //     ? _setSpeakerphoneOn
               //     : null,
@@ -380,7 +381,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                     child: const ListTile(
                       leading: Icon(
                         EvaIcons.videoOff,
-                        color: Colors.white,
+                        color: AppColors.surface,
                       ),
                       title: Text('Disable Camera'),
                     ),
@@ -394,11 +395,11 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                                   widget.room.selectedVideoInputDeviceId)
                               ? const Icon(
                                   EvaIcons.checkmarkSquare,
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                 )
                               : const Icon(
                                   EvaIcons.square,
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                 ),
                           title: Text(device.label),
                         ),

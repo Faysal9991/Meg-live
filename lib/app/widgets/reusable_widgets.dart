@@ -1,4 +1,5 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:flutter/material.dart';
 
 Color _resolveReadableForegroundColor({
@@ -42,10 +43,10 @@ Widget rPrimaryTextButton({
 );
 
 Widget rPrimaryTextField({
-  required controller,
+  required TextEditingController controller,
   obscureText = false,
   readOnly = false,
-  required keyboardType,
+  required TextInputType keyboardType,
   required borderColor,
   fillColor = AppColors.surface,
   textColor = AppColors.textPrimary,
@@ -60,38 +61,54 @@ Widget rPrimaryTextField({
   focusNode,
   double borderRadius = 8.0,
   Function(String)? onChanged,
+  bool useNeumorphic = false,
   EdgeInsetsGeometry contentPadding = const EdgeInsets.symmetric(
     horizontal: 16,
   ),
-}) => TextField(
-  controller: controller,
-  focusNode: focusNode,
-  obscureText: obscureText,
-  readOnly: readOnly,
-  keyboardType: keyboardType,
-  maxLength: maxLength,
-  maxLines: (keyboardType == TextInputType.multiline && maxLines == null)
-      ? null
-      : maxLines ?? 1,
-  style: TextStyle(color: textColor),
-  decoration: InputDecoration(
-    contentPadding: contentPadding,
-    filled: true,
-    fillColor: fillColor,
-    border: OutlineInputBorder(
-      borderSide: BorderSide(color: borderColor),
-      borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+}) {
+  if (useNeumorphic) {
+    return AppSearchField(
+      controller: controller,
+      focusNode: focusNode,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      hintText: hintText,
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      onChanged: onChanged,
+    );
+  }
+
+  return TextField(
+    controller: controller,
+    focusNode: focusNode,
+    obscureText: obscureText,
+    readOnly: readOnly,
+    keyboardType: keyboardType,
+    maxLength: maxLength,
+    maxLines: (keyboardType == TextInputType.multiline && maxLines == null)
+        ? null
+        : maxLines ?? 1,
+    style: TextStyle(color: textColor),
+    decoration: InputDecoration(
+      contentPadding: contentPadding,
+      filled: true,
+      fillColor: fillColor,
+      border: OutlineInputBorder(
+        borderSide: BorderSide(color: borderColor),
+        borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+      ),
+      prefixIcon: prefixIcon,
+      prefixText: prefixText,
+      suffixIcon: suffixIcon,
+      labelText: labelText,
+      hintText: hintText,
+      helperStyle: TextStyle(color: helpTextColor),
+      hintStyle: TextStyle(color: helpTextColor),
     ),
-    prefixIcon: prefixIcon,
-    prefixText: prefixText,
-    suffixIcon: suffixIcon,
-    labelText: labelText,
-    hintText: hintText,
-    helperStyle: TextStyle(color: helpTextColor),
-    hintStyle: TextStyle(color: helpTextColor),
-  ),
-  onChanged: onChanged,
-);
+    onChanged: onChanged,
+  );
+}
 
 Widget rPrimaryElevatedButton({
   required VoidCallback onPressed,
@@ -107,25 +124,15 @@ Widget rPrimaryElevatedButton({
     backgroundColor: primaryColor,
     requestedColor: buttonTextColor,
   );
-  return ElevatedButton(
+  return PrimaryButton(
+    label: buttonText,
     onPressed: onPressed,
-    style: ElevatedButton.styleFrom(
-      backgroundColor: primaryColor,
-      foregroundColor: resolvedTextColor,
-      fixedSize: fixedSize,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(borderRadius!),
-        // side: BorderSide(color: Colors.red),
-      ),
-    ),
-    child: Text(
-      buttonText,
-      style: TextStyle(
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        color: resolvedTextColor,
-      ),
-    ),
+    backgroundColor: primaryColor,
+    foregroundColor: resolvedTextColor,
+    fixedSize: fixedSize,
+    fontSize: fontSize,
+    fontWeight: fontWeight ?? FontWeight.w600,
+    borderRadius: borderRadius!,
   );
 }
 
@@ -143,26 +150,16 @@ Widget rPrimaryElevatedButton2({
     backgroundColor: primaryColor,
     requestedColor: buttonTextColor,
   );
-  return ElevatedButton(
+  return PrimaryButton(
+    label: buttonText,
     onPressed: onPressed,
-    style: ElevatedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-      backgroundColor: primaryColor,
-      foregroundColor: resolvedTextColor,
-      fixedSize: fixedSize,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(borderRadius!),
-        // side: BorderSide(color: Colors.red),
-      ),
-    ),
-    child: Text(
-      buttonText,
-      style: TextStyle(
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        color: resolvedTextColor,
-      ),
-    ),
+    backgroundColor: primaryColor,
+    foregroundColor: resolvedTextColor,
+    fixedSize: fixedSize,
+    fontSize: fontSize,
+    fontWeight: fontWeight ?? FontWeight.w600,
+    borderRadius: borderRadius!,
+    compact: true,
   );
 }
 
@@ -181,27 +178,16 @@ Widget rPrimaryElevatedIconButton({
     backgroundColor: primaryColor,
     requestedColor: buttonTextColor,
   );
-  return ElevatedButton.icon(
+  return PrimaryButton(
+    label: buttonText,
+    icon: iconData,
     onPressed: onPressed,
-    style: ElevatedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      backgroundColor: primaryColor,
-      foregroundColor: resolvedTextColor,
-      fixedSize: fixedSize,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(borderRadius!),
-        // side: BorderSide(color: Colors.red),
-      ),
-    ),
-    icon: Icon(iconData, color: resolvedTextColor),
-    label: Text(
-      buttonText,
-      style: TextStyle(
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        color: resolvedTextColor,
-      ),
-    ),
+    backgroundColor: primaryColor,
+    foregroundColor: resolvedTextColor,
+    fixedSize: fixedSize,
+    fontSize: fontSize,
+    fontWeight: fontWeight ?? FontWeight.w600,
+    borderRadius: borderRadius!,
   );
 }
 

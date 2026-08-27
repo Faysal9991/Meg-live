@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:app_links/app_links.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/live_streaming_view.dart';
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:share_plus/share_plus.dart';
@@ -71,8 +71,8 @@ class HelperFunctions {
       Get.snackbar(
         'Not allowed',
         "You can't enter your own stream.",
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
+        backgroundColor: AppColors.warning,
+        colorText: AppColors.surface,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 1),
       );
@@ -94,8 +94,8 @@ class HelperFunctions {
           Get.snackbar(
             'Not allowed',
             "Live is Locked.",
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
+            backgroundColor: AppColors.error,
+            colorText: AppColors.surface,
             snackPosition: SnackPosition.BOTTOM,
             duration: const Duration(seconds: 2),
           );
@@ -199,7 +199,7 @@ class HelperFunctions {
 
     String customUrl = '$baseUrlAppLink/streaming/?data=$encoded';
 
-    String? desc = 'Doyel Live:\n$title\n$customUrl';
+    String? desc = 'Biho Live:\n$title\n$customUrl';
 
     await SharePlus.instance.share(
       ShareParams(text: desc, subject: title),

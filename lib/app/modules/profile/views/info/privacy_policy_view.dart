@@ -28,8 +28,8 @@ class PrivacyPolicyView extends GetView {
 const htmlData = r"""
 <div id="privacy_content">
     <strong>Privacy Policy</strong> <p>
-                  Doyel Live built the Doyel Live app as a Free app. This SERVICE is provided by
-                  Doyel Live at no cost and is intended for use as
+                  Biho Live built the Biho Live app as a Free app. This SERVICE is provided by
+                  Biho Live at no cost and is intended for use as
                   is.
                 </p> <p>
                   This page is used to inform visitors regarding our
@@ -44,11 +44,11 @@ const htmlData = r"""
                 </p> <p>
                   The terms used in this Privacy Policy have the same meanings
                   as in our Terms and Conditions, which are accessible at
-                  Doyel Live unless otherwise defined in this Privacy Policy.
+                  Biho Live unless otherwise defined in this Privacy Policy.
                 </p> <p><strong>Information Collection and Use</strong></p> <p>
                   For a better experience, while using our Service, we
                   may require you to provide us with certain personally
-                  identifiable information, including but not limited to Doyel Live streaming app is a live broadcasting and video Conference calling app.. The information that
+                  identifiable information, including but not limited to Biho Live streaming app is a live broadcasting and video Conference calling app.. The information that
                   we request will be retained by us and used as described in this privacy policy.
                 </p> <div><p>
                     The app does use third-party services that may collect

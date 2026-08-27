@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
@@ -137,15 +138,15 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
     // foregroundDecoration: BoxDecoration(
     //   border: widget.participant.isSpeaking && !widget.isScreenShare
     //       ? Border.all(
-    //           color: Colors.red.shade600,
+    //           color: AppColors.error,
     //           width: 3,
     //           strokeAlign: StrokeAlign.center,
     //         )
-    //       : Border.all(color: Colors.white30),
+    //       : Border.all(color: AppColors.onMediaSubtle),
     // ),
     // decoration: const BoxDecoration(
     //   // color: Theme.of(ctx).cardColor,
-    //   color: Colors.black,
+    //   color: AppColors.textPrimary,
     //   // color: Colors.transparent,
     //   image: DecorationImage(
     //     image: AssetImage('assets/others/loading_black.gif'),
@@ -156,7 +157,7 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
         ? Stack(
             children: [
               Container(
-                color: Colors.black,
+                color: AppColors.textPrimary,
                 child: VideoTrackRenderer(
                   activeVideoTrack!,
                   // fit: rtc.RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
@@ -188,8 +189,8 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
               //   child: Text(
               //     '${_livekitStreamingController.videoDimensionsDescription}',
               //     style: TextStyle(
-              //       backgroundColor: Colors.black87,
-              //       color: Colors.white,
+              //       backgroundColor: AppColors.textPrimary,
+              //       color: AppColors.surface,
               //       fontWeight: FontWeight.w600,
               //     ),
               //   ),
@@ -204,10 +205,12 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         alignment: Alignment.center,
-                        decoration: const BoxDecoration(color: Colors.black38),
+                        decoration: const BoxDecoration(
+                          color: AppColors.overlay,
+                        ),
                         child: Text(
                           widget.participant.name,
-                          style: const TextStyle(color: Colors.white70),
+                          style: const TextStyle(color: AppColors.onMediaMuted),
                         ),
                       ),
                     ),
@@ -220,15 +223,15 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
             alignment: Alignment.center,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.black, Theme.of(context).primaryColor],
+                colors: [AppColors.textPrimary, Theme.of(context).primaryColor],
                 begin: Alignment.bottomLeft,
                 end: Alignment.topRight,
               ),
-              border: Border.all(color: Colors.white24, width: 2),
+              border: Border.all(color: AppColors.onMediaSubtle, width: 2),
             ),
             child: Text(
               widget.participant.name,
-              style: const TextStyle(color: Colors.white70),
+              style: const TextStyle(color: AppColors.onMediaMuted),
             ),
           ),
     // child: Stack(
@@ -354,15 +357,15 @@ class RemoteTrackPublicationMenuWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: Colors.black.withOpacity(0.3),
+    color: AppColors.textPrimary.withValues(alpha: 0.3),
     child: PopupMenuButton<Function>(
       tooltip: 'Subscribe menu',
       icon: Icon(
         icon,
         color: {
-          TrackSubscriptionState.notAllowed: Colors.red,
-          TrackSubscriptionState.unsubscribed: Colors.grey,
-          TrackSubscriptionState.subscribed: Colors.green,
+          TrackSubscriptionState.notAllowed: AppColors.error,
+          TrackSubscriptionState.unsubscribed: AppColors.textSecondary,
+          TrackSubscriptionState.subscribed: AppColors.success,
         }[pub.subscriptionState],
       ),
       onSelected: (value) => value(),

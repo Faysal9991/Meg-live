@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -17,6 +18,7 @@ import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_fun
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_interact/user_interact_bottom_sheet_funtion.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/participant_info.dart';
 import 'package:doyel_live/app/modules/nav/views/nav_view.dart';
+import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/helper_functions.dart';
 import 'package:doyel_live/app/widgets/circle_button.dart';
@@ -82,6 +84,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     with SingleTickerProviderStateMixin {
   final AuthController _authController = Get.find();
   final LiveStreamingController _livekitStreamingController = Get.find();
+  final VVIPorVipPackageController _packageController =
+      Get.isRegistered<VVIPorVipPackageController>()
+      ? Get.find<VVIPorVipPackageController>()
+      : Get.put(VVIPorVipPackageController());
 
   late TextEditingController _editingControllerComment;
 
@@ -127,6 +133,12 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   // Working Emoji
   final _emojiItems = <EmojiItem>[];
   final _random = Random();
+
+  bool get _hasLiveRoomControlAccess {
+    final isModerator = _authController.profile.value.is_moderator ?? false;
+    final hasKingPackage = _packageController.hasActiveKingPackage;
+    return widget.isBroadcaster || isModerator || hasKingPackage;
+  }
 
   _scrollToBottom() {
     // _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -745,6 +757,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
     _myUid = _authController.profile.value.user!.uid!;
     _liveGroupRoomCount = 1;
+    _packageController.ensureKingPackageCatalogLoaded();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _screenGlobalWidth = MediaQuery.of(context).size.width;
@@ -854,7 +867,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         //       rShowSnackBar(
         //         context: context,
         //         title: 'Connection failed. Please try again.',
-        //         color: Colors.red,
+        //         color: AppColors.error,
         //         durationInSeconds: 2,
         //       );
         //     });
@@ -898,7 +911,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         //       rShowSnackBar(
         //         context: context,
         //         title: 'Connection failed. Please try again.',
-        //         color: Colors.red,
+        //         color: AppColors.error,
         //         durationInSeconds: 2,
         //       );
         //     });
@@ -964,7 +977,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       child: SafeArea(
         child: Scaffold(
           body: Container(
-            color: const Color(0xFF273238),
+            color: AppColors.textPrimary,
             child: Stack(
               children: [
                 // Body
@@ -1015,7 +1028,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             child: Container(
                               padding: const EdgeInsets.all(4.0),
                               decoration: BoxDecoration(
-                                color: Colors.black38,
+                                color: AppColors.overlay,
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
                               child: Row(
@@ -1030,7 +1043,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                     return Text(
                                       '${_livekitStreamingController.broadcasterDiamonds.value}',
                                       style: const TextStyle(
-                                        color: Colors.white,
+                                        color: AppColors.surface,
                                       ),
                                     );
                                   }),
@@ -1043,13 +1056,15 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           Container(
                             padding: const EdgeInsets.all(4.0),
                             decoration: BoxDecoration(
-                              color: Colors.black38,
+                              color: AppColors.overlay,
                               borderRadius: BorderRadius.circular(20.0),
                             ),
                             child: Obx(() {
                               return Text(
                                 '⭐ ${_livekitStreamingController.broadcasterDiamonds.value < 100000 ? 0 : (_livekitStreamingController.broadcasterDiamonds.value / 100000).floor()}',
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(
+                                  color: AppColors.surface,
+                                ),
                               );
                             }),
                           ),
@@ -1071,14 +1086,14 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             child: Container(
                               padding: const EdgeInsets.all(4.0),
                               decoration: BoxDecoration(
-                                color: Colors.black38,
+                                color: AppColors.overlay,
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
                               child: Row(
                                 children: [
                                   const Icon(
                                     Icons.visibility,
-                                    color: Colors.white,
+                                    color: AppColors.surface,
                                     size: 16.0,
                                   ),
                                   const SizedBox(width: 8),
@@ -1086,7 +1101,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                     return Text(
                                       '${_livekitStreamingController.viewersCount.value}',
                                       style: const TextStyle(
-                                        color: Colors.white,
+                                        color: AppColors.surface,
                                       ),
                                     );
                                   }),
@@ -1099,45 +1114,47 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                !widget.isBroadcaster &&
-                                        _authController
-                                            .profile
-                                            .value
-                                            .is_moderator!
-                                    ? CircleButton(
-                                        icon: Icons.close_outlined,
-                                        iconSize: 24.0,
-                                        minHeight: 32,
-                                        minWidth: 32,
-                                        backgroundColor: Colors.amber,
-                                        onPressed: () {
-                                          rShowAlertDialog(
-                                            context: context,
-                                            title: 'Moderator access',
-                                            content: 'Do you wanna close Live?',
-                                            onConfirm: () {
-                                              LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                                                submissionData:
-                                                    LiveRoomUpdateRequest.deleteLiveRoom(
-                                                      channelId: int.parse(
-                                                        widget.channelName,
-                                                      ),
-                                                    ),
-                                              );
+                                Obx(() {
+                                  final hasLiveRoomControlAccess =
+                                      _hasLiveRoomControlAccess;
+                                  if (widget.isBroadcaster ||
+                                      !hasLiveRoomControlAccess) {
+                                    return Container();
+                                  }
 
-                                              dynamic userData = {
-                                                'action':
-                                                    'moderator_end_streaming',
-                                              };
-
-                                              onUpdateAction(userData);
-
-                                              Navigator.pop(context);
-                                            },
+                                  return CircleButton(
+                                    icon: Icons.close_outlined,
+                                    iconSize: 24.0,
+                                    minHeight: 32,
+                                    minWidth: 32,
+                                    backgroundColor: AppColors.premium,
+                                    onPressed: () {
+                                      rShowAlertDialog(
+                                        context: context,
+                                        title: 'Room control',
+                                        content: 'Do you wanna close Live?',
+                                        onConfirm: () {
+                                          LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
+                                            submissionData:
+                                                LiveRoomUpdateRequest.deleteLiveRoom(
+                                                  channelId: int.parse(
+                                                    widget.channelName,
+                                                  ),
+                                                ),
                                           );
+
+                                          dynamic userData = {
+                                            'action': 'moderator_end_streaming',
+                                          };
+
+                                          onUpdateAction(userData);
+
+                                          Navigator.pop(context);
                                         },
-                                      )
-                                    : Container(),
+                                      );
+                                    },
+                                  );
+                                }),
                               ],
                             ),
                           ),
@@ -1172,7 +1189,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4.0),
                           decoration: BoxDecoration(
-                            color: Colors.grey,
+                            color: AppColors.textSecondary,
                             borderRadius: BorderRadius.circular(20.0),
                           ),
                           child: Row(
@@ -1189,7 +1206,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                         ),
                                         border: Border.all(
                                           width: 2.0,
-                                          color: Colors.orange.shade600,
+                                          color: AppColors.warning,
                                         ),
                                       ),
                                       child: ClipRRect(
@@ -1229,7 +1246,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                                     const Center(
                                                       child:
                                                           CircularProgressIndicator(
-                                                            color: Colors.red,
+                                                            color:
+                                                                AppColors.error,
                                                           ),
                                                     ),
                                               ),
@@ -1242,13 +1260,13 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                             right: 0,
                                             child: Container(
                                               decoration: BoxDecoration(
-                                                color: Colors.black38,
+                                                color: AppColors.overlay,
                                                 // borderRadius: BorderRadius.only(
                                                 //   bottomLeft: Radius.circular(20.0),
                                                 //   bottomRight: Radius.circular(20.0),
                                                 // ),
                                                 border: Border.all(
-                                                  color: Colors.orange.shade600,
+                                                  color: AppColors.warning,
                                                   // width: 2.0,
                                                 ),
                                                 borderRadius:
@@ -1289,9 +1307,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                       overflow: TextOverflow.ellipsis,
                                       // textAlign: TextAlign.center,
                                       style: const TextStyle(
-                                        color: Colors.white,
+                                        color: AppColors.surface,
                                         fontWeight: FontWeight.w700,
-                                        // backgroundColor: Colors.black12,
+                                        // backgroundColor: AppColors.overlayLight,
                                       ),
                                     ),
                                   ),
@@ -1301,10 +1319,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                           .liveRunningDuration
                                           .value,
                                       style: const TextStyle(
-                                        color: Colors.white,
+                                        color: AppColors.surface,
                                         fontWeight: FontWeight.w700,
                                         fontSize: 12,
-                                        // backgroundColor: Colors.black12,
+                                        // backgroundColor: AppColors.overlayLight,
                                       ),
                                     );
                                   }),
@@ -1357,14 +1375,14 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                                 width: 22,
                                                 height: 8,
                                                 fit: BoxFit.fill,
-                                                color: Colors.yellow,
+                                                color: AppColors.premium,
                                               ),
                                             )
                                           : Text(
                                               '${data['diamonds'] != null ? (data['diamonds'] < 100000 ? 0 : (data['diamonds'] / 100000).floor()) : 0} ⭐',
                                               style: const TextStyle(
                                                 fontSize: 8,
-                                                color: Colors.white,
+                                                color: AppColors.surface,
                                               ),
                                             ),
                                       Container(
@@ -1375,7 +1393,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                           //   bottomRight: Radius.circular(20.0),
                                           // ),
                                           border: Border.all(
-                                            color: Colors.orange,
+                                            color: AppColors.warning,
                                           ),
                                           borderRadius: BorderRadius.circular(
                                             100.0,
@@ -1406,7 +1424,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                                       const Center(
                                                         child:
                                                             CircularProgressIndicator(
-                                                              color: Colors.red,
+                                                              color: AppColors
+                                                                  .error,
                                                             ),
                                                       ),
                                                 ),
@@ -1529,10 +1548,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               keyboardType: TextInputType.text,
                               borderColor: Colors.transparent,
                               borderRadius: 100.0,
-                              fillColor: Colors.black38,
-                              textColor: Colors.white70,
+                              fillColor: AppColors.overlay,
+                              textColor: AppColors.onMediaMuted,
                               hintText: 'Write your comment',
-                              helpTextColor: Colors.white70,
+                              helpTextColor: AppColors.onMediaMuted,
                               suffixIcon: IconButton(
                                 padding: EdgeInsets.zero,
                                 onPressed: () {
@@ -1553,7 +1572,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                           context: context,
                                           title:
                                               "You can't write more than 1000 characters.",
-                                          color: Colors.orange,
+                                          color: AppColors.warning,
                                           durationInSeconds: 2,
                                         );
                                       }
@@ -1611,8 +1630,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                           _livekitStreamingController
                                               .allowCommentAndEmojiSend
                                               .value
-                                      ? Colors.grey
-                                      : Colors.black,
+                                      ? AppColors.textSecondary
+                                      : AppColors.textPrimary,
                                 ),
                               ),
                             );
@@ -1622,7 +1641,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         Container(
                           padding: const EdgeInsets.all(4.5),
                           decoration: BoxDecoration(
-                            color: Colors.black38,
+                            color: AppColors.overlay,
                             borderRadius: BorderRadius.circular(100.0),
                           ),
                           child: Center(
@@ -1694,8 +1713,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                     iconSize: 24,
                                     minHeight: 32,
                                     minWidth: 32,
-                                    backgroundColor: Colors.green,
-                                    iconColor: Colors.white,
+                                    backgroundColor: AppColors.success,
+                                    iconColor: AppColors.surface,
                                   ),
                                 ),
                                 Obx(() {
@@ -1711,7 +1730,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                       width: 16,
                                       height: 16,
                                       decoration: BoxDecoration(
-                                        color: Colors.red,
+                                        color: AppColors.error,
                                         borderRadius: BorderRadius.circular(
                                           100.0,
                                         ),
@@ -1720,7 +1739,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                         '${_livekitStreamingController.listRequestedCall.length}',
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.surface,
                                         ),
                                       ),
                                     ),
@@ -1785,7 +1804,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             padding: const EdgeInsets.all(2.0),
                             margin: const EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
-                              color: Colors.black38,
+                              color: AppColors.overlay,
                               borderRadius: BorderRadius.circular(100.0),
                             ),
                             child: Text(
@@ -1839,7 +1858,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             padding: const EdgeInsets.all(2.0),
                             margin: const EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
-                              color: Colors.black38,
+                              color: AppColors.overlay,
                               borderRadius: BorderRadius.circular(100.0),
                             ),
                             child: Text(
@@ -1893,7 +1912,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             padding: const EdgeInsets.all(2.0),
                             margin: const EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
-                              color: Colors.black38,
+                              color: AppColors.overlay,
                               borderRadius: BorderRadius.circular(100.0),
                             ),
                             child: Text(
@@ -1949,7 +1968,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             padding: const EdgeInsets.all(2.0),
                             margin: const EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
-                              color: Colors.black38,
+                              color: AppColors.overlay,
                               borderRadius: BorderRadius.circular(100.0),
                             ),
                             child: Text(
@@ -1977,7 +1996,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         minHeight: 32,
                         minWidth: 32,
                         backgroundColor: Theme.of(context).primaryColor,
-                        iconColor: Colors.white70,
+                        iconColor: AppColors.onMediaMuted,
                         onPressed: () {
                           HelperFunctions().buildDynamicLinksForLiveStreaming(
                             title: _livekitStreamingController
@@ -2008,7 +2027,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                 onPressed: _onHostSwitchPosition,
                                 shape: const CircleBorder(),
                                 elevation: 2.0,
-                                fillColor: Colors.black38,
+                                fillColor: AppColors.overlay,
                                 padding: const EdgeInsets.all(6.0),
                                 constraints: const BoxConstraints(
                                   minWidth: 32,
@@ -2016,7 +2035,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                 ),
                                 child: const Icon(
                                   Icons.swap_horiz,
-                                  color: Colors.white70,
+                                  color: AppColors.onMediaMuted,
                                   size: 22.0,
                                 ),
                               );
@@ -2057,9 +2076,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                 shape: const CircleBorder(),
                                 elevation: 2.0,
                                 // fillColor: _livekitStreamingController.muted.value
-                                //     ? Colors.blueAccent
-                                //     : Colors.white,
-                                fillColor: Colors.black38,
+                                //     ? AppColors.info
+                                //     : AppColors.surface,
+                                fillColor: AppColors.overlay,
                                 padding: const EdgeInsets.all(6.0),
                                 constraints: const BoxConstraints(
                                   minWidth: 32,
@@ -2075,8 +2094,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                       _livekitStreamingController
                                           .allowCommentAndEmojiSend
                                           .value
-                                      ? Colors.green
-                                      : Colors.red,
+                                      ? AppColors.success
+                                      : AppColors.error,
                                   size: 24.0,
                                 ),
                               );
@@ -2104,9 +2123,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           shape: const CircleBorder(),
                           elevation: 2.0,
                           // fillColor: _livekitStreamingController.muted.value
-                          //     ? Colors.blueAccent
-                          //     : Colors.white,
-                          fillColor: Colors.black38,
+                          //     ? AppColors.info
+                          //     : AppColors.surface,
+                          fillColor: AppColors.overlay,
                           padding: const EdgeInsets.all(6.0),
                           constraints: const BoxConstraints(
                             minWidth: 32,
@@ -2117,8 +2136,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                 ? Icons.mic_off
                                 : Icons.mic,
                             color: _livekitStreamingController.muted.value
-                                ? Colors.red
-                                : Colors.white70,
+                                ? AppColors.error
+                                : AppColors.onMediaMuted,
                             size: 16.0,
                           ),
                         );
@@ -2145,7 +2164,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           onPressed: _onSwitchCamera,
                           shape: const CircleBorder(),
                           elevation: 2.0,
-                          fillColor: Colors.black38,
+                          fillColor: AppColors.overlay,
                           padding: const EdgeInsets.all(6.0),
                           constraints: const BoxConstraints(
                             minWidth: 32,
@@ -2153,7 +2172,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           ),
                           child: const Icon(
                             Icons.switch_camera,
-                            color: Colors.white70,
+                            color: AppColors.onMediaMuted,
                             size: 16.0,
                           ),
                         );
@@ -2189,29 +2208,31 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               !_livekitStreamingController
                                   .expandMediaController
                                   .value
-                              ? Colors.white70
-                              : Colors.orange,
-                          backgroundColor: Colors.black38,
+                              ? AppColors.onMediaMuted
+                              : AppColors.warning,
+                          backgroundColor: AppColors.overlay,
                         );
                       }),
                       Container(
                         padding: const EdgeInsets.all(4.0),
                         margin: const EdgeInsets.only(top: 4, right: 8),
                         decoration: BoxDecoration(
-                          color: Colors.black38,
+                          color: AppColors.overlay,
                           borderRadius: BorderRadius.circular(20.0),
                         ),
                         child: Row(
                           children: [
                             const Icon(
                               Icons.favorite_border_outlined,
-                              color: Colors.white70,
+                              color: AppColors.onMediaMuted,
                             ),
                             const SizedBox(width: 8),
                             Obx(() {
                               return Text(
                                 '${_livekitStreamingController.loveReacts.value}',
-                                style: const TextStyle(color: Colors.white70),
+                                style: const TextStyle(
+                                  color: AppColors.onMediaMuted,
+                                ),
                               );
                             }),
                           ],
@@ -2435,14 +2456,14 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
             //   title: 'Something is wrong',
             //   middleText: 'Please try again',
             //   titleStyle: const TextStyle(
-            //     color: Colors.orange,
+            //     color: AppColors.warning,
             //   ),
             // );
             if (_isDisposed) return;
             rShowSnackBar(
               context: context,
               title: 'Connection failed. Please try again.',
-              color: Colors.red,
+              color: AppColors.error,
               durationInSeconds: 2,
             );
           },
@@ -2566,7 +2587,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       return Container(
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.black38,
+          color: AppColors.overlay,
           borderRadius: BorderRadius.circular(20.0),
         ),
         child: Marquee(
@@ -2574,7 +2595,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
           velocity: 50.0,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.yellow,
+            color: AppColors.premium,
           ),
           // scrollAxis: Axis.horizontal,
           // crossAxisAlignment: CrossAxisAlignment.end,
@@ -2653,7 +2674,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       try {
         String decoded = utf8.decode(event.data);
         data = jsonDecode(decoded)['message'];
-        // rShowSnackBar(context: context, title: '$data', color: Colors.green);
+        // rShowSnackBar(context: context, title: '$data', color: AppColors.success);
         if (data['gzip'] != null) {
           List<int> gzipDecodedBytes = gzip.decode(data['gzip'].cast<int>());
           Map<String, dynamic> gzipData = jsonDecode(
@@ -2667,7 +2688,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         // print('Failed to decode: $_');
       }
       // context.showDataReceivedDialog(decoded);
-      // rShowSnackBar(context: context, title: '$data', color: Colors.green);
+      // rShowSnackBar(context: context, title: '$data', color: AppColors.success);
     })
     // ..on<TrackSubscribedEvent>((e) {
     //   if (e.publication.kind == TrackType.VIDEO) {
@@ -3182,7 +3203,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
           Get.defaultDialog(
             title: 'No Access',
             middleText: '${widget.fullName} blocked you',
-            titleStyle: const TextStyle(color: Colors.red),
+            titleStyle: const TextStyle(color: AppColors.error),
           );
 
           return;
@@ -3479,7 +3500,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         context: context,
         title:
             'Failed to ${_livekitStreamingController.muted.value ? 'Unmute' : 'Mute'}',
-        color: Colors.red,
+        color: AppColors.error,
         durationInSeconds: 1,
       );
     }
@@ -3490,7 +3511,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       rShowSnackBar(
         context: context,
         title: 'Your headset is already connected.',
-        color: Colors.green,
+        color: AppColors.success,
         durationInSeconds: 1,
       );
       return;
@@ -3547,7 +3568,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         context: context,
         title:
             'Failed to ${_livekitStreamingController.videoDisabled.value ? 'Show Video' : 'Hide Video'}',
-        color: Colors.red,
+        color: AppColors.error,
         durationInSeconds: 1,
       );
     }
@@ -3607,7 +3628,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       rShowSnackBar(
         context: context,
         title: 'Need at least 2 active callers to switch position.',
-        color: Colors.orange,
+        color: AppColors.warning,
         durationInSeconds: 1,
       );
       return;
@@ -3680,9 +3701,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.orange.withOpacity(.2),
-                    Colors.red.withOpacity(.2),
-                    Colors.black38,
+                    AppColors.warning.withValues(alpha: .2),
+                    AppColors.error.withValues(alpha: .2),
+                    AppColors.overlay,
                   ],
                   begin: Alignment.bottomLeft,
                   end: Alignment.topRight,
@@ -3760,7 +3781,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                                 const Center(
                                                   child:
                                                       CircularProgressIndicator(
-                                                        color: Colors.red,
+                                                        color: AppColors.error,
                                                       ),
                                                 ),
                                           ),
@@ -3788,7 +3809,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                               const Center(
                                                 child:
                                                     CircularProgressIndicator(
-                                                      color: Colors.red,
+                                                      color: AppColors.error,
                                                     ),
                                               ),
                                         ),
@@ -3800,7 +3821,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           child: Container(
                             padding: const EdgeInsets.all(1),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(100),
                             ),
                             child: Container(
@@ -3808,14 +3829,14 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               height: 16,
                               padding: const EdgeInsets.all(1),
                               decoration: BoxDecoration(
-                                color: Colors.green,
+                                color: AppColors.success,
                                 borderRadius: BorderRadius.circular(100),
                               ),
                               child: Center(
                                 child: Text(
                                   '${data['level'] != null ? data['level']['level'] : 0}',
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.surface,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -3835,7 +3856,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                       '${data['full_name']}',
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.surface,
                         fontWeight: FontWeight.w700,
                         fontSize: 18,
                       ),
@@ -3854,7 +3875,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                   width: 70,
                   fit: BoxFit.contain,
                   placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator(color: Colors.red),
+                    child: CircularProgressIndicator(color: AppColors.error),
                   ),
                 ),
                 Positioned(
@@ -3869,7 +3890,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 4.0),
                         decoration: BoxDecoration(
-                          color: Colors.black38,
+                          color: AppColors.overlay,
                           borderRadius: BorderRadius.circular(20.0),
                         ),
                         child: Row(
@@ -3877,10 +3898,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.diamond, color: Colors.white),
+                            const Icon(Icons.diamond, color: AppColors.surface),
                             Text(
                               '${data['diamonds']}',
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(color: AppColors.surface),
                             ),
                           ],
                         ),
@@ -3898,13 +3919,13 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         //   child: Container(
         //     padding: const EdgeInsets.symmetric(horizontal: 4.0),
         //     decoration: BoxDecoration(
-        //       color: Colors.amber,
+        //       color: AppColors.premium,
         //       borderRadius: BorderRadius.circular(20.0),
         //     ),
         //     child: Text(
         //       'L.v'${data['level'] != null ? data['level']['level'] : 0}',
         //       style: const TextStyle(
-        //         color: Colors.white,
+        //         color: AppColors.surface,
         //         fontSize: 12,
         //         fontWeight: FontWeight.w500,
         //       ),
@@ -3938,13 +3959,13 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             decoration: BoxDecoration(
               // color: const Color(0xFF8B69C8),
-              color: Colors.black38,
+              color: AppColors.overlay,
               borderRadius: BorderRadius.circular(10),
               border:
                   data['vvip_or_vip_preference'] == null ||
                       data['vvip_or_vip_preference']['vvip_or_vip_gif'] == null
                   ? null
-                  : Border.all(color: Colors.orange),
+                  : Border.all(color: AppColors.warning),
             ),
             child:
                 data['vvip_or_vip_preference'] == null ||
@@ -3958,7 +3979,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         // padding: const EdgeInsets.all(4),
                         margin: const EdgeInsets.only(right: 4),
                         decoration: const BoxDecoration(
-                          color: Colors.green,
+                          color: AppColors.success,
                           // borderRadius: BorderRadius.circular(100),
                           shape: BoxShape.circle,
                         ),
@@ -3970,7 +3991,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           child: Text(
                             '${data['level'] != null ? data['level']['level'] : 0}',
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.surface,
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
                             ),
@@ -3990,7 +4011,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               '${data['full_name']}',
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.surface,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
@@ -4017,10 +4038,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                         data['type'] == 'call_request' ||
                                         data['type'] == 'cancel_request' ||
                                         data['type'] == 'gift'
-                                    ? Colors.yellow
+                                    ? AppColors.premium
                                     : data['type'] == 'emoji'
-                                    ? Colors.red
-                                    : Colors.white,
+                                    ? AppColors.error
+                                    : AppColors.surface,
                                 fontStyle:
                                     data['type'] == 'joined' ||
                                         data['type'] == 'call_request' ||
@@ -4054,7 +4075,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           borderRadius: BorderRadius.circular(100.0),
                           border: Border.all(
                             width: 2.0,
-                            color: Colors.orange.shade600,
+                            color: AppColors.warning,
                           ),
                         ),
                         child: ClipRRect(
@@ -4073,7 +4094,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => const Center(
                                     child: CircularProgressIndicator(
-                                      color: Colors.red,
+                                      color: AppColors.error,
                                     ),
                                   ),
                                 ),
@@ -4090,7 +4111,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             // padding: const EdgeInsets.all(4),
                             margin: const EdgeInsets.only(right: 4),
                             // decoration: const BoxDecoration(
-                            //   color: Colors.red,
+                            //   color: AppColors.error,
                             //   // borderRadius: BorderRadius.circular(100),
                             //   // shape: BoxShape.circle,
                             // ),
@@ -4104,7 +4125,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                 Text(
                                   'L.v.${data['level'] != null ? data['level']['level'] : 0}',
                                   style: const TextStyle(
-                                    color: Colors.yellow,
+                                    color: AppColors.premium,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 12,
                                   ),
@@ -4118,7 +4139,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                     '${data['full_name']}',
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.surface,
                                       fontWeight: FontWeight.w900,
                                     ),
                                   ),
@@ -4134,13 +4155,13 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               Container(
                                 margin: const EdgeInsets.only(right: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.black38,
+                                  color: AppColors.overlay,
                                   // borderRadius: BorderRadius.only(
                                   //   bottomLeft: Radius.circular(20.0),
                                   //   bottomRight: Radius.circular(20.0),
                                   // ),
                                   border: Border.all(
-                                    color: Colors.orange.shade600,
+                                    color: AppColors.warning,
                                     // width: 2.0,
                                   ),
                                   borderRadius: BorderRadius.circular(100.0),
@@ -4177,10 +4198,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                             data['type'] == 'call_request' ||
                                             data['type'] == 'cancel_request' ||
                                             data['type'] == 'gift'
-                                        ? Colors.yellow
+                                        ? AppColors.premium
                                         : data['type'] == 'emoji'
-                                        ? Colors.red
-                                        : Colors.white,
+                                        ? AppColors.error
+                                        : AppColors.surface,
                                     fontStyle:
                                         data['type'] == 'joined' ||
                                             data['type'] == 'call_request' ||

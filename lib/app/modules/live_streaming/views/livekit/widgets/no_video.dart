@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -25,7 +26,7 @@ class NoVideoWidget extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.black,
+            AppColors.textPrimary,
             Theme.of(context).primaryColor,
           ],
           begin: Alignment.bottomLeft,
@@ -73,7 +74,7 @@ class NoVideoWidget extends StatelessWidget {
                               height: (data['width'] / 3).round().toDouble(),
                               placeholder: (context, url) => const Center(
                                   child: CircularProgressIndicator(
-                                      color: Colors.red)),
+                                      color: AppColors.error)),
                             ),
                           ),
                         ),
@@ -95,7 +96,7 @@ class NoVideoWidget extends StatelessWidget {
                         height: (data['width'] / 3).round().toDouble(),
                         placeholder: (context, url) => const Center(
                             child:
-                                CircularProgressIndicator(color: Colors.red)),
+                                CircularProgressIndicator(color: AppColors.error)),
                       ),
                     )),
           // serial == null
@@ -109,7 +110,7 @@ class NoVideoWidget extends StatelessWidget {
           //         maxLines: 1,
           //         overflow: TextOverflow.ellipsis,
           //         style: const TextStyle(
-          //           color: Colors.white,
+          //           color: AppColors.surface,
           //           fontSize: 14,
           //         ),
           //       )

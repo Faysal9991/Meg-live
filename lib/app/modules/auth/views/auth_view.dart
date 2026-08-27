@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/modules/auth/views/registration_view.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
 import 'package:flutter/material.dart';
@@ -28,9 +29,9 @@ class AuthView extends GetView<AuthController> {
             const SizedBox(height: 16),
             const Center(
               child: Text(
-                'Doyel Live',
+                'Biho Live',
                 style: TextStyle(
-                  color: Colors.deepPurple,
+                  color: AppColors.primary,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -41,7 +42,7 @@ class AuthView extends GetView<AuthController> {
                 return Container();
               }
               return const SpinKitFadingCircle(
-                color: Colors.orange,
+                color: AppColors.warning,
                 size: 48.0,
               );
             }),

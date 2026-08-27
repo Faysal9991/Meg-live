@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +10,7 @@ class ImageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.textPrimary,
         appBar: AppBar(backgroundColor: Colors.transparent),
         body: Center(
           child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.contain),

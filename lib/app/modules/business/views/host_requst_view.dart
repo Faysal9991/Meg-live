@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -48,7 +49,7 @@ class _HostRequstViewState extends State<HostRequstView> {
               Obx(() {
                 return _businessController.loadingAgentList.value ||
                         _businessController.loadingHostRequest.value
-                    ? const SpinKitCircle(color: Colors.red)
+                    ? const SpinKitCircle(color: AppColors.error)
                     : _businessController.hostRequestedData.value['id'] != null
                     ? Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -62,7 +63,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                   "Your host request (${_businessController.hostRequestedData.value['is_allow_video_live'] ? 'Video Live' : 'Audio Live'}) is pending. Please wait for authority confirmation.\n\nDatetime: ${DateFormat.yMEd().add_jms().format(DateTime.parse(_businessController.hostRequestedData.value['datetime']).toLocal())}",
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-                                    color: Colors.orange,
+                                    color: AppColors.warning,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -81,11 +82,11 @@ class _HostRequstViewState extends State<HostRequstView> {
                                         .tryToRemoveHostRequest();
                                     Navigator.of(context).pop();
                                   },
-                                  confirmTextColor: Colors.white,
+                                  confirmTextColor: AppColors.surface,
                                   onCancel: () => Get.close,
                                 );
                               },
-                              primaryColor: Colors.red,
+                              primaryColor: AppColors.error,
                               buttonText: 'Remove Request',
                               fontSize: 16,
                               iconData: Icons.close,
@@ -102,7 +103,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                             "No agent available now",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.orange,
+                              color: AppColors.warning,
                               fontSize: 16,
                             ),
                           ),
@@ -118,6 +119,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                               keyboardType: TextInputType.number,
                               borderColor: Theme.of(context).primaryColor,
                               hintText: 'Search agent with UserID here',
+                              useNeumorphic: true,
                               suffixIcon: IconButton(
                                 onPressed: () {
                                   FocusScope.of(context).unfocus();
@@ -127,7 +129,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                     rShowSnackBar(
                                       context: context,
                                       title: 'You already searching an agent',
-                                      color: Colors.orange,
+                                      color: AppColors.warning,
                                     );
                                     return;
                                   }
@@ -137,7 +139,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                     rShowSnackBar(
                                       context: context,
                                       title: 'Host request is processing...',
-                                      color: Colors.orange,
+                                      color: AppColors.warning,
                                     );
                                     return;
                                   }
@@ -155,7 +157,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                     rShowSnackBar(
                                       context: context,
                                       title: 'You must enter number for UserID',
-                                      color: Colors.orange,
+                                      color: AppColors.warning,
                                       durationInSeconds: 2,
                                     );
                                   }
@@ -168,7 +170,9 @@ class _HostRequstViewState extends State<HostRequstView> {
                               if (_businessController
                                   .loadingAgentSearch
                                   .value) {
-                                return const SpinKitCircle(color: Colors.red);
+                                return const SpinKitCircle(
+                                  color: AppColors.error,
+                                );
                               }
                               if (_businessController
                                       .searchedAgentData
@@ -181,7 +185,9 @@ class _HostRequstViewState extends State<HostRequstView> {
                                 children: [
                                   const Text(
                                     'You searched:',
-                                    style: TextStyle(color: Colors.black),
+                                    style: TextStyle(
+                                      color: AppColors.textPrimary,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   Container(
@@ -239,7 +245,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                                       );
                                                   Get.back();
                                                 },
-                                                primaryColor: Colors.red,
+                                                primaryColor: AppColors.error,
                                                 buttonText: 'Video Live',
                                                 fontSize: 16,
                                                 iconData:
@@ -253,7 +259,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                           //           agentId: agentData['user_id']);
                                           //   Get.back();
                                           // },
-                                          // confirmTextColor: Colors.white,
+                                          // confirmTextColor: AppColors.surface,
                                           onCancel: () => Get.close,
                                         );
                                       },
@@ -279,7 +285,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  const Divider(color: Colors.grey),
+                                  const Divider(color: AppColors.textSecondary),
                                   const SizedBox(height: 4),
                                 ],
                               );
@@ -303,7 +309,10 @@ class _HostRequstViewState extends State<HostRequstView> {
                                       // color:
                                       //     Theme.of(context).primaryColor,
                                       gradient: LinearGradient(
-                                        colors: [Colors.grey, Colors.white],
+                                        colors: [
+                                          AppColors.textSecondary,
+                                          AppColors.surface,
+                                        ],
                                       ),
                                       borderRadius: BorderRadius.circular(20.0),
                                     ),
@@ -346,7 +355,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                                       );
                                                   Get.back();
                                                 },
-                                                primaryColor: Colors.red,
+                                                primaryColor: AppColors.error,
                                                 buttonText: 'Video Live',
                                                 fontSize: 16,
                                                 iconData:
@@ -360,7 +369,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                           //           agentId: agentData['user_id']);
                                           //   Get.back();
                                           // },
-                                          // confirmTextColor: Colors.white,
+                                          // confirmTextColor: AppColors.surface,
                                           onCancel: () => Get.close,
                                         );
                                       },
@@ -414,7 +423,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //       ),
 //       body: Material(
 //         textStyle: const TextStyle(
-//           color: Colors.black,
+//           color: AppColors.textPrimary,
 //         ),
 //         color: Colors.transparent,
 //         child: Padding(
@@ -426,7 +435,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                 return _businessController.loadingAgentList.value ||
 //                         _businessController.loadingHostRequest.value
 //                     ? const SpinKitCircle(
-//                         color: Colors.red,
+//                         color: AppColors.error,
 //                       )
 //                     : _businessController.hostRequestedData.value['id'] != null
 //                         ? Padding(
@@ -441,7 +450,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                       "Your host request (${_businessController.hostRequestedData.value['is_allow_video_live'] ? 'Video Live' : 'Audio Live'}) is pending. Please wait for authority confirmation.\n\nDatetime: ${DateFormat.yMEd().add_jms().format(DateTime.parse(_businessController.hostRequestedData.value['datetime']).toLocal())}",
 //                                       textAlign: TextAlign.center,
 //                                       style: const TextStyle(
-//                                         color: Colors.orange,
+//                                         color: AppColors.warning,
 //                                         fontSize: 16,
 //                                       ),
 //                                     ),
@@ -461,12 +470,12 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                             .tryToRemoveHostRequest();
 //                                         Navigator.of(context).pop();
 //                                       },
-//                                       confirmTextColor: Colors.white,
+//                                       confirmTextColor: AppColors.surface,
 //                                       onCancel: () =>
 //                                           Navigator.of(context).pop(),
 //                                     );
 //                                   },
-//                                   primaryColor: Colors.red,
+//                                   primaryColor: AppColors.error,
 //                                   buttonText: 'Remove Request',
 //                                   fontSize: 16,
 //                                   iconData: Icons.close,
@@ -483,7 +492,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                     "No agent available now",
 //                                     textAlign: TextAlign.center,
 //                                     style: TextStyle(
-//                                       color: Colors.orange,
+//                                       color: AppColors.warning,
 //                                       fontSize: 16,
 //                                     ),
 //                                   ),
@@ -510,7 +519,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                               context: context,
 //                                               title:
 //                                                   'You already searching a user',
-//                                               color: Colors.orange,
+//                                               color: AppColors.warning,
 //                                             );
 //                                             return;
 //                                           }
@@ -520,7 +529,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                               context: context,
 //                                               title:
 //                                                   'Host request is processing...',
-//                                               color: Colors.orange,
+//                                               color: AppColors.warning,
 //                                             );
 //                                             return;
 //                                           }
@@ -540,7 +549,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                               context: context,
 //                                               title:
 //                                                   'You must enter number for UserID',
-//                                               color: Colors.orange,
+//                                               color: AppColors.warning,
 //                                               durationInSeconds: 2,
 //                                             );
 //                                           }
@@ -557,7 +566,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                       if (_businessController
 //                                           .loadingAgentSearch.value) {
 //                                         return const SpinKitCircle(
-//                                           color: Colors.red,
+//                                           color: AppColors.error,
 //                                         );
 //                                       }
 //                                       if (_businessController
@@ -575,7 +584,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                           ),
 //                                           Material(
 //                                             textStyle: const TextStyle(
-//                                               color: Colors.white,
+//                                               color: AppColors.surface,
 //                                             ),
 //                                             color: Colors.transparent,
 //                                             child: Container(
@@ -592,7 +601,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                                 //     .primaryColorLight,
 //                                                 gradient: LinearGradient(
 //                                                   colors: [
-//                                                     Colors.black,
+//                                                     AppColors.textPrimary,
 //                                                     Theme.of(context)
 //                                                         .primaryColor,
 //                                                   ],
@@ -636,7 +645,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                                             Get.back();
 //                                                           },
 //                                                           primaryColor:
-//                                                               Colors.green,
+//                                                               AppColors.success,
 //                                                           buttonText:
 //                                                               'Audio Live',
 //                                                           fontSize: 16,
@@ -658,7 +667,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                                             Get.back();
 //                                                           },
 //                                                           primaryColor:
-//                                                               Colors.red,
+//                                                               AppColors.error,
 //                                                           buttonText:
 //                                                               'Video Live',
 //                                                           fontSize: 16,
@@ -673,7 +682,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                                     //           agentId: agentData['user_id']);
 //                                                     //   Get.back();
 //                                                     // },
-//                                                     // confirmTextColor: Colors.white,
+//                                                     // confirmTextColor: AppColors.surface,
 //                                                     onCancel: () => Get.back(),
 //                                                   );
 //                                                 },
@@ -702,7 +711,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                             height: 4,
 //                                           ),
 //                                           const Divider(
-//                                             color: Colors.white,
+//                                             color: AppColors.surface,
 //                                           ),
 //                                           const SizedBox(
 //                                             height: 4,
@@ -720,7 +729,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                                   .agentListForHost[index];
 //                                           return Material(
 //                                             textStyle: const TextStyle(
-//                                               color: Colors.white,
+//                                               color: AppColors.surface,
 //                                             ),
 //                                             color: Colors.transparent,
 //                                             child: Container(
@@ -737,7 +746,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                                 //     .primaryColorLight,
 //                                                 gradient: LinearGradient(
 //                                                   colors: [
-//                                                     Colors.black,
+//                                                     AppColors.textPrimary,
 //                                                     Theme.of(context)
 //                                                         .primaryColor,
 //                                                   ],
@@ -781,7 +790,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                                             Get.back();
 //                                                           },
 //                                                           primaryColor:
-//                                                               Colors.green,
+//                                                               AppColors.success,
 //                                                           buttonText:
 //                                                               'Audio Live',
 //                                                           fontSize: 16,
@@ -803,7 +812,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                                             Get.back();
 //                                                           },
 //                                                           primaryColor:
-//                                                               Colors.red,
+//                                                               AppColors.error,
 //                                                           buttonText:
 //                                                               'Video Live',
 //                                                           fontSize: 16,
@@ -818,7 +827,7 @@ class _HostRequstViewState extends State<HostRequstView> {
 //                                                     //           agentId: agentData['user_id']);
 //                                                     //   Get.back();
 //                                                     // },
-//                                                     // confirmTextColor: Colors.white,
+//                                                     // confirmTextColor: AppColors.surface,
 //                                                     onCancel: () => Get.back(),
 //                                                   );
 //                                                 },

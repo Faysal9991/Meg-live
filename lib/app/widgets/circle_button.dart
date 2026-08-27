@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class CircleButton extends StatelessWidget {
@@ -14,7 +15,7 @@ class CircleButton extends StatelessWidget {
     required this.onPressed,
     this.minWidth = 32.0,
     this.minHeight = 32.0,
-    this.iconColor = Colors.black,
+    this.iconColor = AppColors.textPrimary,
     this.backgroundColor,
   }) : super(key: key);
 
@@ -25,7 +26,7 @@ class CircleButton extends StatelessWidget {
       width: minWidth,
       margin: const EdgeInsets.all(6.0),
       decoration: BoxDecoration(
-        color: backgroundColor ?? Colors.grey[200],
+        color: backgroundColor ?? AppColors.disabledBackground,
         shape: BoxShape.circle,
       ),
       child: IconButton(

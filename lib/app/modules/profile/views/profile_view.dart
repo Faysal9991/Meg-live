@@ -1,3 +1,7 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
+import 'package:doyel_live/app/theme/app_spacing.dart';
+import 'package:doyel_live/app/theme/app_text_styles.dart';
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/auth/views/change_password_view.dart';
@@ -36,23 +40,27 @@ class ProfileView extends GetView<ProfileController> {
     final isHost = profile.is_host ?? false;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenHorizontal,
+        vertical: AppSpacing.xs,
+      ),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Profile',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
-            ),
+            const Text('Profile', style: AppTextStyles.pageTitle),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                // color: Colors.black45,
+                // color: AppColors.overlayStrong,
                 borderRadius: BorderRadius.circular(16.0),
                 gradient: const LinearGradient(
-                  colors: [Colors.black38, Colors.grey, Colors.black12],
+                  colors: [
+                    AppColors.primaryDark,
+                    AppColors.primary,
+                    AppColors.accentDark,
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -70,7 +78,7 @@ class ProfileView extends GetView<ProfileController> {
                               borderRadius: BorderRadius.circular(100.0),
                               border: Border.all(
                                 width: 2.0,
-                                color: Colors.white,
+                                color: AppColors.surface,
                               ),
                             ),
                             child: ClipRRect(
@@ -123,7 +131,7 @@ class ProfileView extends GetView<ProfileController> {
                                       placeholder: (context, url) =>
                                           const Center(
                                             child: CircularProgressIndicator(
-                                              color: Colors.red,
+                                              color: AppColors.error,
                                             ),
                                           ),
                                     ),
@@ -139,13 +147,13 @@ class ProfileView extends GetView<ProfileController> {
                                   right: 0,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: Colors.black38,
+                                      color: AppColors.overlay,
                                       // borderRadius: BorderRadius.only(
                                       //   bottomLeft: Radius.circular(20.0),
                                       //   bottomRight: Radius.circular(20.0),
                                       // ),
                                       border: Border.all(
-                                        color: Colors.orange.shade600,
+                                        color: AppColors.warning,
                                         width: 2.0,
                                       ),
                                       borderRadius: BorderRadius.circular(
@@ -185,7 +193,7 @@ class ProfileView extends GetView<ProfileController> {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: AppColors.surface,
                             ),
                           );
                         }),
@@ -198,7 +206,7 @@ class ProfileView extends GetView<ProfileController> {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: AppColors.surface,
                             ),
                           );
                         }),
@@ -209,7 +217,7 @@ class ProfileView extends GetView<ProfileController> {
                       //     Text(
                       //       'ID:  ${_authController.profile.value.user!.uid!}',
                       //       style: const TextStyle(
-                      //         color: Colors.white,
+                      //         color: AppColors.surface,
                       //       ),
                       //     ),
                       //     const SizedBox(
@@ -219,7 +227,7 @@ class ProfileView extends GetView<ProfileController> {
                       //       return Text(
                       //         'Level:  ${_authController.profile.value.level != null ? _authController.profile.value.level['level']['level'] : 0}',
                       //         style: const TextStyle(
-                      //           color: Colors.white,
+                      //           color: AppColors.surface,
                       //         ),
                       //       );
                       //     }),
@@ -237,20 +245,20 @@ class ProfileView extends GetView<ProfileController> {
                           Obx(() {
                             return Text(
                               '${_authController.profile.value.diamonds ?? 0}',
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(color: AppColors.surface),
                             );
                           }),
                           const SizedBox(width: 16),
                           const Icon(
                             Icons.perm_identity,
-                            color: Colors.white,
+                            color: AppColors.surface,
                             size: 16,
                           ),
                           const SizedBox(width: 4),
                           Obx(() {
                             return Text(
                               '${_authController.profile.value.followers!.length}',
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(color: AppColors.surface),
                             );
                           }),
                         ],
@@ -261,11 +269,7 @@ class ProfileView extends GetView<ProfileController> {
               ),
             ),
             const SizedBox(height: 16),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                //set border radius more than 50% of height and width to make circle
-              ),
+            AppCard(
               child: Column(
                 children: [
                   ListTile(
@@ -356,11 +360,7 @@ class ProfileView extends GetView<ProfileController> {
               ),
             ),
             const SizedBox(height: 16),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                //set border radius more than 50% of height and width to make circle
-              ),
+            AppCard(
               child: Column(
                 children: [
                   ListTile(
@@ -457,16 +457,12 @@ class ProfileView extends GetView<ProfileController> {
               ),
             ),
             const SizedBox(height: 16),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                //set border radius more than 50% of height and width to make circle
-              ),
+            AppCard(
               child: Column(
                 children: [
                   ListTile(
                     onTap: () async {
-                      String title = 'Welcome to Doyel Live';
+                      String title = 'Welcome to ';
                       String playStoreAppUrl =
                           'https://play.google.com/store/apps/details?id=com.taksoft.doyel_live';
                       String sharedText =

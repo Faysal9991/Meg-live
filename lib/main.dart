@@ -3,12 +3,13 @@ import 'dart:io';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/messenger/controllers/messenger_controller.dart';
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/theme/app_theme.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/fcm_notifications.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/notification_message.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 
@@ -53,6 +54,16 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+      systemNavigationBarColor: AppColors.surface,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarDividerColor: AppColors.divider,
+    ),
+  );
 
   await Firebase.initializeApp();
 
@@ -76,12 +87,16 @@ void main() async {
   // Override the ssl certificate requirements
   HttpOverrides.global = MyHttpOverrides();
   runApp(
-    GetMaterialApp(
-      title: "Doyel Live",
-      initialRoute: AppPages.INITIAL,
-      getPages: AppPages.routes,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
+    NeumorphicTheme(
+      theme: AppTheme.neumorphicTheme,
+      themeMode: ThemeMode.light,
+      child: GetMaterialApp(
+        title: "Biho Live",
+        initialRoute: AppPages.INITIAL,
+        getPages: AppPages.routes,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+      ),
     ),
   );
 }

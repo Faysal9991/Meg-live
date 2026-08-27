@@ -32,6 +32,7 @@ class VVIPorVipPackageController extends GetxController {
   final Rxn<PurchasedKingPackage> purchasedKingPackage =
       Rxn<PurchasedKingPackage>();
   final kingPackageOrderingInfo = <String, dynamic>{}.obs;
+  bool _kingPackageCatalogLoadedOnce = false;
 
   Map<String, String> _authHeaders() {
     return {
@@ -42,6 +43,32 @@ class VVIPorVipPackageController extends GetxController {
   }
 
   int get currentDiamondBalance => _authController.profile.value.diamonds ?? 0;
+
+  bool get hasActiveKingPackage {
+    final purchasedPackage = purchasedKingPackage.value;
+    if (purchasedPackage?.kingPackage == null) {
+      return false;
+    }
+
+    final expiredDatetime = purchasedPackage?.expiredDatetime;
+    if (expiredDatetime == null || expiredDatetime.isEmpty) {
+      return true;
+    }
+
+    final expiry = DateTime.tryParse(expiredDatetime);
+    if (expiry == null) {
+      return true;
+    }
+
+    return expiry.toUtc().isAfter(DateTime.now().toUtc());
+  }
+
+  Future<void> ensureKingPackageCatalogLoaded() async {
+    if (_kingPackageCatalogLoadedOnce || loadingAllKingPackageList.value) {
+      return;
+    }
+    await loadAllKingPackageList();
+  }
 
   int kingPackageDiamondCost(KingPackageItem packageItem) {
     final dynamic rawCost =
@@ -170,6 +197,7 @@ class VVIPorVipPackageController extends GetxController {
         listAllKingPackage.assignAll(state.kingPackageList);
         purchasedKingPackage.value = state.purchasedKingPackage;
         kingPackageOrderingInfo.value = state.kingPackageOrderingInfo;
+        _kingPackageCatalogLoadedOnce = true;
       }
     } catch (error, stackTrace) {
       ApiLogger.error(

@@ -1,7 +1,8 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:doyel_live/app/widgets/circle_button.dart';
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -72,7 +73,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                                   borderRadius: BorderRadius.circular(100.0),
                                   border: Border.all(
                                     width: 4,
-                                    color: Colors.orange,
+                                    color: AppColors.warning,
                                   ),
                                 ),
                                 child: Obx(() {
@@ -82,7 +83,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                                           .path !=
                                       '') {
                                     return CircleAvatar(
-                                      backgroundColor: Colors.blueGrey,
+                                      backgroundColor: AppColors.textSecondary,
                                       backgroundImage: FileImage(
                                         _profileController
                                             .selectedProfileImageFile
@@ -96,7 +97,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                                           .profile_image !=
                                       null) {
                                     return CircleAvatar(
-                                      backgroundColor: Colors.blueGrey,
+                                      backgroundColor: AppColors.textSecondary,
                                       backgroundImage:
                                           CachedNetworkImageProvider(
                                             _authController
@@ -108,7 +109,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                                     );
                                   }
                                   return const CircleAvatar(
-                                    backgroundColor: Colors.blueGrey,
+                                    backgroundColor: AppColors.textSecondary,
                                     backgroundImage: AssetImage(
                                       'assets/others/person.jpg',
                                     ),
@@ -123,13 +124,11 @@ class _EditProfileViewState extends State<EditProfileView> {
                             left: 130,
                             right: 0,
                             child: Center(
-                              child: CircleButton(
+                              child: NeumorphicIconButton(
                                 icon: MdiIcons.camera,
-                                iconSize: 20.0,
-                                iconColor: Colors.white,
-                                backgroundColor: Theme.of(
-                                  context,
-                                ).primaryColor.withOpacity(.9),
+                                iconSize: 20,
+                                size: 42,
+                                tooltip: 'Change profile photo',
                                 onPressed: () async {
                                   // Profile Image
                                   FilePickerResult? result = await FilePicker
@@ -182,7 +181,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                     rPrimaryTextField(
                       controller: _editingControllerFullName,
                       keyboardType: TextInputType.name,
-                      borderColor: Colors.black45,
+                      borderColor: AppColors.overlayStrong,
                       hintText: 'Your full name',
                       maxLength: 25,
                     ),
@@ -199,8 +198,8 @@ class _EditProfileViewState extends State<EditProfileView> {
                             Get.snackbar(
                               'Failed',
                               "Your name must be in 25 characters long.",
-                              backgroundColor: Colors.red,
-                              colorText: Colors.white,
+                              backgroundColor: AppColors.error,
+                              colorText: AppColors.surface,
                               snackPosition: SnackPosition.TOP,
                             );
                             return;

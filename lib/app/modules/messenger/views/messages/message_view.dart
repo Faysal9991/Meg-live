@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/helper_functions.dart';
 import 'package:flutter/material.dart';
@@ -84,8 +85,8 @@ class _MessagesViewState extends State<MessagesView>
     final popupTextColor =
         ThemeData.estimateBrightnessForColor(popupBackgroundColor) ==
             Brightness.dark
-        ? Colors.white
-        : Colors.black;
+        ? AppColors.surface
+        : AppColors.textPrimary;
     final appBarIconColor = Theme.of(context).colorScheme.onSurface;
     return AppBar(
       automaticallyImplyLeading: false,
@@ -99,12 +100,12 @@ class _MessagesViewState extends State<MessagesView>
           ),
           // widget.profile['profile_image'] == null
           //     ? const CircleAvatar(
-          //         backgroundColor: Colors.blueGrey,
+          //         backgroundColor: AppColors.textSecondary,
           //         backgroundImage: AssetImage('assets/others/person.jpg'),
           //         radius: 16,
           //       )
           //     : CircleAvatar(
-          //         backgroundColor: Colors.blueGrey,
+          //         backgroundColor: AppColors.textSecondary,
           //         backgroundImage: CachedNetworkImageProvider(
           //             widget.profile['profile_image']),
           //         radius: 16,
@@ -140,7 +141,7 @@ class _MessagesViewState extends State<MessagesView>
                 ),
                 const Text(
                   'Active',
-                  style: TextStyle(fontSize: 14, color: Colors.green),
+                  style: TextStyle(fontSize: 14, color: AppColors.success),
                 ),
                 // StreamBuilder(
                 //   stream: _firestore
@@ -169,8 +170,8 @@ class _MessagesViewState extends State<MessagesView>
                 //       style: TextStyle(
                 //         fontSize: 14,
                 //         color: userStatus == "Active"
-                //             ? Colors.green
-                //             : Colors.orange,
+                //             ? AppColors.success
+                //             : AppColors.warning,
                 //       ),
                 //     );
                 //   },

@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -35,7 +36,7 @@ class _HostListViewState extends State<HostListView> {
           Obx(() {
             return _businessController.loadingHostList.value
                 ? const SpinKitCircle(
-                    color: Colors.red,
+                    color: AppColors.error,
                   )
                 : _businessController.hostList.isEmpty
                     ? const Card(
@@ -46,7 +47,7 @@ class _HostListViewState extends State<HostListView> {
                             "No host",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.orange,
+                              color: AppColors.warning,
                               fontSize: 16,
                             ),
                           ),
@@ -76,7 +77,7 @@ class _HostListViewState extends State<HostListView> {
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                     Text(
@@ -85,7 +86,7 @@ class _HostListViewState extends State<HostListView> {
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                     Text(
@@ -94,7 +95,7 @@ class _HostListViewState extends State<HostListView> {
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                     Text(
@@ -103,7 +104,7 @@ class _HostListViewState extends State<HostListView> {
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                   ],
@@ -129,8 +130,8 @@ class _HostListViewState extends State<HostListView> {
                                       // color: Theme.of(context).primaryColor,
                                       gradient: const LinearGradient(
                                         colors: [
-                                          Colors.grey,
-                                          Colors.white,
+                                          AppColors.textSecondary,
+                                          AppColors.surface,
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(20.0),
@@ -187,7 +188,7 @@ class _HostListViewState extends State<HostListView> {
                                                   );
                                                   Navigator.of(context).pop();
                                                 },
-                                                confirmTextColor: Colors.white,
+                                                confirmTextColor: AppColors.surface,
                                                 onCancel: () => Get.close,
                                               );
                                             },

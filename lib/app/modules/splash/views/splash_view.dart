@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -22,15 +23,15 @@ class SplashView extends GetView<SplashController> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Doyel Live',
+                'Biho Live',
                 style: TextStyle(
-                  color: Colors.deepPurple,
+                  color: AppColors.primary,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 16),
-              const SpinKitThreeInOut(color: Colors.deepPurple, size: 48),
+              const SpinKitThreeInOut(color: AppColors.primary, size: 48),
               const SizedBox(height: 20),
               Obx(() {
                 final version = controller.appVersionLabel.value;
@@ -41,7 +42,7 @@ class SplashView extends GetView<SplashController> {
                 return Text(
                   'Version $version',
                   style: TextStyle(
-                    color: Colors.grey.shade600,
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),

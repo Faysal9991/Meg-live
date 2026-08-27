@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camera/camera.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
@@ -63,7 +64,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
     return SafeArea(
       child: Scaffold(
         body: Container(
-          color: const Color(0xFF273238),
+          color: AppColors.textPrimary,
           child: Stack(
             children: [
               Positioned(
@@ -83,7 +84,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                     Container(
                       padding: const EdgeInsets.all(4.0),
                       decoration: BoxDecoration(
-                        color: Colors.black38,
+                        color: AppColors.overlay,
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: Row(
@@ -97,7 +98,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                           Obx(() {
                             return Text(
                               '${_authController.profile.value.diamonds ?? 0}',
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(color: AppColors.surface),
                             );
                           }),
                         ],
@@ -107,18 +108,18 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                     Container(
                       padding: const EdgeInsets.all(4.0),
                       decoration: BoxDecoration(
-                        color: Colors.black38,
+                        color: AppColors.overlay,
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: const Row(
                         children: [
                           Icon(
                             Icons.visibility,
-                            color: Colors.white,
+                            color: AppColors.surface,
                             size: 16.0,
                           ),
                           SizedBox(width: 8),
-                          Text('0', style: TextStyle(color: Colors.white)),
+                          Text('0', style: TextStyle(color: AppColors.surface)),
                         ],
                       ),
                     ),
@@ -135,19 +136,19 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
                       decoration: BoxDecoration(
-                        color: Colors.grey,
+                        color: AppColors.textSecondary,
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: Row(
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.black38,
+                              color: AppColors.overlay,
                               // borderRadius: BorderRadius.only(
                               //   bottomLeft: Radius.circular(20.0),
                               //   bottomRight: Radius.circular(20.0),
                               // ),
-                              border: Border.all(color: Colors.orange),
+                              border: Border.all(color: AppColors.warning),
                               borderRadius: BorderRadius.circular(100.0),
                             ),
                             padding: const EdgeInsets.all(2.0),
@@ -182,7 +183,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                                               const Center(
                                                 child:
                                                     CircularProgressIndicator(
-                                                      color: Colors.red,
+                                                      color: AppColors.error,
                                                     ),
                                               ),
                                         ),
@@ -197,9 +198,9 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                               overflow: TextOverflow.ellipsis,
                               // textAlign: TextAlign.center,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.surface,
                                 fontWeight: FontWeight.w700,
-                                // backgroundColor: Colors.black12,
+                                // backgroundColor: AppColors.overlayLight,
                               ),
                             );
                           }),
@@ -219,7 +220,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                 right: 0,
                 bottom: 0,
                 child: Container(
-                  decoration: const BoxDecoration(color: Colors.black38),
+                  decoration: const BoxDecoration(color: AppColors.overlay),
                   height: 100,
                   child: Center(
                     child: InkWell(

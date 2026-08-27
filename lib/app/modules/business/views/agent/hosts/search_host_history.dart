@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -39,14 +40,13 @@ class _SearchHostHistoryState extends State<SearchHostHistory> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(
-            height: 16,
-          ),
+          const SizedBox(height: 16),
           rPrimaryTextField(
             controller: _editingControllerSearchUid,
             keyboardType: TextInputType.number,
             borderColor: Theme.of(context).primaryColor,
             hintText: 'Search user with UserID here',
+            useNeumorphic: true,
             suffixIcon: IconButton(
               onPressed: () {
                 if (FocusScope.of(context).hasFocus) {
@@ -55,7 +55,7 @@ class _SearchHostHistoryState extends State<SearchHostHistory> {
                   //   rShowSnackBar(
                   //     context: context,
                   //     title: 'You already searching a user',
-                  //     color: Colors.orange,
+                  //     color: AppColors.warning,
                   //   );
                   //   return;
                   // }
@@ -81,26 +81,20 @@ class _SearchHostHistoryState extends State<SearchHostHistory> {
                     rShowSnackBar(
                       context: context,
                       title: 'You must enter number for UserID',
-                      color: Colors.orange,
+                      color: AppColors.warning,
                       durationInSeconds: 2,
                     );
                   }
                 }
               },
-              icon: const Icon(
-                Icons.search,
-              ),
+              icon: const Icon(Icons.search),
             ),
           ),
-          const SizedBox(
-            height: 16,
-          ),
+          const SizedBox(height: 16),
           _searchedUid > 0
               ? Text("Searching for host User ID:  $_searchedUid")
               : Container(),
-          const SizedBox(
-            height: 8,
-          ),
+          const SizedBox(height: 8),
           Obx(() {
             if (_profileController.loadingHostBroadcastingHistories.value) {
               return Center(
@@ -115,9 +109,7 @@ class _SearchHostHistoryState extends State<SearchHostHistory> {
               return const Center(
                 child: Text(
                   'No history',
-                  style: TextStyle(
-                    color: Colors.red,
-                  ),
+                  style: TextStyle(color: AppColors.error),
                 ),
               );
             }
@@ -131,19 +123,15 @@ class _SearchHostHistoryState extends State<SearchHostHistory> {
                   itemBuilder: (context, index) {
                     dynamic data =
                         _profileController.listHostBroadcastingHistory[index];
-                    return HistoryItem(
-                      data: data,
-                    );
+                    return HistoryItem(data: data);
                   },
                   separatorBuilder: (BuildContext context, int index) {
-                    return const SizedBox(
-                      height: 1,
-                    );
+                    return const SizedBox(height: 1);
                   },
                 ),
               ),
             );
-          })
+          }),
           // : Container(),
         ],
       ),

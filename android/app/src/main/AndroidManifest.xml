@@ -43,7 +43,7 @@ xmlns:tools="http://schemas.android.com/tools">
     </queries>
 
     <application
-        android:label="Doyel Live"
+        android:label="Biho Live"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"

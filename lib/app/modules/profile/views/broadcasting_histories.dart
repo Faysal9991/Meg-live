@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -40,7 +41,7 @@ class BroadcastingHistoriesView extends GetView {
                   return const Center(
                     child: Text(
                       'No history',
-                      style: TextStyle(color: Colors.red),
+                      style: TextStyle(color: AppColors.error),
                     ),
                   );
                 }
@@ -89,11 +90,11 @@ class HistoryItem extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             // colors: [
-            //   Colors.orange.withOpacity(.5),
+            //   AppColors.warning.withOpacity(.5),
             //   Theme.of(context).primaryColor.withOpacity(.5),
-            //   Colors.black38,
+            //   AppColors.overlay,
             // ],
-            colors: [Colors.blue, Theme.of(context).primaryColor],
+            colors: [AppColors.info, Theme.of(context).primaryColor],
 
             begin: Alignment.bottomLeft,
             end: Alignment.topRight,
@@ -107,14 +108,14 @@ class HistoryItem extends StatelessWidget {
             Text(
               'Date: ${data['broadcasting_date']}',
               style: const TextStyle(
-                color: Colors.white70,
+                color: AppColors.onMediaMuted,
                 fontWeight: FontWeight.w900,
               ),
             ),
             // Text(
             //   'Audio: ${(data['audio_broadcast_in_second'] / 60).toStringAsFixed(2)} minutes',
             //   style: const TextStyle(
-            //     color: Colors.white70,
+            //     color: AppColors.onMediaMuted,
             //     fontWeight: FontWeight.w900,
             //   ),
             // ),
@@ -122,7 +123,7 @@ class HistoryItem extends StatelessWidget {
               // 'Video: ${(data['video_broadcast_in_second'] / 60).toStringAsFixed(2)} minutes',
               '(H:M:S): ${_printDuration(Duration(seconds: data['video_broadcast_in_second']))}',
               style: const TextStyle(
-                color: Colors.white70,
+                color: AppColors.onMediaMuted,
                 fontWeight: FontWeight.w900,
               ),
             ),

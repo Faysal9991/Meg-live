@@ -1,5 +1,6 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
-import 'package:flutter/material.dart';
+import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
+import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
 
 class CustomTabItem {
   const CustomTabItem({
@@ -31,7 +32,7 @@ class CustomTabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final selectedColor = theme.colorScheme.primary;
-    final unselectedColor = AppColors.black45;
+    final unselectedColor = AppColors.textSecondary;
 
     return SizedBox(
       height: 72,
@@ -59,52 +60,28 @@ class CustomTabBar extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 220),
-                          curve: Curves.easeOutCubic,
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            gradient: i == selectedIndex
-                                ? LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      selectedColor.withValues(alpha: 0.26),
-                                      theme.colorScheme.secondary.withValues(
-                                        alpha: 0.16,
-                                      ),
-                                    ],
-                                  )
-                                : null,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: i == selectedIndex
-                                  ? selectedColor.withValues(alpha: 0.35)
-                                  : Colors.transparent,
-                              width: 1,
-                            ),
-                            boxShadow: i == selectedIndex
-                                ? [
-                                    BoxShadow(
-                                      color: selectedColor.withValues(
-                                        alpha: 0.22,
-                                      ),
-                                      blurRadius: 14,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ]
-                                : const [],
-                          ),
-                          child: Icon(
-                            i == selectedIndex
-                                ? item.activeIcon
-                                : item.inactiveIcon,
-                            color: i == selectedIndex
-                                ? selectedColor
-                                : unselectedColor,
-                            size: 21,
-                          ),
-                        ),
+                        i == selectedIndex
+                            ? Neumorphic(
+                                padding: const EdgeInsets.all(6),
+                                style: AppNeumorphicStyles.raised(
+                                  color: AppColors.secondary,
+                                  depth: 2,
+                                  radius: 12,
+                                ),
+                                child: Icon(
+                                  item.activeIcon,
+                                  color: selectedColor,
+                                  size: 21,
+                                ),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.all(6),
+                                child: Icon(
+                                  item.inactiveIcon,
+                                  color: unselectedColor,
+                                  size: 21,
+                                ),
+                              ),
                         const SizedBox(height: 3),
                         Text(
                           item.label,

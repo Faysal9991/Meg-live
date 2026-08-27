@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -64,7 +65,7 @@ class _ResellerRechargeViewState extends State<ResellerRechargeView> {
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 24,
-                        color: Colors.blue,
+                        color: AppColors.info,
                       ),
                     ),
                   ],
@@ -72,14 +73,13 @@ class _ResellerRechargeViewState extends State<ResellerRechargeView> {
               ],
             ),
           ),
-          const SizedBox(
-            height: 16,
-          ),
+          const SizedBox(height: 16),
           rPrimaryTextField(
             controller: _editingControllerSearchUid,
             keyboardType: TextInputType.number,
             borderColor: Theme.of(context).primaryColorLight,
             hintText: 'Search user with UserID here',
+            useNeumorphic: true,
             suffixIcon: IconButton(
               onPressed: () {
                 FocusScope.of(context).unfocus();
@@ -87,7 +87,7 @@ class _ResellerRechargeViewState extends State<ResellerRechargeView> {
                   rShowSnackBar(
                     context: context,
                     title: 'You already searching a user',
-                    color: Colors.orange,
+                    color: AppColors.warning,
                   );
                   return;
                 }
@@ -95,7 +95,7 @@ class _ResellerRechargeViewState extends State<ResellerRechargeView> {
                   rShowSnackBar(
                     context: context,
                     title: 'Recharge is processing...',
-                    color: Colors.orange,
+                    color: AppColors.warning,
                   );
                   return;
                 }
@@ -109,125 +109,124 @@ class _ResellerRechargeViewState extends State<ResellerRechargeView> {
                   rShowSnackBar(
                     context: context,
                     title: 'You must enter number for UserID',
-                    color: Colors.orange,
+                    color: AppColors.warning,
                     durationInSeconds: 2,
                   );
                 }
               },
-              icon: const Icon(
-                Icons.search,
-              ),
+              icon: const Icon(Icons.search),
             ),
           ),
-          const SizedBox(
-            height: 16,
-          ),
+          const SizedBox(height: 16),
           Obx(
-            () => _profileController.loadingProfileSearch.value ||
+            () =>
+                _profileController.loadingProfileSearch.value ||
                     _businessController.loadingResellerRecharge.value
-                ? const Center(
-                    child: SpinKitCircle(color: Colors.red),
-                  )
+                ? const Center(child: SpinKitCircle(color: AppColors.error))
                 : _profileController.searchedProfile.value['id'] == null
-                    ? const Text("User doesn't exists.")
-                    : InkWell(
-                        onTap: () {
-                          Get.defaultDialog(
-                            barrierDismissible: false,
-                            title:
-                                'User ID: ${_profileController.searchedProfile.value['user']['uid']}',
-                            content: rPrimaryTextField(
-                              controller: _editingControllerDiamonds,
-                              keyboardType: TextInputType.number,
-                              borderColor: Theme.of(context).primaryColorLight,
-                              hintText: 'Diamonds',
-                              prefixIcon: const Icon(
-                                Icons.diamond,
-                                color: Colors.blue,
-                                size: 32,
-                              ),
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  FocusScope.of(context).unfocus();
-                                  if (_businessController
-                                      .loadingResellerRecharge.value) {
-                                    rShowSnackBar(
-                                      context: context,
-                                      title: 'Recharge is processing...',
-                                      color: Colors.orange,
-                                    );
-                                    return;
-                                  }
-                                  if (_profileController
-                                      .loadingProfileSearch.value) {
-                                    rShowSnackBar(
-                                      context: context,
-                                      title: 'You already searching a user',
-                                      color: Colors.orange,
-                                    );
-                                    return;
-                                  }
-                                  try {
-                                    int diamonds = int.parse(
-                                        _editingControllerDiamonds.text);
-                                    if (diamonds > 0) {
-                                      _businessController
-                                          .tryToRechargeResellerToClient(
+                ? const Text("User doesn't exists.")
+                : InkWell(
+                    onTap: () {
+                      Get.defaultDialog(
+                        barrierDismissible: false,
+                        title:
+                            'User ID: ${_profileController.searchedProfile.value['user']['uid']}',
+                        content: rPrimaryTextField(
+                          controller: _editingControllerDiamonds,
+                          keyboardType: TextInputType.number,
+                          borderColor: Theme.of(context).primaryColorLight,
+                          hintText: 'Diamonds',
+                          prefixIcon: const Icon(
+                            Icons.diamond,
+                            color: AppColors.info,
+                            size: 32,
+                          ),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              if (_businessController
+                                  .loadingResellerRecharge
+                                  .value) {
+                                rShowSnackBar(
+                                  context: context,
+                                  title: 'Recharge is processing...',
+                                  color: AppColors.warning,
+                                );
+                                return;
+                              }
+                              if (_profileController
+                                  .loadingProfileSearch
+                                  .value) {
+                                rShowSnackBar(
+                                  context: context,
+                                  title: 'You already searching a user',
+                                  color: AppColors.warning,
+                                );
+                                return;
+                              }
+                              try {
+                                int diamonds = int.parse(
+                                  _editingControllerDiamonds.text,
+                                );
+                                if (diamonds > 0) {
+                                  _businessController
+                                      .tryToRechargeResellerToClient(
                                         customerId: _profileController
                                             .searchedProfile
                                             .value['user']['uid'],
                                         diamonds: diamonds,
                                       );
-                                      _editingControllerDiamonds.clear();
-                                      Get.back();
-                                    }
-                                  } catch (e) {
-                                    rShowSnackBar(
-                                      context: context,
-                                      title: 'You must enter number for UserID',
-                                      color: Colors.orange,
-                                      durationInSeconds: 2,
-                                    );
-                                  }
-                                },
-                                icon: const Icon(
-                                  Icons.check_box,
-                                ),
-                              ),
-                            ),
-                            onCancel: () => Navigator.of(context).pop(),
-                          );
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 2),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 8.0,
-                            horizontal: 16.0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColorLight,
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                        'User ID: ${_profileController.searchedProfile.value['user']['uid']}'),
-                                    Text(
-                                        'Name: ${_profileController.searchedProfile.value['full_name']}'),
-                                    Text(
-                                        'Diamonds: ${_profileController.searchedProfile.value['diamonds']}'),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Icons.touch_app),
-                            ],
+                                  _editingControllerDiamonds.clear();
+                                  Get.back();
+                                }
+                              } catch (e) {
+                                rShowSnackBar(
+                                  context: context,
+                                  title: 'You must enter number for UserID',
+                                  color: AppColors.warning,
+                                  durationInSeconds: 2,
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.check_box),
                           ),
                         ),
+                        onCancel: () => Navigator.of(context).pop(),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8.0,
+                        horizontal: 16.0,
                       ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColorLight,
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'User ID: ${_profileController.searchedProfile.value['user']['uid']}',
+                                ),
+                                Text(
+                                  'Name: ${_profileController.searchedProfile.value['full_name']}',
+                                ),
+                                Text(
+                                  'Diamonds: ${_profileController.searchedProfile.value['diamonds']}',
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.touch_app),
+                        ],
+                      ),
+                    ),
+                  ),
           ),
         ],
       ),

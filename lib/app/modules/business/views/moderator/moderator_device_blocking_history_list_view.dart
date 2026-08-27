@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -33,7 +34,7 @@ class _ModeratorDeviceBlockingHistoryListViewState
           Obx(() {
             return _devicesController.loadingBlockedDevicesHistories.value
                 ? const SpinKitCircle(
-                    color: Colors.red,
+                    color: AppColors.error,
                   )
                 : _devicesController.userBlockedDevicesList.isEmpty
                     ? const Card(
@@ -44,7 +45,7 @@ class _ModeratorDeviceBlockingHistoryListViewState
                             "No block",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.orange,
+                              color: AppColors.warning,
                               fontSize: 16,
                             ),
                           ),

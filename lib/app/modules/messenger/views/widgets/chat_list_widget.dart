@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
@@ -43,7 +44,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
       },
       child: Material(
         textStyle: const TextStyle(
-          color: Colors.black,
+          color: AppColors.textPrimary,
         ),
         color: Colors.transparent,
         child: Padding(
@@ -69,7 +70,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
-                              color: Colors.grey,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         )
@@ -87,7 +88,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
                                       title: 'Go to delete',
                                       content: const Text(
                                           'Do you wanna delete this last message?'),
-                                      confirmTextColor: Colors.white,
+                                      confirmTextColor: AppColors.surface,
                                       onCancel: () => Get.back(),
                                       onConfirm: () async {
                                         await _messengerController
@@ -130,7 +131,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
     //       if (snapshot.hasError) {
     //         return const Text(
     //           'Something went wrong',
-    //           style: TextStyle(fontSize: 15, color: Colors.red),
+    //           style: TextStyle(fontSize: 15, color: AppColors.error),
     //         );
     //       }
 
@@ -159,7 +160,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
     //                   title: 'Go to delete',
     //                   content:
     //                       const Text('Do you wanna delete this last message?'),
-    //                   confirmTextColor: Colors.white,
+    //                   confirmTextColor: AppColors.surface,
     //                   onCancel: () => Get.back(),
     //                   onConfirm: () {
     //                     _firestore
@@ -252,8 +253,8 @@ Widget chatItem({
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      // color: Colors.grey,
-                      color: Colors.black,
+                      // color: AppColors.textSecondary,
+                      color: AppColors.textPrimary,
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: ClipRRect(
@@ -283,9 +284,9 @@ Widget chatItem({
                   child: Icon(
                     Icons.circle,
                     // color: data["userStatus"] == "Online"
-                    //     ? Colors.green
-                    //     : Colors.orange,
-                    color: Colors.green,
+                    //     ? AppColors.success
+                    //     : AppColors.warning,
+                    color: AppColors.success,
                     size: 16,
                   ),
                 ),
@@ -305,7 +306,7 @@ Widget chatItem({
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
@@ -318,7 +319,7 @@ Widget chatItem({
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
-                    color: Colors.black,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
@@ -339,7 +340,7 @@ Widget chatItem({
                     .format(DateTime.parse(message['datetime']).toLocal()),
 
             style: const TextStyle(
-              color: Colors.grey,
+              color: AppColors.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -357,7 +358,7 @@ Widget chatItem({
           //           "dd-MM-yyyy hh:mm a")
           //       .fromNow(),
           //   style: const TextStyle(
-          //     color: Colors.grey,
+          //     color: AppColors.textSecondary,
           //     fontSize: 12,
           //     fontWeight: FontWeight.w500,
           //   ),
@@ -409,8 +410,8 @@ Widget chatItem({
   //                           width: 50,
   //                           height: 50,
   //                           decoration: BoxDecoration(
-  //                             // color: Colors.grey,
-  //                             color: Colors.black,
+  //                             // color: AppColors.textSecondary,
+  //                             color: AppColors.textPrimary,
   //                             borderRadius: BorderRadius.circular(100),
   //                           ),
   //                           child: ClipRRect(
@@ -442,8 +443,8 @@ Widget chatItem({
   //                         child: Icon(
   //                           Icons.circle,
   //                           color: data["userStatus"] == "Online"
-  //                               ? Colors.green
-  //                               : Colors.orange,
+  //                               ? AppColors.success
+  //                               : AppColors.warning,
   //                           size: 16,
   //                         ),
   //                       ),
@@ -499,8 +500,8 @@ Widget chatItem({
   //                               .toLocal()),
 
   //                   style: const TextStyle(
-  //                     // color: Colors.grey,
-  //                     color: Colors.white70,
+  //                     // color: AppColors.textSecondary,
+  //                     color: AppColors.onMediaMuted,
   //                     fontSize: 12,
   //                     fontWeight: FontWeight.w500,
   //                   ),
@@ -518,7 +519,7 @@ Widget chatItem({
   //                 //           "dd-MM-yyyy hh:mm a")
   //                 //       .fromNow(),
   //                 //   style: const TextStyle(
-  //                 //     color: Colors.grey,
+  //                 //     color: AppColors.textSecondary,
   //                 //     fontSize: 12,
   //                 //     fontWeight: FontWeight.w500,
   //                 //   ),

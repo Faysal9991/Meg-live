@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/messenger/utils/utils.dart';
@@ -73,7 +74,7 @@ void showUserInfoBottomSheet({
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Center(
-                    child: SpinKitHourGlass(color: Colors.red, size: 50.0),
+                    child: SpinKitHourGlass(color: AppColors.error, size: 50.0),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -119,7 +120,7 @@ void showUserInfoBottomSheet({
               // decoration: BoxDecoration(
               //   gradient: Palette.linearGradient2,
               // ),
-              color: Colors.black,
+              color: AppColors.textPrimary,
               child: Stack(
                 children: <Widget>[
                   Positioned(
@@ -130,17 +131,17 @@ void showUserInfoBottomSheet({
                     child: Container(
                       decoration: const BoxDecoration(
                         // color: Theme.of(context).primaryColor,
-                        // color: Colors.black54,
+                        // color: AppColors.textSecondary,
                         // gradient: LinearGradient(
                         //   colors: [
-                        //     Colors.black38,
-                        //     Colors.black26,
-                        //     Colors.black12,
+                        //     AppColors.overlay,
+                        //     AppColors.overlayMedium,
+                        //     AppColors.overlayLight,
                         //   ],
                         //   begin: Alignment.bottomLeft,
                         //   end: Alignment.topRight,
                         // ),
-                        color: Colors.white,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(20),
                           topRight: Radius.circular(20),
@@ -164,7 +165,7 @@ void showUserInfoBottomSheet({
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w700,
-                                          color: Colors.white,
+                                          color: AppColors.surface,
                                         ),
                                       ),
                                     )
@@ -293,9 +294,9 @@ void showUserInfoBottomSheet({
                                                 //             .value
                                                 //             .user!
                                                 //             .uid!)
-                                                //     ? Colors.blue
-                                                //     : Colors.red,
-                                                color: Colors.white,
+                                                //     ? AppColors.info
+                                                //     : AppColors.error,
+                                                color: AppColors.surface,
                                                 size: 12,
                                               )
                                             : Icon(
@@ -368,7 +369,7 @@ void showUserInfoBottomSheet({
                                                               )
                                                           ? Icons.block
                                                           : Icons.flag,
-                                                      color: Colors.white,
+                                                      color: AppColors.surface,
                                                       size: 12,
                                                     )
                                                   : Icon(
@@ -409,7 +410,7 @@ void showUserInfoBottomSheet({
                                     //   child: IconButton(
                                     //     icon: const Icon(
                                     //       Icons.chat,
-                                    //       color: Colors.white,
+                                    //       color: AppColors.surface,
                                     //     ),
                                     //     iconSize: 32,
                                     //     onPressed: () {
@@ -489,7 +490,7 @@ void showUserInfoBottomSheet({
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(
                                   child: CircularProgressIndicator(
-                                    color: Colors.red,
+                                    color: AppColors.error,
                                   ),
                                 ),
                               ),
@@ -508,13 +509,13 @@ void showUserInfoBottomSheet({
                           ? Container(
                               margin: const EdgeInsets.only(left: 60),
                               decoration: BoxDecoration(
-                                color: Colors.black38,
+                                color: AppColors.overlay,
                                 // borderRadius: BorderRadius.only(
                                 //   bottomLeft: Radius.circular(20.0),
                                 //   bottomRight: Radius.circular(20.0),
                                 // ),
                                 border: Border.all(
-                                  color: Colors.orange.shade600,
+                                  color: AppColors.warning,
                                   // width: 2.0,
                                 ),
                                 borderRadius: BorderRadius.circular(100.0),
@@ -534,14 +535,14 @@ void showUserInfoBottomSheet({
                               height: 20,
                               margin: const EdgeInsets.only(left: 60),
                               decoration: BoxDecoration(
-                                color: Colors.green,
+                                color: AppColors.success,
                                 borderRadius: BorderRadius.circular(100),
                               ),
                               child: Center(
                                 child: Text(
                                   '${data['level'] != null ? data['level']['level'] : 0}',
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.surface,
                                     fontSize: 8,
                                   ),
                                 ),

@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -47,7 +48,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             Text(
               'User ID: ${widget.data['uid']}',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.surface,
               ),
             ),
             const SizedBox(
@@ -55,7 +56,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             ),
             const Center(
               child: SpinKitHourGlass(
-                color: Colors.white,
+                color: AppColors.surface,
                 size: 50.0,
               ),
             ),
@@ -83,7 +84,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   Text(
                     '${widget.profileController.profileForHost.value['followers'].length}',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
@@ -94,7 +95,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   const Text(
                     'Fans',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       fontSize: 16,
                     ),
                   ),
@@ -110,7 +111,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               //         Text(
               //           '${data['diamonds']}',
               //           style: const TextStyle(
-              // color: Colors.white,
+              // color: AppColors.surface,
               //             fontSize: 16,
               //             fontWeight: FontWeight.w700,
               //           ),
@@ -121,7 +122,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               //         const Text(
               //           'Diamonds',
               //           style: TextStyle(
-              // color: Colors.white,
+              // color: AppColors.surface,
               //             fontSize: 16,
               //           ),
               //         ),
@@ -136,7 +137,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               //   child: Text(
               //     'User Id: ${data['uid']}',
               //     style: const TextStyle(
-              // color: Colors.white,
+              // color: AppColors.surface,
               //       fontSize: 18,
               //       fontWeight: FontWeight.w700,
               //     ),
@@ -148,7 +149,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 children: [
                   const Icon(
                     Icons.diamond,
-                    color: Colors.blue,
+                    color: AppColors.info,
                     size: 16,
                   ),
                   const SizedBox(
@@ -158,7 +159,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     '${widget.profileController.profileForHost.value['diamonds']}',
                     // '${(data['sender_diamonds'] ?? data['diamonds']) / 1000}K',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       fontSize: 12,
                     ),
                   ),
@@ -178,7 +179,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   //   '${widget.profileController.profileForHost.value['gift_coins']}',
                   //   // '${profileController.profileForHost.value['gift_coins'] / 1000}K',
                   //   style: const TextStyle(
-                  // color: Colors.white,
+                  // color: AppColors.surface,
                   //     fontSize: 12,
                   //   ),
                   // ),
@@ -188,7 +189,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   Text(
                     'User ID: ${widget.data['uid']}',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       fontSize: 12,
                     ),
                   ),
@@ -214,7 +215,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           //           child: Text(
           //             'Error occurred',
           //             style: TextStyle(
-          //color: Colors.white,fontWeight: FontWeight.bold),
+          //color: AppColors.surface,fontWeight: FontWeight.bold),
           //           ),
           //         );
 
@@ -277,9 +278,9 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                 // color: !profileController.hostAccountFollowers
                                 //         .contains(authController
                                 //             .profile.value.user!.uid!)
-                                //     ? Colors.blue
-                                //     : Colors.red,
-                                color: Colors.white,
+                                //     ? AppColors.info
+                                //     : AppColors.error,
+                                color: AppColors.surface,
                                 size: 12,
                               )
                             : Icon(
@@ -295,14 +296,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                             ? const Text(
                                 'Follow',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                   fontSize: 12,
                                 ),
                               )
                             : const Text(
                                 'Unfollow',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                   fontSize: 12,
                                 ),
                               );
@@ -345,7 +346,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                               .contains(widget.data['uid'])
                                           ? Icons.block
                                           : Icons.flag,
-                                      color: Colors.white,
+                                      color: AppColors.surface,
                                       size: 12,
                                     )
                                   : Icon(
@@ -361,14 +362,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                   ? const Text(
                                       'Block',
                                       style: TextStyle(
-                                        color: Colors.white,
+                                        color: AppColors.surface,
                                         fontSize: 12,
                                       ),
                                     )
                                   : const Text(
                                       'Unblock',
                                       style: TextStyle(
-                                        color: Colors.white,
+                                        color: AppColors.surface,
                                         fontSize: 12,
                                       ),
                                     );
@@ -393,13 +394,13 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                         // Get.snackbar(
                         //   'Coming Soon',
                         //   "Will be implemented later.",
-                        //   backgroundColor: Colors.orange,
-                        //   colorText: Colors.white,
+                        //   backgroundColor: AppColors.warning,
+                        //   colorText: AppColors.surface,
                         // );
                         // rShowSnackBar(
                         //   context: context,
                         //   title: "Coming soon",
-                        //   color: Colors.green,
+                        //   color: AppColors.success,
                         //   durationInSeconds: 1,
                         // );
                         rShowAlertDialog(
@@ -419,7 +420,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       child: const Text(
                         'Report',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           fontSize: 12,
                         ),
                       ),
@@ -434,7 +435,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     //   child: IconButton(
                     //       icon: const Icon(
                     //         Icons.chat,
-                    //         color: Colors.white,
+                    //         color: AppColors.surface,
                     //       ),
                     //       iconSize: 32,
                     //       onPressed: () {

@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -35,7 +36,7 @@ class _ResellerRequestViewState extends State<ResellerRequestView> {
               SizedBox(height: MediaQuery.of(context).size.height * .20),
               Obx(() {
                 return _businessController.loadingResellerRequest.value
-                    ? const SpinKitCircle(color: Colors.red)
+                    ? const SpinKitCircle(color: AppColors.error)
                     : _businessController.resellerRequestedData.value['id'] !=
                           null
                     ? Padding(
@@ -50,7 +51,7 @@ class _ResellerRequestViewState extends State<ResellerRequestView> {
                                   "Your Reseller request is pending. Please wait for authority confirmation.\n\nDatetime: ${DateFormat.yMEd().add_jms().format(DateTime.parse(_businessController.resellerRequestedData.value['datetime']).toLocal())}",
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-                                    color: Colors.orange,
+                                    color: AppColors.warning,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -69,11 +70,11 @@ class _ResellerRequestViewState extends State<ResellerRequestView> {
                                         .tryToRemoveResellerRequest();
                                     Navigator.of(context).pop();
                                   },
-                                  confirmTextColor: Colors.white,
+                                  confirmTextColor: AppColors.surface,
                                   onCancel: () => Navigator.of(context).pop(),
                                 );
                               },
-                              primaryColor: Colors.red,
+                              primaryColor: AppColors.error,
                               buttonText: 'Remove Request',
                               fontSize: 16,
                               iconData: Icons.close,
@@ -97,7 +98,7 @@ class _ResellerRequestViewState extends State<ResellerRequestView> {
                                       .tryToSendResellerRequest();
                                   Navigator.of(context).pop();
                                 },
-                                confirmTextColor: Colors.white,
+                                confirmTextColor: AppColors.surface,
                                 onCancel: () => Navigator.of(context).pop(),
                               );
                             },

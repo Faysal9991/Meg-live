@@ -1,6 +1,6 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:convert';
 import 'dart:isolate';
-import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -21,6 +21,7 @@ import 'package:doyel_live/app/utils/constants.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/firebase_functions.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/helper_functions.dart';
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/widgets/custom_tab_bar.dart';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
@@ -313,7 +314,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
       //   rShowSnackBar(
       //       context: context,
       //       title: "You are offline now",
-      //       color: Colors.orange,
+      //       color: AppColors.warning,
       //       durationInSeconds: 1);
       //   // rShowSnackBar(
       //   //     context: context,
@@ -322,8 +323,8 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
       //   //     color: _authController.preferences
       //   //             .getBool('internet', defaultValue: false)
       //   //             .getValue()
-      //   //         ? Colors.green
-      //   //         : Colors.red,
+      //   //         ? AppColors.success
+      //   //         : AppColors.error,
       //   //     durationInSeconds: 1);
       // }
     });
@@ -371,7 +372,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
           child: AlertDialog(
             title: const Text('Update Required'),
             content: const Text(
-              'A new version is available on Play Store. Please update to continue using Doyel Live.',
+              'A new version is available on Play Store. Please update to continue using Biho Live.',
             ),
             actions: [
               FilledButton(
@@ -408,7 +409,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -424,7 +425,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                     children: [
                       const Icon(
                         Icons.workspace_premium,
-                        color: Colors.amber,
+                        color: AppColors.premium,
                         size: 24,
                       ),
                       const SizedBox(width: 8),
@@ -481,7 +482,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                           child: Text(
                             'No top hosts found.',
                             style: TextStyle(
-                              color: Colors.black54,
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -509,14 +510,14 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F7F7),
+        color: AppColors.disabledBackground,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: Colors.black12,
+            backgroundColor: AppColors.overlayLight,
             backgroundImage: hasImage ? NetworkImage(host.profileImage!) : null,
             child: hasImage ? null : const Icon(Icons.person),
           ),
@@ -532,14 +533,14 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'UID #${host.uid}',
                   style: const TextStyle(
-                    color: Colors.black54,
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -548,7 +549,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                 Text(
                   _formatTopHostSeconds(host.seconds),
                   style: const TextStyle(
-                    color: Colors.deepOrange,
+                    color: AppColors.warning,
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),
@@ -556,7 +557,11 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
               ],
             ),
           ),
-          const Icon(Icons.workspace_premium, color: Colors.amber, size: 22),
+          const Icon(
+            Icons.workspace_premium,
+            color: AppColors.premium,
+            size: 22,
+          ),
         ],
       ),
     );
@@ -594,20 +599,23 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                         ),
                       ),
                       title: const Text(
-                        'Doyel Live',
-                        style: TextStyle(color: Colors.black),
+                        'Biho Live',
+                        style: TextStyle(color: AppColors.textPrimary),
                       ),
                       actions: [
-                        IconButton(
-                          tooltip: 'Top Hosts',
-                          onPressed: _showTopHostsBottomSheet,
-                          icon: const Icon(
-                            Icons.workspace_premium,
-                            color: Colors.amber,
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: NeumorphicIconButton(
+                            tooltip: 'Top Hosts',
+                            onPressed: _showTopHostsBottomSheet,
+                            icon: Icons.workspace_premium,
+                            iconColor: AppColors.primary,
+                            size: 38,
+                            iconSize: 20,
                           ),
                         ),
                       ],
-                      backgroundColor: Colors.white,
+                      backgroundColor: AppColors.secondary,
                     )
                   : null,
               body: Column(
@@ -620,7 +628,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                   // Obx(() {
                   //   return _rewardAdsController.bannerAdLoaded.value
                   //       ? Container(
-                  //           color: Colors.black38,
+                  //           color: AppColors.overlay,
                   //           alignment: Alignment.bottomCenter,
                   //           // width: _rewardAdsController.bannerAd!.size.width
                   //           //     .toDouble(),
@@ -635,84 +643,56 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
               ),
               bottomNavigationBar: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.72),
-                            Colors.white.withValues(alpha: 0.52),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.45),
-                          width: 1.1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.12),
-                            blurRadius: 24,
-                            offset: const Offset(0, 10),
+                child: AppCard(
+                  child: CustomTabBar(
+                    items: _navItems,
+                    selectedIndex: _navController.pageIndex.value,
+                    onTap: (index) async {
+                      if (index == _navController.pageIndex.value) {
+                        return;
+                      }
+
+                      // 2 is the broadcast streaming
+                      // if (index == CHATS) {
+                      //   Navigator.of(context).pushNamedAndRemoveUntil(
+                      //       Routes.CHAT, (Route<dynamic> route) => false);
+                      // } else
+
+                      if (index != LIVE_STREAM) {
+                        _navController.setPageIndex(index: index);
+                      } else {
+                        // if (_authController.showingLiveStreamingWidget.value) {
+                        //   Get.snackbar(
+                        //     'Not allowed',
+                        //     "You have to end recent streaming.",
+                        //     backgroundColor: AppColors.warning,
+                        //     colorText: AppColors.surface,
+                        //     snackPosition: SnackPosition.BOTTOM,
+                        //     duration: const Duration(seconds: 2),
+                        //   );
+                        //   return;
+                        // }
+                        // if (_authController.showingCallWidget.value) {
+                        //   Get.snackbar(
+                        //     'Not allowed',
+                        //     "You are already in call.",
+                        //     backgroundColor: AppColors.warning,
+                        //     colorText: AppColors.surface,
+                        //     snackPosition: SnackPosition.BOTTOM,
+                        //     duration: const Duration(seconds: 2),
+                        //   );
+                        //   return;
+                        // }
+                        await availableCameras().then(
+                          (value) => Get.to(
+                            () => PrepareToLiveView(
+                              camera: value[1],
+                              // onUpdateLiveStreamStatus: onUpdateLiveStreamStatus,
+                            ),
                           ),
-                        ],
-                      ),
-                      child: CustomTabBar(
-                        items: _navItems,
-                        selectedIndex: _navController.pageIndex.value,
-                        onTap: (index) async {
-                          if (index == _navController.pageIndex.value) {
-                            return;
-                          }
-
-                          // 2 is the broadcast streaming
-                          // if (index == CHATS) {
-                          //   Navigator.of(context).pushNamedAndRemoveUntil(
-                          //       Routes.CHAT, (Route<dynamic> route) => false);
-                          // } else
-
-                          if (index != LIVE_STREAM) {
-                            _navController.setPageIndex(index: index);
-                          } else {
-                            // if (_authController.showingLiveStreamingWidget.value) {
-                            //   Get.snackbar(
-                            //     'Not allowed',
-                            //     "You have to end recent streaming.",
-                            //     backgroundColor: Colors.orange,
-                            //     colorText: Colors.white,
-                            //     snackPosition: SnackPosition.BOTTOM,
-                            //     duration: const Duration(seconds: 2),
-                            //   );
-                            //   return;
-                            // }
-                            // if (_authController.showingCallWidget.value) {
-                            //   Get.snackbar(
-                            //     'Not allowed',
-                            //     "You are already in call.",
-                            //     backgroundColor: Colors.orange,
-                            //     colorText: Colors.white,
-                            //     snackPosition: SnackPosition.BOTTOM,
-                            //     duration: const Duration(seconds: 2),
-                            //   );
-                            //   return;
-                            // }
-                            await availableCameras().then(
-                              (value) => Get.to(
-                                () => PrepareToLiveView(
-                                  camera: value[1],
-                                  // onUpdateLiveStreamStatus: onUpdateLiveStreamStatus,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                    ),
+                        );
+                      }
+                    },
                   ),
                 ),
               ),

@@ -1,4 +1,4 @@
-import 'package:doyel_live/app/routes/app_pages.dart';
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/widgets/country_phone_code_widget.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
 import 'package:flutter/material.dart';
@@ -44,9 +44,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(
-                    height: 64,
-                  ),
+                  const SizedBox(height: 64),
                   Center(
                     child: Image.asset(
                       'assets/logos/doyel_live.jpeg',
@@ -54,20 +52,18 @@ class _RegistrationViewState extends State<RegistrationView> {
                       height: 130,
                     ),
                   ),
-                  const SizedBox(
-                    height: 16,
-                  ),
+                  const SizedBox(height: 16),
                   const Center(
                     child: Text(
                       'Your Phone!',
-                      style:
-                          TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   showSignUpFormWidget(context),
-                  const SizedBox(
-                    height: 16,
-                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -81,29 +77,21 @@ class _RegistrationViewState extends State<RegistrationView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(
-          height: 16,
-        ),
+        const SizedBox(height: 16),
         rPrimaryTextField(
           controller: _editingControllerName,
           keyboardType: TextInputType.name,
-          borderColor: Colors.grey,
+          borderColor: AppColors.textSecondary,
           hintText: 'Enter your name !!',
         ),
-        const SizedBox(
-          height: 16,
-        ),
+        const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: Container(
             decoration: BoxDecoration(
-              // color: Colors.grey,
-              borderRadius: BorderRadius.circular(
-                8.0,
-              ),
-              border: Border.all(
-                color: Colors.grey,
-              ),
+              // color: AppColors.textSecondary,
+              borderRadius: BorderRadius.circular(8.0),
+              border: Border.all(color: AppColors.textSecondary),
             ),
             child: ListTile(
               dense: true,
@@ -111,27 +99,23 @@ class _RegistrationViewState extends State<RegistrationView> {
                 context: context,
                 authController: _authController,
               ),
-              title: Obx(
-                () {
-                  return buildCountryPickerDialogItem(
-                    country: _authController.country.value,
-                    showAsSelected: true,
-                    textEditingControllerPhoneNumber:
-                        _editingControllerPhoneNumber,
-                  );
-                },
-              ),
+              title: Obx(() {
+                return buildCountryPickerDialogItem(
+                  country: _authController.country.value,
+                  showAsSelected: true,
+                  textEditingControllerPhoneNumber:
+                      _editingControllerPhoneNumber,
+                );
+              }),
             ),
           ),
         ),
-        const SizedBox(
-          height: 8,
-        ),
+        const SizedBox(height: 8),
         rPrimaryTextField(
           controller: _editingControllerPassword,
           keyboardType: TextInputType.visiblePassword,
           obscureText: true,
-          borderColor: Colors.grey,
+          borderColor: AppColors.textSecondary,
           hintText: 'Enter password',
         ),
         Obx(() {
@@ -139,13 +123,11 @@ class _RegistrationViewState extends State<RegistrationView> {
             return Container();
           }
           return const SpinKitFadingCircle(
-            color: Colors.orange,
+            color: AppColors.warning,
             size: 48.0,
           );
         }),
-        const SizedBox(
-          height: 16,
-        ),
+        const SizedBox(height: 16),
         rPrimaryElevatedButton(
           onPressed: () async {
             if (_authController.authLoading.value) {
@@ -165,8 +147,8 @@ class _RegistrationViewState extends State<RegistrationView> {
                 Get.snackbar(
                   'Failed',
                   "Password length must be at least 8 characters long.",
-                  backgroundColor: Colors.red,
-                  colorText: Colors.white,
+                  backgroundColor: AppColors.error,
+                  colorText: AppColors.surface,
                   snackPosition: SnackPosition.BOTTOM,
                 );
                 return;
@@ -180,8 +162,8 @@ class _RegistrationViewState extends State<RegistrationView> {
                   Get.snackbar(
                     'Failed',
                     "${_authController.country.value.name} mobile number is incorrect.",
-                    backgroundColor: Colors.red,
-                    colorText: Colors.white,
+                    backgroundColor: AppColors.error,
+                    colorText: AppColors.surface,
                     snackPosition: SnackPosition.BOTTOM,
                   );
                   return;
@@ -198,8 +180,8 @@ class _RegistrationViewState extends State<RegistrationView> {
               Get.snackbar(
                 'Failed',
                 "All fields are required.",
-                backgroundColor: Colors.red,
-                colorText: Colors.white,
+                backgroundColor: AppColors.error,
+                colorText: AppColors.surface,
                 snackPosition: SnackPosition.BOTTOM,
               );
             }
@@ -207,10 +189,7 @@ class _RegistrationViewState extends State<RegistrationView> {
           primaryColor: Theme.of(context).primaryColor,
           buttonText: 'LOGIN',
           fontSize: 16.0,
-          fixedSize: Size(
-            MediaQuery.of(context).size.width - 21,
-            46,
-          ),
+          fixedSize: Size(MediaQuery.of(context).size.width - 21, 46),
           borderRadius: 8.0,
         ),
       ],

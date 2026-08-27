@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/modules/balance/controllers/balance_controller.dart';
 import 'package:doyel_live/app/modules/balance/models/withdraw_models.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
@@ -62,7 +63,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
       rShowSnackBar(
         context: context,
         title: 'Please choose a package and payment method.',
-        color: Colors.orange,
+        color: AppColors.warning,
         durationInSeconds: 2,
       );
       return;
@@ -71,7 +72,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
       rShowSnackBar(
         context: context,
         title: 'Receiver number is required.',
-        color: Colors.orange,
+        color: AppColors.warning,
         durationInSeconds: 2,
       );
       return;
@@ -80,7 +81,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
       rShowSnackBar(
         context: context,
         title: 'Account type is required for this payment method.',
-        color: Colors.orange,
+        color: AppColors.warning,
         durationInSeconds: 2,
       );
       return;
@@ -114,7 +115,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
         rShowSnackBar(
           context: context,
           title: 'Withdraw request submitted successfully.',
-          color: Colors.green,
+          color: AppColors.success,
           durationInSeconds: 2,
         );
         break;
@@ -123,7 +124,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
           context: context,
           title:
               'Withdraw request could not be created. Please review your balance and package.',
-          color: Colors.red,
+          color: AppColors.error,
           durationInSeconds: 3,
         );
         break;
@@ -131,7 +132,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
         rShowSnackBar(
           context: context,
           title: 'Withdraw request is not allowed right now.',
-          color: Colors.red,
+          color: AppColors.error,
           durationInSeconds: 3,
         );
         break;
@@ -139,7 +140,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
         rShowSnackBar(
           context: context,
           title: 'Something is wrong. Please try again.',
-          color: Colors.red,
+          color: AppColors.error,
           durationInSeconds: 2,
         );
     }
@@ -319,7 +320,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
                   ? () {}
                   : _submitWithdrawRequest,
               primaryColor: _balanceController.creatingWithdrawRequest.value
-                  ? Colors.grey
+                  ? AppColors.textSecondary
                   : Theme.of(context).primaryColor,
               buttonText: _balanceController.creatingWithdrawRequest.value
                   ? 'Submitting...'
@@ -338,13 +339,13 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
     String label;
 
     if (item.isAccepted) {
-      color = Colors.green;
+      color = AppColors.success;
       label = 'Accepted';
     } else if (item.isDeclined) {
-      color = Colors.red;
+      color = AppColors.error;
       label = 'Declined';
     } else {
-      color = Colors.orange;
+      color = AppColors.warning;
       label = 'Pending';
     }
 

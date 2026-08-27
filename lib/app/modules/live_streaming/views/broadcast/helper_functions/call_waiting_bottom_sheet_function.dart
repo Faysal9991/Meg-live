@@ -1,14 +1,132 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
 import 'package:doyel_live/app/modules/live_streaming/utlls/liveroom_isolation_actions.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_info_bottom_sheet_function.dart';
+import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/widgets/circle_button.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
+
+bool _hasLiveRoomControlAccess({
+  required LiveStreamingController streamingController,
+  required AuthController authController,
+  required VVIPorVipPackageController packageController,
+}) {
+  final isBroadcaster = streamingController.isBroadcaster.value;
+  final isModerator = authController.profile.value.is_moderator ?? false;
+  final hasKingPackage = packageController.hasActiveKingPackage;
+  return isBroadcaster || isModerator || hasKingPackage;
+}
+
+Widget _buildSelfCallActionButton({
+  required BuildContext context,
+  required LiveStreamingController streamingController,
+  required AuthController authController,
+  required Function onUpdateAction,
+}) {
+  if (streamingController.listRequestedCall.indexWhere(
+        (element) => element['uid'] == authController.profile.value.user!.uid!,
+      ) >
+      -1) {
+    return ElevatedButton(
+      onPressed: () {
+        dynamic data = {
+          'action': 'cancel_request',
+          'uid': authController.profile.value.user!.uid!,
+          'full_name': authController.profile.value.full_name,
+          'profile_image':
+              authController.profile.value.profile_image ??
+              authController.profile.value.photo_url,
+          'level': authController.profile.value.level,
+          'vvip_or_vip_preference':
+              authController.profile.value.vvip_or_vip_preference,
+        };
+        onUpdateAction(data);
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.error,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+      ),
+      child: const Text('Cancel', style: TextStyle(color: AppColors.surface)),
+    );
+  }
+
+  if (streamingController.listActiveCall.indexWhere(
+        (element) => element['uid'] == authController.profile.value.user!.uid!,
+      ) >
+      -1) {
+    return ElevatedButton(
+      onPressed: () {
+        dynamic actionData = {
+          "action": "end_call",
+          "uid": authController.profile.value.user!.uid!,
+        };
+        onUpdateAction(actionData);
+        LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
+          submissionData: LiveRoomUpdateRequest.removeUserFromCallingGroup(
+            channelId: int.parse(streamingController.channelName.value),
+            uid: authController.profile.value.user!.uid!,
+          ),
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.error,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+      ),
+      child: const Text('End Call'),
+    );
+  }
+
+  return ElevatedButton(
+    onPressed: () {
+      if (streamingController.listActiveCall.isEmpty) {
+        rShowAlertDialog(
+          context: context,
+          title: "Not allowed",
+          content:
+              "Live data is not properly loaded yet. Please try again later",
+          onConfirm: () {
+            Navigator.pop(context);
+          },
+        );
+        return;
+      }
+
+      dynamic myData = {
+        'action': 'call_request',
+        'uid': authController.profile.value.user!.uid!,
+        'full_name': authController.profile.value.full_name,
+        'profile_image':
+            authController.profile.value.profile_image ??
+            authController.profile.value.photo_url,
+        'call_type': 'video',
+        'muted': streamingController.muted.value,
+        'video_disabled': streamingController.videoDisabled.value,
+        'diamonds': authController.profile.value.diamonds,
+        'is_moderator': authController.profile.value.is_moderator,
+        'is_reseller': authController.profile.value.is_reseller,
+        'level': authController.profile.value.level,
+        'followers': authController.profile.value.followers,
+        'vvip_or_vip_preference':
+            authController.profile.value.vvip_or_vip_preference,
+      };
+      onUpdateAction(myData);
+    },
+    style: ElevatedButton.styleFrom(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+    ),
+    child: const Text('Join'),
+  );
+}
 
 void showCallWaitingBottomSheet({
   required BuildContext context,
@@ -17,6 +135,12 @@ void showCallWaitingBottomSheet({
   required AuthController authController,
   required Function onUpdateAction,
 }) {
+  final VVIPorVipPackageController packageController =
+      Get.isRegistered<VVIPorVipPackageController>()
+      ? Get.find<VVIPorVipPackageController>()
+      : Get.put(VVIPorVipPackageController());
+  packageController.ensureKingPackageCatalogLoaded();
+
   showModalBottomSheet(
     context: context,
     barrierColor: Colors.transparent,
@@ -41,10 +165,18 @@ void showCallWaitingBottomSheet({
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Obx(() {
+                  final hasLiveRoomControlAccess = _hasLiveRoomControlAccess(
+                    streamingController: streamingController,
+                    authController: authController,
+                    packageController: packageController,
+                  );
+
                   return Container(
                     padding: const EdgeInsets.only(bottom: 4),
                     decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.grey)),
+                      border: Border(
+                        bottom: BorderSide(color: AppColors.textSecondary),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -61,7 +193,7 @@ void showCallWaitingBottomSheet({
                                     streamingController.callTabName.value ==
                                         'views'
                                     ? Theme.of(context).primaryColor
-                                    : Colors.grey,
+                                    : AppColors.textSecondary,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -80,18 +212,16 @@ void showCallWaitingBottomSheet({
                                     streamingController.callTabName.value ==
                                         'waiting'
                                     ? Theme.of(context).primaryColor
-                                    : Colors.grey,
+                                    : AppColors.textSecondary,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
                         ),
-                        Obx(() {
-                          if (streamingController.isBroadcaster.value) {
-                            return InkWell(
-                              onTap: () => streamingController.setCallTab(
-                                tabName: 'live',
-                              ),
+                        if (hasLiveRoomControlAccess)
+                          InkWell(
+                            onTap: () =>
+                                streamingController.setCallTab(tabName: 'live'),
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Text(
@@ -101,212 +231,32 @@ void showCallWaitingBottomSheet({
                                         streamingController.callTabName.value ==
                                             'live'
                                         ? Theme.of(context).primaryColor
-                                        : Colors.grey,
+                                      : AppColors.textSecondary,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
-                            );
-                          } else {
-                            if (streamingController.listRequestedCall
-                                    .indexWhere(
-                                      (element) =>
-                                          element['uid'] ==
-                                          authController
-                                              .profile
-                                              .value
-                                              .user!
-                                              .uid!,
-                                    ) >
-                                -1) {
-                              return ElevatedButton(
-                                onPressed: () {
-                                  dynamic data = {
-                                    // 'room_name':
-                                    //     '${streamingController.channelName.value}_actions',
-                                    'action': 'cancel_request',
-                                    'uid':
-                                        authController.profile.value.user!.uid!,
-                                    'full_name':
-                                        authController.profile.value.full_name,
-                                    'profile_image':
-                                        authController
-                                            .profile
-                                            .value
-                                            .profile_image ??
-                                        authController.profile.value.photo_url,
-                                    // 'call_type': streamingController.callType.value,
-                                    // 'muted': streamingController.muted.value,
-                                    // 'video_disabled':
-                                    //     streamingController.videoDisabled.value,
-                                    // 'diamonds': authController.profile.value.diamonds,
-                                    // 'gift_coins':
-                                    //     authController.profile.value.gift_coins,
-                                    // 'is_moderator': authController.profile.value.is_moderator,
-                                    // 'is_host': authController.profile.value.is_host,
-                                    // 'is_reseller':
-                                    //     authController.profile.value.is_reseller,
-                                    'level': authController.profile.value.level,
-                                    'vvip_or_vip_preference': authController
-                                        .profile
-                                        .value
-                                        .vvip_or_vip_preference,
-                                    // 'followers':
-                                    //     authController.profile.value.followers,
-                                    // 'blocks': authController.profile.value.blocks,
-                                  };
-                                  onUpdateAction(data);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20.0),
-                                    // side: BorderSide(color: Colors.red),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Cancel',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              );
-                            } else if (streamingController.listActiveCall
-                                    .indexWhere(
-                                      (element) =>
-                                          element['uid'] ==
-                                          authController
-                                              .profile
-                                              .value
-                                              .user!
-                                              .uid!,
-                                    ) >
-                                -1) {
-                              return ElevatedButton(
-                                onPressed: () {
-                                  dynamic actionData = {
-                                    "action": "end_call",
-                                    "uid":
-                                        authController.profile.value.user!.uid!,
-                                  };
-                                  onUpdateAction(actionData);
-                                  LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                                    submissionData:
-                                        LiveRoomUpdateRequest.removeUserFromCallingGroup(
-                                          channelId: int.parse(
-                                            streamingController
-                                                .channelName
-                                                .value,
                                           ),
-                                          uid: authController
-                                              .profile
-                                              .value
-                                              .user!
-                                              .uid!,
-                                        ),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20.0),
-                                    // side: BorderSide(color: Colors.red),
-                                  ),
-                                ),
-                                child: const Text('End Call'),
-                              );
-                            }
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    if (streamingController
-                                        .listActiveCall
-                                        .isEmpty) {
-                                      rShowAlertDialog(
+                        if (!streamingController.isBroadcaster.value)
+                          _buildSelfCallActionButton(
                                         context: context,
-                                        title: "Not allowed",
-                                        content:
-                                            "Live data is not properly loaded yet. Please try again later",
-                                        onConfirm: () {
-                                          Navigator.pop(context);
-                                        },
-                                      );
-                                      return;
-                                    }
-
-                                    dynamic myData = {
-                                      // 'room_name':
-                                      //     '${streamingController.channelName.value}_actions',
-                                      'action': 'call_request',
-                                      'uid': authController
-                                          .profile
-                                          .value
-                                          .user!
-                                          .uid!,
-                                      'full_name': authController
-                                          .profile
-                                          .value
-                                          .full_name,
-                                      'profile_image':
-                                          authController
-                                              .profile
-                                              .value
-                                              .profile_image ??
-                                          authController
-                                              .profile
-                                              .value
-                                              .photo_url,
-                                      'call_type': 'video',
-                                      'muted': streamingController.muted.value,
-                                      'video_disabled': streamingController
-                                          .videoDisabled
-                                          .value,
-                                      'diamonds':
-                                          authController.profile.value.diamonds,
-
-                                      'is_moderator': authController
-                                          .profile
-                                          .value
-                                          .is_moderator,
-                                      'is_reseller': authController
-                                          .profile
-                                          .value
-                                          .is_reseller,
-                                      'level':
-                                          authController.profile.value.level,
-
-                                      'followers': authController
-                                          .profile
-                                          .value
-                                          .followers,
-                                      'vvip_or_vip_preference': authController
-                                          .profile
-                                          .value
-                                          .vvip_or_vip_preference,
-                                      // 'blocks':
-                                      //     authController.profile.value.blocks,
-                                    };
-                                    onUpdateAction(myData);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20.0),
-                                      // side: BorderSide(color: Colors.red),
-                                    ),
-                                  ),
-                                  child: const Text('Join'),
+                            streamingController: streamingController,
+                            authController: authController,
+                            onUpdateAction: onUpdateAction,
                                 ),
                               ],
-                            );
-                          }
-                        }),
-                      ],
                     ),
                   );
                 }),
               ),
               Expanded(
                 child: Obx(() {
+                  final hasLiveRoomControlAccess = _hasLiveRoomControlAccess(
+                    streamingController: streamingController,
+                    authController: authController,
+                    packageController: packageController,
+                  );
+
                   return streamingController.callTabName.value == 'views'
                       ? ViewerWidget(
                           onUpdateAction: onUpdateAction,
@@ -318,7 +268,8 @@ void showCallWaitingBottomSheet({
                               streamingController.listRequestedCall.length,
                           itemBuilder: ((context, index) {
                             return _callRequestItem(
-                              authController: authController,
+                              hasLiveRoomControlAccess:
+                                  hasLiveRoomControlAccess,
                               streamingController: streamingController,
                               data:
                                   streamingController.listRequestedCall[index],
@@ -333,7 +284,8 @@ void showCallWaitingBottomSheet({
                               : 0,
                           itemBuilder: ((context, index) {
                             return _guestLiveItem(
-                              authController: authController,
+                              hasLiveRoomControlAccess:
+                                  hasLiveRoomControlAccess,
                               streamingController: streamingController,
                               data:
                                   streamingController.listActiveCall[index + 1],
@@ -355,15 +307,15 @@ class _callRequestItem extends StatelessWidget {
   const _callRequestItem({
     Key? key,
     required this.streamingController,
+    required this.hasLiveRoomControlAccess,
     this.data,
     required this.onUpdateAction,
-    required this.authController,
   }) : super(key: key);
 
   final LiveStreamingController streamingController;
+  final bool hasLiveRoomControlAccess;
   final dynamic data;
   final Function onUpdateAction;
-  final AuthController authController;
 
   @override
   Widget build(BuildContext context) {
@@ -386,8 +338,7 @@ class _callRequestItem extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
           ),
-          streamingController.isBroadcaster.value ||
-                  authController.profile.value.is_moderator!
+          hasLiveRoomControlAccess
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -396,7 +347,7 @@ class _callRequestItem extends StatelessWidget {
                       iconSize: 24,
                       minWidth: 32,
                       minHeight: 32,
-                      iconColor: Colors.green,
+                      iconColor: AppColors.success,
                       onPressed: () {
                         if (streamingController.allowVideoCall.value) {
                           // Video Call
@@ -404,7 +355,7 @@ class _callRequestItem extends StatelessWidget {
                             rShowSnackBar(
                               context: context,
                               title: 'Not allowed more than 8 Guests in call',
-                              color: Colors.red,
+                              color: AppColors.error,
                               durationInSeconds: 3,
                             );
                             return;
@@ -415,7 +366,7 @@ class _callRequestItem extends StatelessWidget {
                             rShowSnackBar(
                               context: context,
                               title: 'Not allowed more than 8 Guests in call',
-                              color: Colors.red,
+                              color: AppColors.error,
                               durationInSeconds: 3,
                             );
                             return;
@@ -464,7 +415,7 @@ class _callRequestItem extends StatelessWidget {
                       iconSize: 24,
                       minWidth: 32,
                       minHeight: 32,
-                      iconColor: Colors.red,
+                      iconColor: AppColors.error,
                       onPressed: () {
                         String action = 'cancel_request';
                         dynamic cancelData = {
@@ -504,14 +455,14 @@ class _guestLiveItem extends StatelessWidget {
   const _guestLiveItem({
     Key? key,
     required this.streamingController,
+    required this.hasLiveRoomControlAccess,
     this.data,
     required this.onUpdateAction,
-    required this.authController,
   }) : super(key: key);
   final LiveStreamingController streamingController;
+  final bool hasLiveRoomControlAccess;
   final dynamic data;
   final Function onUpdateAction;
-  final AuthController authController;
 
   @override
   Widget build(BuildContext context) {
@@ -551,12 +502,12 @@ class _guestLiveItem extends StatelessWidget {
                   // textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,
-                    backgroundColor: Colors.black12,
+                    backgroundColor: AppColors.overlayLight,
                     fontSize: 10,
                   ),
                 )
               : Container(),
-          streamingController.isBroadcaster.value
+          hasLiveRoomControlAccess
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -566,8 +517,8 @@ class _guestLiveItem extends StatelessWidget {
                       minWidth: 32,
                       minHeight: 32,
                       iconColor: data['muted']
-                          ? Colors.grey
-                          : Colors.blueAccent,
+                          ? AppColors.textSecondary
+                          : AppColors.info,
                       onPressed: () {
                         String action = 'controller';
                         // if (_pk) {
@@ -607,8 +558,8 @@ class _guestLiveItem extends StatelessWidget {
                             minWidth: 24,
                             minHeight: 24,
                             iconColor: data['video_disabled']
-                                ? Colors.grey
-                                : Colors.blueAccent,
+                                ? AppColors.textSecondary
+                                : AppColors.info,
                             onPressed: () {
                               String action = 'controller';
                               // if (_pk) {
@@ -648,7 +599,7 @@ class _guestLiveItem extends StatelessWidget {
                       iconSize: 24,
                       minWidth: 32,
                       minHeight: 32,
-                      iconColor: Colors.red,
+                      iconColor: AppColors.error,
                       onPressed: () {
                         // streamingController.tryToEndCallInLiveKitRoom(
                         //   channelName:
@@ -707,7 +658,7 @@ class ViewerWidget extends StatelessWidget {
     return Obx(() {
       if (streamingController.loadingParticipantList.value) {
         return const Center(
-          child: SpinKitHourGlass(color: Colors.red, size: 50.0),
+          child: SpinKitHourGlass(color: AppColors.error, size: 50.0),
         );
       }
       return ListView.separated(
@@ -773,7 +724,7 @@ Widget _profileImageWithVVIPWidget({required data}) {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100.0),
-              border: Border.all(width: 2.0, color: Colors.orange.shade600),
+              border: Border.all(width: 2.0, color: AppColors.warning),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(100.0),
@@ -790,7 +741,9 @@ Widget _profileImageWithVVIPWidget({required data}) {
                       height: 46,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(color: Colors.red),
+                        child: CircularProgressIndicator(
+                          color: AppColors.error,
+                        ),
                       ),
                     ),
             ),
@@ -803,13 +756,13 @@ Widget _profileImageWithVVIPWidget({required data}) {
                 right: 0,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black38,
+                    color: AppColors.overlay,
                     // borderRadius: BorderRadius.only(
                     //   bottomLeft: Radius.circular(20.0),
                     //   bottomRight: Radius.circular(20.0),
                     // ),
                     border: Border.all(
-                      color: Colors.orange.shade600,
+                      color: AppColors.warning,
                       // width: 2.0,
                     ),
                     borderRadius: BorderRadius.circular(100.0),

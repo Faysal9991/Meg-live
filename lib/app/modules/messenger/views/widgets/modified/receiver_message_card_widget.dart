@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -68,7 +69,7 @@ class _ReceiverMessageCardState extends State<ReceiverMessageCard> {
         widget.msg,
         style: const TextStyle(
           fontSize: 16,
-          color: Colors.white,
+          color: AppColors.surface,
         ),
       );
     }
@@ -80,7 +81,7 @@ class _ReceiverMessageCardState extends State<ReceiverMessageCard> {
     return Align(
         alignment: Alignment.centerLeft,
         child: Card(
-          color: Colors.blueGrey.shade700,
+          color: AppColors.textSecondary,
           elevation: 5,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
@@ -98,7 +99,7 @@ class _ReceiverMessageCardState extends State<ReceiverMessageCard> {
             Padding(
               padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
               child: Text(widget.time,
-                  style: const TextStyle(fontSize: 12, color: Colors.white)),
+                  style: const TextStyle(fontSize: 12, color: AppColors.surface)),
             )
           ]),
         ));

@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
@@ -5,10 +6,12 @@ import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_mo
 import 'package:doyel_live/app/modules/live_streaming/utlls/liveroom_isolation_actions.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_info_bottom_sheet_function.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_interact/user_interact_bottom_sheet_funtion.dart';
+import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/participant.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/participant_info.dart';
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class RoomDisplayLayout {
   static Widget displayScreenView({
@@ -26,6 +29,10 @@ class RoomDisplayLayout {
     required AuthController authController,
     required BuildContext context,
   }) {
+    final VVIPorVipPackageController packageController =
+        Get.isRegistered<VVIPorVipPackageController>()
+        ? Get.find<VVIPorVipPackageController>()
+        : Get.put(VVIPorVipPackageController());
     data['width'] = roomWidth;
     return Container(
       color: Colors.transparent,
@@ -65,7 +72,7 @@ class RoomDisplayLayout {
                 width: roomWidth,
                 height: roomHeight ?? roomWidth,
                 decoration: BoxDecoration(
-                  // color:  Colors.black,
+                  // color:  AppColors.textPrimary,
                   // gradient: livekitStreamingController.listActiveCall.length >
                   //                 1
                   //         ? Palette.linearGradient2
@@ -77,12 +84,12 @@ class RoomDisplayLayout {
                           // !data['muted']
                           view.participant.isMicrophoneEnabled()
                       ? Border.all(
-                          color: Colors.red.shade600,
+                          color: AppColors.error,
                           width: 3,
                           // strokeAlign: StrokeAlign.center,
                           strokeAlign: BorderSide.strokeAlignCenter,
                         )
-                      : Border.all(color: Colors.white30),
+                      : Border.all(color: AppColors.onMediaSubtle),
                 ),
 
                 // TODO: Kyaw
@@ -103,12 +110,12 @@ class RoomDisplayLayout {
                                   ),
                                   margin: const EdgeInsets.only(bottom: 8.0),
                                   decoration: BoxDecoration(
-                                    // color: Colors.black45,
+                                    // color: AppColors.overlayStrong,
                                     gradient: const LinearGradient(
                                       colors: [
-                                        Colors.black12,
-                                        Colors.black38,
-                                        Colors.black54,
+                                        AppColors.overlayLight,
+                                        AppColors.overlay,
+                                        AppColors.textSecondary,
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(20.0),
@@ -118,7 +125,7 @@ class RoomDisplayLayout {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.surface,
                                       fontSize: 14,
                                     ),
                                   ),
@@ -165,7 +172,7 @@ class RoomDisplayLayout {
                           color: Theme.of(context).primaryColor,
                           borderRadius: BorderRadius.circular(20.0),
                           border: VIDEO_AS_CONTAINER
-                              ? Border.all(color: Colors.white24)
+                              ? Border.all(color: AppColors.onMediaSubtle)
                               : null,
                         ),
                         child: GestureDetector(
@@ -191,7 +198,7 @@ class RoomDisplayLayout {
                                         ),
                                         border: Border.all(
                                           width: 2.0,
-                                          color: Colors.orange.shade600,
+                                          color: AppColors.warning,
                                         ),
                                       ),
                                       child: ClipRRect(
@@ -239,7 +246,8 @@ class RoomDisplayLayout {
                                                     const Center(
                                                       child:
                                                           CircularProgressIndicator(
-                                                            color: Colors.red,
+                                                            color:
+                                                                AppColors.error,
                                                           ),
                                                     ),
                                               ),
@@ -253,13 +261,13 @@ class RoomDisplayLayout {
                                             right: 0,
                                             child: Container(
                                               decoration: BoxDecoration(
-                                                color: Colors.black38,
+                                                color: AppColors.overlay,
                                                 // borderRadius: BorderRadius.only(
                                                 //   bottomLeft: Radius.circular(20.0),
                                                 //   bottomRight: Radius.circular(20.0),
                                                 // ),
                                                 border: Border.all(
-                                                  color: Colors.orange.shade600,
+                                                  color: AppColors.warning,
                                                   // width: 2.0,
                                                 ),
                                                 borderRadius:
@@ -309,13 +317,13 @@ class RoomDisplayLayout {
                                     child: Text(
                                       '${data['full_name']}',
                                       // style: TextStyle(
-                                      //   color: Colors.white,
+                                      //   color: AppColors.surface,
                                       //   fontSize: 14,
                                       // ),
                                       // "${data['full_name'].length > ((!livekitStreamingController.pkState.value && (livekitStreamingController.listActiveCall.length > 4 || livekitStreamingController.allowVideoCall.value)) ? 8 : 12) ? data['full_name'].substring(0, ((!livekitStreamingController.pkState.value && (livekitStreamingController.listActiveCall.length > 4 || livekitStreamingController.allowVideoCall.value)) ? 8 : 12)) + '...' : data['full_name']}",
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                        color: Colors.white,
+                                        color: AppColors.surface,
                                         fontSize:
                                             (!livekitStreamingController
                                                     .pkState
@@ -349,7 +357,7 @@ class RoomDisplayLayout {
                                         '${data['diamonds'] ?? 0}',
                                         // '${(data['diamonds'] ?? 0) / 1000}K',
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.surface,
                                           fontSize:
                                               (!livekitStreamingController
                                                       .pkState
@@ -379,9 +387,18 @@ class RoomDisplayLayout {
               : Container(),
 
           // End Call for User
-          data['uid'] != myUid &&
-                  (isBroadcaster || authController.profile.value.is_moderator!)
-              ? Positioned(
+          Obx(() {
+            final isModerator =
+                authController.profile.value.is_moderator ?? false;
+            final hasKingPackage = packageController.hasActiveKingPackage;
+            final hasLiveRoomControlAccess =
+                isBroadcaster || isModerator || hasKingPackage;
+
+            if (data['uid'] == myUid || !hasLiveRoomControlAccess) {
+              return Container();
+            }
+
+            return Positioned(
                   top: 4,
                   right: 4,
                   child: InkWell(
@@ -423,25 +440,25 @@ class RoomDisplayLayout {
                       padding: const EdgeInsets.all(4.0),
                       margin: const EdgeInsets.all(4.0),
                       decoration: BoxDecoration(
-                        // color: Colors.redAccent.withOpacity(.6),
-                        color: Colors.white,
+                    // color: AppColors.error.withOpacity(.6),
+                    color: AppColors.surface,
                         borderRadius: BorderRadius.circular(100),
                         border: VIDEO_AS_CONTAINER
-                            ? Border.all(color: Colors.white24)
+                        ? Border.all(color: AppColors.onMediaSubtle)
                             : null,
                       ),
                       child: Icon(
                         Icons.close,
-                        // color: Colors.white,
-                        color: Colors.red,
+                    // color: AppColors.surface,
+                    color: AppColors.error,
                         size: livekitStreamingController.pkState.value
                             ? 16.0
                             : 12.0,
                       ),
                     ),
                   ),
-                )
-              : Container(),
+            );
+          }),
 
           serial != null
               ? Positioned(
@@ -450,15 +467,18 @@ class RoomDisplayLayout {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.black38,
+                      color: AppColors.overlay,
                       borderRadius: BorderRadius.circular(20),
                       border: VIDEO_AS_CONTAINER
-                          ? Border.all(color: Colors.white24)
+                          ? Border.all(color: AppColors.onMediaSubtle)
                           : null,
                     ),
                     child: Text(
                       serial,
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      style: const TextStyle(
+                        color: AppColors.surface,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 )
@@ -480,11 +500,11 @@ class RoomDisplayLayout {
                 !view.isScreenShare &&
                 view.participant.isMicrophoneEnabled()
             ? Border.all(
-                color: Colors.red.shade600,
+                color: AppColors.error,
                 width: 3,
                 strokeAlign: BorderSide.strokeAlignCenter,
               )
-            : Border.all(color: Colors.white30),
+            : Border.all(color: AppColors.onMediaSubtle),
       ),
       width: roomWidth,
       height: roomHeight ?? roomWidth,

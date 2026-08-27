@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
@@ -30,7 +31,7 @@ class GiftsWidget extends StatelessWidget {
     return Obx(() {
       if (streamingController.loadingGfitList.value) {
         return const Center(
-          child: SpinKitChasingDots(color: Colors.red, size: 50.0),
+          child: SpinKitChasingDots(color: AppColors.error, size: 50.0),
         );
       }
       return SizedBox(
@@ -86,8 +87,8 @@ class GiftsWidget extends StatelessWidget {
                                 ? 1
                                 : 2,
                             color: data['selected'] == null || !data['selected']
-                                ? Colors.grey
-                                : Colors.red,
+                                ? AppColors.textSecondary
+                                : AppColors.error,
                           ),
                           borderRadius: BorderRadius.circular(8.0),
                         ),
@@ -107,7 +108,7 @@ class GiftsWidget extends StatelessWidget {
                                       ),
                                       border: Border.all(
                                         width: 2.0,
-                                        color: Colors.orange.shade600,
+                                        color: AppColors.warning,
                                       ),
                                     ),
                                     child: ClipRRect(
@@ -155,7 +156,7 @@ class GiftsWidget extends StatelessWidget {
                                                   const Center(
                                                     child:
                                                         CircularProgressIndicator(
-                                                          color: Colors.red,
+                                                          color: AppColors.error,
                                                         ),
                                                   ),
                                             ),
@@ -169,13 +170,13 @@ class GiftsWidget extends StatelessWidget {
                                           right: 0,
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              color: Colors.black38,
+                                              color: AppColors.overlay,
                                               // borderRadius: BorderRadius.only(
                                               //   bottomLeft: Radius.circular(20.0),
                                               //   bottomRight: Radius.circular(20.0),
                                               // ),
                                               border: Border.all(
-                                                color: Colors.orange.shade600,
+                                                color: AppColors.warning,
                                                 // width: 2.0,
                                               ),
                                               borderRadius:
@@ -266,7 +267,7 @@ class GiftsWidget extends StatelessWidget {
                         const SizedBox(width: 24),
                         // const Icon(
                         //   Icons.diamond,
-                        //   color: Colors.blue,
+                        //   color: AppColors.info,
                         // ),
                         Image.asset(
                           'assets/others/diamond.png',
@@ -277,7 +278,7 @@ class GiftsWidget extends StatelessWidget {
                         Obx(() {
                           return Text(
                             '${authController.profile.value.diamonds}',
-                            // style: const TextStyle(color: Colors.white),
+                            // style: const TextStyle(color: AppColors.surface),
                           );
                         }),
                         const SizedBox(width: 4),
@@ -285,11 +286,11 @@ class GiftsWidget extends StatelessWidget {
                           onPressed: () => Get.snackbar(
                             'Oops',
                             "Coming Soon!",
-                            backgroundColor: Colors.orange,
-                            colorText: Colors.white,
+                            backgroundColor: AppColors.warning,
+                            colorText: AppColors.surface,
                             snackPosition: SnackPosition.TOP,
                           ),
-                          primaryColor: Colors.green,
+                          primaryColor: AppColors.success,
                           buttonText: '+ Recharge',
                           borderRadius: 8.0,
                           fontSize: 12.0,
@@ -390,8 +391,8 @@ class GiftsWidget extends StatelessWidget {
                                         Get.snackbar(
                                           'Failed',
                                           "You've no sufficient diamonds. Please +Recharge.",
-                                          backgroundColor: Colors.red,
-                                          colorText: Colors.white,
+                                          backgroundColor: AppColors.error,
+                                          colorText: AppColors.surface,
                                           snackPosition: SnackPosition.TOP,
                                         );
                                         return;
@@ -509,9 +510,9 @@ class GiftsWidget extends StatelessWidget {
                                     }
                                   },
                                   primaryColor: canSend
-                                      ? Colors.orange
-                                      : Colors.grey,
-                                  buttonTextColor: Colors.white,
+                                      ? AppColors.warning
+                                      : AppColors.textSecondary,
+                                  buttonTextColor: AppColors.surface,
                                   borderRadius: 8.0,
                                   buttonText: isSending
                                       ? 'Wait...'
@@ -557,14 +558,14 @@ class giftItem extends StatelessWidget {
             Get.snackbar(
               'Failed',
               "You've no sufficient diamonds. Please +Recharge.",
-              backgroundColor: Colors.red,
-              colorText: Colors.white,
+              backgroundColor: AppColors.error,
+              colorText: AppColors.surface,
               snackPosition: SnackPosition.TOP,
             );
             // rShowSnackBar(
             //   context: context,
             //   title: "You've no sufficient diamonds. Please +Recharge.",
-            //   color: Colors.red,
+            //   color: AppColors.error,
             //   durationInSeconds: 3,
             // );
             return;
@@ -602,7 +603,7 @@ class giftItem extends StatelessWidget {
                     : Colors.transparent,
               ),
               borderRadius: BorderRadius.circular(8.0),
-              color: Colors.black12,
+              color: AppColors.overlayLight,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -615,7 +616,7 @@ class giftItem extends StatelessWidget {
                   height: 46,
                   fit: BoxFit.contain,
                   placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator(color: Colors.red),
+                    child: CircularProgressIndicator(color: AppColors.error),
                   ),
                 ),
                 const SizedBox(height: 8),

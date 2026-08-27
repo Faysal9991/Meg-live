@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -27,7 +28,7 @@ class MessageBubble extends StatelessWidget {
                   name,
                   style: const TextStyle(
                     fontSize: 14,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 )
@@ -45,12 +46,12 @@ class MessageBubble extends StatelessWidget {
             elevation: 5,
             color: senderId == uid
                 ? Theme.of(context).primaryColor
-                : Colors.blueGrey.shade700,
+                : AppColors.textSecondary,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               child: Text(
                 text,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
+                style: const TextStyle(color: AppColors.surface, fontSize: 15),
               ),
             ),
           ),
@@ -64,12 +65,12 @@ class MessageBubble extends StatelessWidget {
                 .add_jm()
                 .format(DateTime.parse(timestamp.toString()).toLocal()),
             // timestamp.toString(),
-            style: const TextStyle(fontSize: 12, color: Colors.black87),
+            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
           ),
           // senderId == uid
           //     ? Text(
           //         'Seen',
-          //         style: const TextStyle(fontSize: 10, color: Colors.black54),
+          //         style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
           //       )
           //     : Container(),
         ],

@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
@@ -21,7 +22,7 @@ class ChangePasswordView extends StatelessWidget {
           isLoading: _authController.loadingChangePassword.value,
           // opacity: 0.8,
           progressIndicator: const SpinKitHourGlass(
-            color: Colors.red,
+            color: AppColors.error,
             size: 50.0,
           ),
           child: Scaffold(
@@ -38,7 +39,7 @@ class ChangePasswordView extends StatelessWidget {
                   child: rPrimaryTextField(
                     controller: _editingControllerOldPassword,
                     keyboardType: TextInputType.visiblePassword,
-                    borderColor: Colors.black,
+                    borderColor: AppColors.textPrimary,
                     obscureText: true,
                     hintText: 'Old password',
                   ),
@@ -49,7 +50,7 @@ class ChangePasswordView extends StatelessWidget {
                   child: rPrimaryTextField(
                     controller: _editingControllerNewPassword,
                     keyboardType: TextInputType.visiblePassword,
-                    borderColor: Colors.black,
+                    borderColor: AppColors.textPrimary,
                     obscureText: true,
                     hintText: 'New password (minimum 8 characters)',
                   ),
@@ -68,8 +69,8 @@ class ChangePasswordView extends StatelessWidget {
                         Get.snackbar(
                           'Failed',
                           "New password length must be 8 charecters long.",
-                          backgroundColor: Colors.red,
-                          colorText: Colors.white,
+                          backgroundColor: AppColors.error,
+                          colorText: AppColors.surface,
                           snackPosition: SnackPosition.BOTTOM,
                         );
                         return;
@@ -85,15 +86,15 @@ class ChangePasswordView extends StatelessWidget {
                       Get.snackbar(
                         'Failed',
                         "All fields are required.",
-                        backgroundColor: Colors.red,
-                        colorText: Colors.white,
+                        backgroundColor: AppColors.error,
+                        colorText: AppColors.surface,
                         snackPosition: SnackPosition.BOTTOM,
                       );
                     }
                   },
                   primaryColor: Theme.of(context).primaryColor,
                   buttonText: 'Submit',
-                  buttonTextColor: Colors.white,
+                  buttonTextColor: AppColors.surface,
                   fontSize: 16.0,
                   fixedSize: Size(MediaQuery.of(context).size.width - 32, 46),
                   borderRadius: 8.0,

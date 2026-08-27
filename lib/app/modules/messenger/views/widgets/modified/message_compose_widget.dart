@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -45,7 +46,7 @@ class _MessagesComposeState extends State<MessagesCompose>
                 padding: const EdgeInsets.only(left: 8.0),
                 child: TextField(
                   style: const TextStyle(
-                    color: Colors.black,
+                    color: AppColors.textPrimary,
                   ),
                   controller: _textController,
                   textAlignVertical: TextAlignVertical.center,
@@ -75,7 +76,7 @@ class _MessagesComposeState extends State<MessagesCompose>
                     border: InputBorder.none,
                     hintText: "Type your message",
                     hintStyle: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.surface,
                     ),
                     contentPadding: EdgeInsets.all(16),
                   ),
@@ -93,7 +94,7 @@ class _MessagesComposeState extends State<MessagesCompose>
                     Get.snackbar(
                       "Can't send message",
                       "Chat is blocked by ${_messengerController.chatBlockedBy.value == _authController.profile.value.user!.uid! ? "you" : widget.peerUserFullName}",
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppColors.error,
                       animationDuration: Duration.zero,
                       duration: const Duration(seconds: 3),
                     );
@@ -158,7 +159,7 @@ class _MessagesComposeState extends State<MessagesCompose>
                 },
                 icon: const Icon(
                   Icons.send,
-                  color: Colors.white,
+                  color: AppColors.surface,
                 )),
           ),
         ),

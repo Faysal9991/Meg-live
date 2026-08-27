@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_interact/widgets/contributors_widget.dart';
@@ -51,7 +52,7 @@ void showUserInteractBottomSheet({
                   right: 0,
                   bottom: 0,
                   child: Container(
-                    color: Colors.white,
+                    color: AppColors.surface,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -87,7 +88,7 @@ void showUserInteractBottomSheet({
                   child: Container(
                     padding: const EdgeInsets.only(bottom: 4),
                     decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.grey)),
+                      border: Border(bottom: BorderSide(color: AppColors.textSecondary)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -122,7 +123,7 @@ void showUserInteractBottomSheet({
                                                   .userInteractTab
                                                   .value !=
                                               'gifts'
-                                          ? Colors.grey
+                                          ? AppColors.textSecondary
                                           : Theme.of(context).primaryColor,
                                       fontWeight: FontWeight.w700,
                                       fontSize: 12,
@@ -148,7 +149,7 @@ void showUserInteractBottomSheet({
                               children: [
                                 // const Icon(
                                 //   Icons.person_pin,
-                                //   color: Colors.blue,
+                                //   color: AppColors.info,
                                 // ),
                                 data['vvip_or_vip_preference'] != null &&
                                         data['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
@@ -190,7 +191,7 @@ void showUserInteractBottomSheet({
                                                       const Center(
                                                         child:
                                                             CircularProgressIndicator(
-                                                              color: Colors.red,
+                                                              color: AppColors.error,
                                                             ),
                                                       ),
                                                 ),
@@ -220,7 +221,7 @@ void showUserInteractBottomSheet({
                                                     const Center(
                                                       child:
                                                           CircularProgressIndicator(
-                                                            color: Colors.red,
+                                                            color: AppColors.error,
                                                           ),
                                                     ),
                                               ),
@@ -236,7 +237,7 @@ void showUserInteractBottomSheet({
                                                   .userInteractTab
                                                   .value !=
                                               'contributors'
-                                          ? Colors.grey
+                                          ? AppColors.textSecondary
                                           : Theme.of(context).primaryColor,
                                       fontWeight: FontWeight.w700,
                                       fontSize: 12,

@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
 import 'package:doyel_live/app/modules/products/models/king_package_catalog_state.dart';
@@ -164,7 +165,7 @@ class _KingPackageViewState extends State<KingPackageView> {
                           context: context,
                           title:
                               'You need $requiredDiamonds diamonds, but you have ${_packageController.currentDiamondBalance}.',
-                          color: Colors.red,
+                          color: AppColors.error,
                           durationInSeconds: 5,
                         );
                         return;
@@ -180,7 +181,7 @@ class _KingPackageViewState extends State<KingPackageView> {
                         rShowSnackBar(
                           context: context,
                           title: 'King package purchased successfully.',
-                          color: Colors.green,
+                          color: AppColors.success,
                           durationInSeconds: 3,
                         );
                         return;
@@ -191,7 +192,7 @@ class _KingPackageViewState extends State<KingPackageView> {
                           context: context,
                           title:
                               'You do not have enough diamonds to purchase this package.',
-                          color: Colors.red,
+                          color: AppColors.error,
                           durationInSeconds: 5,
                         );
                         return;
@@ -201,7 +202,7 @@ class _KingPackageViewState extends State<KingPackageView> {
                         Get.defaultDialog(
                           title: 'Locked',
                           middleText: 'Your diamonds has been locked.',
-                          titleStyle: const TextStyle(color: Colors.red),
+                          titleStyle: const TextStyle(color: AppColors.error),
                         );
                         return;
                       }
@@ -210,18 +211,18 @@ class _KingPackageViewState extends State<KingPackageView> {
                         rShowSnackBar(
                           context: context,
                           title: 'Something went wrong. Please try again.',
-                          color: Colors.red,
+                          color: AppColors.error,
                         );
                       }
                     },
-                    primaryColor: Colors.white54,
+                    primaryColor: AppColors.onMediaMuted,
                     buttonText:
                         _packageController.purchasingKingPackageId.value ==
                             packageItem.id
                         ? 'Purchasing...'
                         : 'Purchase',
                     fontSize: 14.0,
-                    buttonTextColor: Colors.black,
+                    buttonTextColor: AppColors.textPrimary,
                     borderRadius: 60.0,
                   )
                 : Text(

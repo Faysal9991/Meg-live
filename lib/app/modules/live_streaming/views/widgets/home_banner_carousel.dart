@@ -31,7 +31,7 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x33000000),
+                color: AppColors.overlayLight,
                 blurRadius: 14,
                 offset: Offset(0, 8),
               ),
@@ -83,7 +83,7 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Color(0xA6000000)],
+                          colors: [Colors.transparent, AppColors.overlayStrong],
                         ),
                       ),
                     ),

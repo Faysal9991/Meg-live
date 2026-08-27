@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:country_pickers/country.dart';
 import 'package:flutter/material.dart';
 import 'package:country_pickers/country_pickers.dart';
@@ -18,12 +19,12 @@ Widget rBuildCountryPickerDropdown({
   double dropdownSelectedItemWidth = dropdownButtonWidth - 30;
   return Container(
     decoration: BoxDecoration(
-      // color: Colors.grey,
+      // color: AppColors.textSecondary,
       borderRadius: BorderRadius.circular(
         8.0,
       ),
       border: Border.all(
-        color: Colors.grey,
+        color: AppColors.textSecondary,
       ),
     ),
     child: Row(
@@ -34,7 +35,7 @@ Widget rBuildCountryPickerDropdown({
         CountryPickerDropdown(
           /* underline: Container(
               height: 2,
-              color: Colors.red,
+              color: AppColors.error,
             ),*/
           //show'em (the text fields) you're in charge now
           onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
@@ -141,7 +142,7 @@ Widget _buildDropdownSelectedItemBuilder(
                     child: Text(
                   '${country.name}',
                   style: const TextStyle(
-                      color: Colors.red, fontWeight: FontWeight.bold),
+                      color: AppColors.error, fontWeight: FontWeight.bold),
                 )),
               ],
             )));
@@ -188,10 +189,10 @@ void openCountryPickerDialog({
     showDialog(
       context: context,
       builder: (context) => Theme(
-        data: Theme.of(context).copyWith(primaryColor: Colors.pink),
+        data: Theme.of(context).copyWith(primaryColor: AppColors.accent),
         child: CountryPickerDialog(
           titlePadding: const EdgeInsets.all(8.0),
-          searchCursorColor: Colors.pinkAccent,
+          searchCursorColor: AppColors.accentLight,
           searchInputDecoration: const InputDecoration(hintText: 'Search...'),
           isSearchable: true,
           title: const Text('Select your phone code'),
