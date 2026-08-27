@@ -9,6 +9,7 @@ import 'package:dio/dio.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/routes/app_pages.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
+import 'package:doyel_live/app/utils/api_logger.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/firebase_functions.dart';
 import 'package:flutter/material.dart';
@@ -123,15 +124,42 @@ class AuthController extends GetxController {
           };
           // SignUp Api Call
           var dio = Dio();
+          final headers = <String, dynamic>{
+            'accept': '*/*',
+            'X-Api-Key': DRF_API_KEY,
+          };
           try {
+            final deviceId = await getUniqueDeviceId();
+            final query = <String, dynamic>{'device_id': deviceId};
+
+            ApiLogger.hit(
+              method: 'POST',
+              url: kLoginUsingFirebaseUrl,
+              body: {
+                'login_type': data['login_type'],
+                'full_name': data['full_name'],
+                'email': data['email'],
+                'uid': data['uid'],
+                'photo_url': data['photo_url'],
+              },
+              query: query,
+              headers: headers,
+            );
+
             final response = await dio.post(
               kLoginUsingFirebaseUrl,
               data: data,
-              options: Options(
-                headers: {'accept': '*/*', 'X-Api-Key': DRF_API_KEY},
-              ),
-              queryParameters: {'device_id': await getUniqueDeviceId()},
+              options: Options(headers: headers),
+              queryParameters: query,
             );
+
+            ApiLogger.response(
+              method: 'POST',
+              url: kLoginUsingFirebaseUrl,
+              statusCode: response.statusCode,
+              data: response.data,
+            );
+
             int? statusCode = response.statusCode;
             authLoading.value = false;
             if (statusCode == 201) {
@@ -168,7 +196,17 @@ class AuthController extends GetxController {
                 snackPosition: SnackPosition.BOTTOM,
               );
             }
-          } catch (e) {
+          } catch (e, stackTrace) {
+            final dioException = e is DioException ? e : null;
+            ApiLogger.error(
+              method: 'POST',
+              url: kLoginUsingFirebaseUrl,
+              error: e,
+              statusCode: dioException?.response?.statusCode,
+              data: dioException?.response?.data,
+              stackTrace: stackTrace,
+            );
+
             authLoading.value = false;
             Get.snackbar(
               'Failed',
@@ -207,13 +245,36 @@ class AuthController extends GetxController {
     };
 
     var dio = Dio();
+    final headers = <String, dynamic>{
+      'accept': '*/*',
+      'X-Api-Key': DRF_API_KEY,
+    };
     try {
+      final deviceId = await getUniqueDeviceId();
+      final query = <String, dynamic>{'device_id': deviceId};
+
+      ApiLogger.hit(
+        method: 'POST',
+        url: kLoginUsingFirebaseUrl,
+        body: data,
+        query: query,
+        headers: headers,
+      );
+
       final response = await dio.post(
         kLoginUsingFirebaseUrl,
         data: data,
-        options: Options(headers: {'accept': '*/*', 'X-Api-Key': DRF_API_KEY}),
-        queryParameters: {'device_id': await getUniqueDeviceId()},
+        options: Options(headers: headers),
+        queryParameters: query,
       );
+
+      ApiLogger.response(
+        method: 'POST',
+        url: kLoginUsingFirebaseUrl,
+        statusCode: response.statusCode,
+        data: response.data,
+      );
+
       int? statusCode = response.statusCode;
       authLoading.value = false;
       if (statusCode == 201) {
@@ -255,7 +316,17 @@ class AuthController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      final dioException = e is DioException ? e : null;
+      ApiLogger.error(
+        method: 'POST',
+        url: kLoginUsingFirebaseUrl,
+        error: e,
+        statusCode: dioException?.response?.statusCode,
+        data: dioException?.response?.data,
+        stackTrace: stackTrace,
+      );
+
       authLoading.value = false;
       Get.snackbar(
         'Failed',
