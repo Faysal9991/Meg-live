@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:doyel_live/app/data/entry_effect_model.dart';
+
 class Profile {
   int? id, loves, diamonds, gift_diamonds;
   ProfileUser? user;
@@ -22,6 +24,7 @@ class Profile {
   bool? is_locked_diamonds, is_reseller, is_moderator, is_agent, is_host;
 
   dynamic level, vvip_or_vip_preference;
+  EntryEffect? entryEffect;
 
   Profile();
   Profile.fromJson(Map<String, dynamic> json)
@@ -33,6 +36,7 @@ class Profile {
       vvip_or_vip_preference = _parseVvipOrVipPreference(
         json['vvip_or_vip_preference'],
       ),
+      entryEffect = _parseEntryEffect(json),
       user = json['user'] is Map<String, dynamic>
           ? ProfileUser.fromJson(json['user'])
           : null,
@@ -70,6 +74,21 @@ class Profile {
     return value;
   }
 
+  static EntryEffect? _parseEntryEffect(Map<String, dynamic> json) {
+    final directEntryEffect = EntryEffect.fromDynamic(json['entry_effect']);
+    if (directEntryEffect != null) {
+      return directEntryEffect;
+    }
+
+    final preference = _parseVvipOrVipPreference(
+      json['vvip_or_vip_preference'],
+    );
+    if (preference is Map) {
+      return EntryEffect.fromDynamic(preference['entry_effect']);
+    }
+    return null;
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'diamonds': diamonds,
@@ -78,6 +97,7 @@ class Profile {
     'user': user?.toJson(),
     'level': level,
     'vvip_or_vip_preference': jsonEncode(vvip_or_vip_preference),
+    'entry_effect': entryEffect?.toJson(),
     'followers': followers,
     'blocks': blocks,
     'full_name': full_name,

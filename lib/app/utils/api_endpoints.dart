@@ -141,12 +141,18 @@ const kLiveStreamingNotifyFollowersCreateUrl =
 // VVIP
 const kPurchasedVvIPPackageListUrl =
     '$_baseUrl/products/purchased-vvip-package-list/';
+const kVvipPackagePurchaseUrl = '$_baseUrl/products/vvip-package-purchase/';
 // VIP
 const kPurchasedVIPPackageListUrl =
     '$_baseUrl/products/purchased-vip-package-list/';
+const kVipPackagePurchaseUrl = '$_baseUrl/products/vip-package-purchase/';
 const kPurchasedKingPackageUrl = '$_baseUrl/products/purchased-king-package/';
 const kPurchasedKingPackageListUrl =
     '$_baseUrl/products/purchased-king-package-list/';
+const kPurchasedEntryEffectPackageListUrl =
+    '$_baseUrl/products/purchased-entry-effect-package-list/';
+const kPurchasedEntryEffectPackageUrl =
+    '$_baseUrl/products/purchased-entry-effect-package/';
 
 // Gift stuffs
 const kGiftListUrl = '$_baseUrl/products/gift-list/';
@@ -168,6 +174,17 @@ const kAppLockRetrieveUrl = '$_baseUrl/tracking/applock-retrieve/';
 //   return 'wss://$host:8001/ws/live-streaming/$roomName/';
 // }
 
+String _webSocketUrl({required List<String> pathSegments, String? query}) {
+  final apiUri = Uri.parse(kDomain);
+  return Uri(
+    scheme: apiUri.scheme == 'https' ? 'wss' : 'ws',
+    host: apiUri.host,
+    port: apiUri.hasPort ? apiUri.port : null,
+    pathSegments: [...pathSegments, ''],
+    query: query,
+  ).toString();
+}
+
 // Websocket
 String kWebSocketLivekitStreamingUrl({
   required dynamic roomName,
@@ -176,32 +193,21 @@ String kWebSocketLivekitStreamingUrl({
   required String deviceName,
 }) {
   deviceName = refineDeviceName(deviceName: deviceName);
-  // 192.168.202.47:8000 (_domainName for example)
-  // http
-  // return 'ws://$host/ws/livekit-streaming/$roomName/$uniqueDeviceId/$deviceName/?$userId';
-  // https
-  return 'wss://$host:8001/ws/livekit-streaming/$roomName/$uniqueDeviceId/$deviceName/?$userId';
+  return _webSocketUrl(
+    pathSegments: [
+      'ws',
+      'livekit-streaming',
+      roomName.toString(),
+      uniqueDeviceId,
+      deviceName,
+    ],
+    query: userId.toString(),
+  );
 }
-
-// // Live Room
-// String kWebSocketLivekitLiveRoomUrl({
-//   required dynamic roomName,
-// }) {
-//   // 192.168.202.47:8000 (_domainName for example)
-//   // http
-//   // return 'ws://$host/ws/livekit-live-room/$roomName/';
-//   // https
-//   // return 'wss://$host:8001/ws/livekit-live-room/$roomName/';
-//   return 'ws://195.26.253.191/ws/livekit-live-room/$roomName/';
-// }
 
 // Chat Room
 String kWebSocketChatRoomUrl({required dynamic roomName}) {
-  // 192.168.202.47:8000 (_domainName for example)
-  // http
-  // return 'ws://$host/ws/chat-room/$roomName/';
-  // https
-  return 'wss://$host:8001/ws/chat-room/$roomName/';
+  return _webSocketUrl(pathSegments: ['ws', 'chat-room', roomName.toString()]);
 }
 
 // Ref: https://docs.flutter.dev/deployment/android

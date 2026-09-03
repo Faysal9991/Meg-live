@@ -5,7 +5,9 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:doyel_live/app/data/entry_effect_model.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
@@ -97,7 +99,11 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   HeadsetState? _headsetState;
   // IOWebSocketChannel? webSocketChannelForActions;
   WebSocket? webSocketClientForActions;
+  StreamSubscription<dynamic>? _actionSocketConnectionSubscription;
+  StreamSubscription<dynamic>? _actionSocketMessageSubscription;
+  String? _liveRoomSocketBaseUrl;
   String _webSocketConnectionState = '';
+  int _actionSocketGeneration = 0;
 
   final ScrollController _scrollController = ScrollController();
   double? _scrollPosition;
@@ -109,6 +115,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       _timerTrackingExpiredStreams,
       _timerTrackingExpiredNormalGifts,
       _timerAfterInternetConnectionCheck;
+  Timer? _entryEffectTimer;
+  AudioPlayer? _entryEffectAudioPlayer;
+  final List<_RoomEntryEffect> _entryEffectQueue = <_RoomEntryEffect>[];
+  _RoomEntryEffect? _activeEntryEffect;
 
   // Live Kit
   String? _preferredCodec;
@@ -269,89 +279,98 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     // }
   }
 
-  initWebSocketClientForActions() async {
-    if (webSocketClientForActions != null &&
-        _webSocketConnectionState != 'disconnecting' &&
-        _webSocketConnectionState != 'disconnected') {
-      // _socket!.connection.state != Disconnecting() &&
-      // _socket!.connection.state != Disconnected()) {
-      // print('Returned............................................');
+  Future<void> initWebSocketClientForActions({
+    bool forceReconnect = false,
+  }) async {
+    final socketBaseUrl = _liveRoomSocketBaseUrl?.trim() ?? '';
+    if (_isDisposed || socketBaseUrl.isEmpty) {
       return;
     }
 
-    // Create a WebSocket client.
-    final uri = Uri.parse(
-      // kWebSocketLivekitLiveRoomUrl(roomName: widget.channelName),
-      '${_livekitStreamingController.liveRoomSocketBaseUrl}/${widget.channelName}/',
+    if (webSocketClientForActions != null &&
+        !forceReconnect &&
+        _webSocketConnectionState != 'disconnecting' &&
+        _webSocketConnectionState != 'disconnected') {
+      return;
+    }
+
+    final normalizedBaseUrl = socketBaseUrl.endsWith('/')
+        ? socketBaseUrl.substring(0, socketBaseUrl.length - 1)
+        : socketBaseUrl;
+    final uri = Uri.tryParse(
+      '$normalizedBaseUrl/${Uri.encodeComponent(widget.channelName)}/',
     );
-    // const backoff = ConstantBackoff(Duration(seconds: 1));
+    if (uri == null || (uri.scheme != 'ws' && uri.scheme != 'wss')) {
+      _webSocketConnectionState = 'disconnected';
+      return;
+    }
+
+    _closeActionSocket();
+    final socketGeneration = _actionSocketGeneration;
     final backoff = LinearBackoff(
       initial: const Duration(seconds: 0),
       increment: const Duration(seconds: 1),
       maximum: const Duration(seconds: 5),
     );
-    webSocketClientForActions = WebSocket(uri, backoff: backoff);
+    final socket = WebSocket(uri, backoff: backoff);
+    webSocketClientForActions = socket;
 
-    // Listen for changes in the connection state.
-    webSocketClientForActions!.connection.listen((state) {
-      // do nothing if already disposed
-      if (_isDisposed) {
+    _actionSocketConnectionSubscription = socket.connection.listen((state) {
+      if (_isDisposed || socketGeneration != _actionSocketGeneration) {
         return;
       }
       if (state == const Connecting()) {
-        // print('connecting: the connection has not yet been established.');
         _webSocketConnectionState = 'connecting';
       } else if (state == const Connected()) {
-        // print(
-        //     ' connected: the connection is established and communication is possible.');
         _webSocketConnectionState = 'connected';
       } else if (state == const Reconnecting()) {
-        // print(
-        //     ' reconnecting: the connection was lost and is in the process of being re-established.');
         _webSocketConnectionState = 'reconnecting';
       } else if (state == const Reconnected()) {
-        // print(
-        //     'reconnected: the connection was lost and has been re-established.');
         _webSocketConnectionState = 'reconnected';
       } else if (state == const Disconnecting()) {
-        // print(
-        //     ' disconnecting: the connection is going through the closing handshake or the close method has been invoked.');
-        try {
-          _webSocketConnectionState = 'disconnecting';
-        } catch (e) {
-          //
-        }
+        _webSocketConnectionState = 'disconnecting';
       } else if (state == const Disconnected()) {
-        // print(
-        //     ' disconnected: the WebSocket connection has been closed or could not be established.');
-        try {
-          _webSocketConnectionState = 'disconnected';
-        } catch (e) {
-          //
+        _webSocketConnectionState = 'disconnected';
+      }
+    });
+
+    _actionSocketMessageSubscription = socket.messages.listen((message) {
+      if (_isDisposed || socketGeneration != _actionSocketGeneration) {
+        return;
+      }
+      try {
+        dynamic data = jsonDecode(message)['message'];
+        if (data['gzip'] != null) {
+          final gzipDecodedBytes = gzip.decode(data['gzip'].cast<int>());
+          final Map<String, dynamic> gzipData = jsonDecode(
+            utf8.decode(gzipDecodedBytes),
+          );
+          data['gzip'] = null;
+          data = {...data, ...gzipData};
         }
+
+        _takeActionOnReceivedData(data);
+      } catch (_) {
+        // Ignore malformed room messages without stopping the socket listener.
       }
     });
+  }
 
-    // Listen for incoming messages.
-    webSocketClientForActions!.messages.listen((message) {
-      // // do nothing if already disposed
-      // if (_isDisposed) {
-      //   return;
-      // }
-      print('Received type message: $message');
-      print('Message runtimeType: ${message.runtimeType}');
-      dynamic data = jsonDecode(message)['message'];
-      if (data['gzip'] != null) {
-        List<int> gzipDecodedBytes = gzip.decode(data['gzip'].cast<int>());
-        Map<String, dynamic> gzipData = jsonDecode(
-          utf8.decode(gzipDecodedBytes),
-        );
-        data['gzip'] = null;
-        data = {...data, ...gzipData};
-      }
+  bool get _isActionSocketConnected =>
+      webSocketClientForActions != null &&
+      (_webSocketConnectionState == 'connected' ||
+          _webSocketConnectionState == 'reconnected');
 
-      _takeActionOnReceivedData(data);
-    });
+  void _closeActionSocket() {
+    _actionSocketGeneration++;
+    _actionSocketConnectionSubscription?.cancel();
+    _actionSocketConnectionSubscription = null;
+    _actionSocketMessageSubscription?.cancel();
+    _actionSocketMessageSubscription = null;
+    final socket = webSocketClientForActions;
+    webSocketClientForActions = null;
+    _webSocketConnectionState = 'disconnected';
+    socket?.close(1000, 'CLOSE_NORMAL');
   }
 
   void _takeActionOnReceivedData(dynamic data) async {
@@ -550,6 +569,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
               };
               onUpdateAction(actionData);
             } else {
+              _queueEntryEffectForParticipant(userJoinedData);
               userJoinedData['datetime'] = DateTime.now().toIso8601String();
               dynamic activityData = {
                 "type": "joined",
@@ -751,6 +771,170 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     _livekitStreamingController.setLiveRunningDurationFormat(durationFormat);
   }
 
+  void _queueEntryEffectForParticipant(dynamic participantData) {
+    if (participantData is! Map) {
+      return;
+    }
+
+    var effect = EntryEffect.fromDynamic(participantData['entry_effect']);
+    if (effect == null) {
+      final preference = participantData['vvip_or_vip_preference'];
+      if (preference is Map) {
+        effect = EntryEffect.fromDynamic(preference['entry_effect']);
+      } else if (preference is String) {
+        try {
+          final decodedPreference = jsonDecode(preference);
+          if (decodedPreference is Map) {
+            effect = EntryEffect.fromDynamic(decodedPreference['entry_effect']);
+          }
+        } catch (_) {
+          // Ignore an invalid legacy preference value.
+        }
+      }
+    }
+
+    if (effect == null || !effect.isActive) {
+      return;
+    }
+
+    _entryEffectQueue.add(
+      _RoomEntryEffect(
+        effect: effect,
+        userName: participantData['full_name']?.toString(),
+      ),
+    );
+    _showNextEntryEffect();
+  }
+
+  void _showNextEntryEffect() {
+    if (_isDisposed || !mounted || _activeEntryEffect != null) {
+      return;
+    }
+    if (_entryEffectQueue.isEmpty) {
+      return;
+    }
+
+    final nextEffect = _entryEffectQueue.removeAt(0);
+    setState(() => _activeEntryEffect = nextEffect);
+    unawaited(_playEntryEffectAudio(nextEffect.effect.audioUrl));
+    _entryEffectTimer = Timer(const Duration(seconds: 3), () {
+      unawaited(_finishCurrentEntryEffect());
+    });
+  }
+
+  Future<void> _playEntryEffectAudio(String? audioUrl) async {
+    await _disposeEntryEffectAudio();
+    if (audioUrl == null || _isDisposed) {
+      return;
+    }
+
+    final player = AudioPlayer(
+      playerId: 'entry-effect-${DateTime.now().microsecondsSinceEpoch}',
+    );
+    _entryEffectAudioPlayer = player;
+    try {
+      await player.play(UrlSource(audioUrl), volume: .6);
+    } catch (_) {
+      await _disposeEntryEffectAudio();
+    }
+  }
+
+  Future<void> _finishCurrentEntryEffect() async {
+    _entryEffectTimer?.cancel();
+    _entryEffectTimer = null;
+    await _disposeEntryEffectAudio();
+    if (_isDisposed || !mounted) {
+      return;
+    }
+    setState(() => _activeEntryEffect = null);
+    _showNextEntryEffect();
+  }
+
+  Future<void> _disposeEntryEffectAudio() async {
+    final player = _entryEffectAudioPlayer;
+    _entryEffectAudioPlayer = null;
+    if (player == null) {
+      return;
+    }
+    try {
+      await player.stop();
+      await player.release();
+      await player.dispose();
+    } catch (_) {
+      // The player may already have been released by the platform.
+    }
+  }
+
+  Widget _buildEntryEffectOverlay(_RoomEntryEffect roomEntryEffect) {
+    final effect = roomEntryEffect.effect;
+    final effectTitle = effect.title ?? 'Special Entry';
+    final userName = roomEntryEffect.userName?.trim();
+
+    return IgnorePointer(
+      child: ColoredBox(
+        color: Colors.black26,
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 380, maxHeight: 420),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.overlay,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.premium, width: 2),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (effect.gifUrl != null)
+                  Flexible(
+                    child: CachedNetworkImage(
+                      key: ValueKey<String>(effect.gifUrl!),
+                      imageUrl: effect.gifUrl!,
+                      fit: BoxFit.contain,
+                      placeholder: (_, __) => const SizedBox(
+                        height: 180,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.premium,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (_, __, ___) => const Icon(
+                        Icons.auto_awesome,
+                        color: AppColors.premium,
+                        size: 100,
+                      ),
+                    ),
+                  )
+                else
+                  const Icon(
+                    Icons.auto_awesome,
+                    color: AppColors.premium,
+                    size: 100,
+                  ),
+                const SizedBox(height: 12),
+                Text(
+                  userName == null || userName.isEmpty
+                      ? effectTitle
+                      : '$userName entered with $effectTitle',
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.surface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -765,194 +949,39 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     });
 
     _authController.setShowingOverlay(overlay: false);
-    _initLiveKitStuffs();
+
+    _initializeLiveRoom();
 
     _editingControllerComment = TextEditingController();
 
-    /// if headset is plugged
-    _headsetPlugin.getCurrentState.then((HeadsetState? headsetState) async {
-      _headsetState = headsetState;
-      switch (headsetState) {
-        case HeadsetState.CONNECT:
-          // Headset in connected
-          _livekitStreamingController.setLoudSpeaker(false);
-          try {
-            await rtc.Helper.setSpeakerphoneOn(false);
-          } catch (e) {
-            //
-          }
-          break;
-        case HeadsetState.DISCONNECT:
-          // Headset in disconnected
-          _livekitStreamingController.setLoudSpeaker(true);
-          try {
-            await rtc.Helper.setSpeakerphoneOn(true);
-          } catch (e) {
-            //
-          }
-          break;
-        default:
-      }
-    });
+    // remaining headset/internet listener code...
+  }
 
-    /// Detect the moment headset is plugged or unplugged
-    _headsetPlugin.setListener((HeadsetState headsetState) async {
-      _headsetState = headsetState;
-      switch (headsetState) {
-        case HeadsetState.CONNECT:
-          // Headset in connected
-          _livekitStreamingController.setLoudSpeaker(false);
-          try {
-            await rtc.Helper.setSpeakerphoneOn(false);
-          } catch (e) {
-            //
-          }
-          break;
-        case HeadsetState.DISCONNECT:
-          // Headset in disconnected
-          _livekitStreamingController.setLoudSpeaker(true);
-          try {
-            await rtc.Helper.setSpeakerphoneOn(true);
-          } catch (e) {
-            //
-          }
-          break;
-        default:
-      }
-    });
+  Future<void> _initializeLiveRoom() async {
+    try {
+      debugPrint('🟡 LIVE INIT: fetching LiveKit stuffs...');
 
-    _authController.preferences.getBool('internet', defaultValue: false).listen((
-      bool connected,
-    ) async {
-      // do nothing if already disposed
-      if (_isDisposed) {
+      await _initLiveKitStuffs();
+
+      debugPrint('✅ LIVE INIT: LiveKit stuffs loaded');
+
+      if (_isDisposed || !mounted) {
         return;
       }
-
-      if (connected && mounted) {
-        // if (!_isFirstTimeLoad &&
-        //     _room != null &&
-        //     _room!.connectionState.name == 'disconnected') {
-        //   if (widget.isBroadcaster) {
-        //     // _room!.reconnect();
-        //     _room!.engine.restartConnection(true).then((value) async {
-        //       try {
-        //         await _room!.localParticipant?.setCameraEnabled(true);
-        //       } catch (e) {
-        //         //
-        //       }
-
-        //       if (_livekitStreamingController.muted.value) {
-        //         try {
-        //           await _room!.localParticipant?.setMicrophoneEnabled(false);
-        //         } catch (e) {
-        //           //
-        //         }
-        //       } else {
-        //         try {
-        //           await _room!.localParticipant?.setMicrophoneEnabled(true);
-        //         } catch (e) {
-        //           //
-        //         }
-        //       }
-        //       // await Hardware.instance.setSpeakerphoneOn(
-        //       //     _livekitStreamingController.loudSpeaker.value);
-        //       await rtc.Helper.setSpeakerphoneOn(
-        //           _livekitStreamingController.loudSpeaker.value);
-
-        //       _livekitStreamingController.busyConnectingEngine.value = false;
-        //       _renderParticipants();
-        //     }, onError: (error) {
-        //       // _closeEverything();
-        //       rShowSnackBar(
-        //         context: context,
-        //         title: 'Connection failed. Please try again.',
-        //         color: AppColors.error,
-        //         durationInSeconds: 2,
-        //       );
-        //     });
-        //   } else {
-        //     _room!.engine.restartConnection(true).then((value) async {
-        //       if (_livekitStreamingController.listActiveCall.indexWhere(
-        //               (element) =>
-        //                   element['uid'] ==
-        //                   _authController.profile.value.user!.uid!) >
-        //           -1) {
-        //         try {
-        //           await _room!.localParticipant?.setCameraEnabled(true);
-        //         } catch (e) {
-        //           //
-        //         }
-
-        //         if (_livekitStreamingController.muted.value) {
-        //           try {
-        //             await _room!.localParticipant?.setMicrophoneEnabled(false);
-        //           } catch (e) {
-        //             //
-        //           }
-        //         } else {
-        //           try {
-        //             await _room!.localParticipant?.setMicrophoneEnabled(true);
-        //           } catch (e) {
-        //             //
-        //           }
-        //         }
-        //       }
-
-        //       // await Hardware.instance.setSpeakerphoneOn(
-        //       //     _livekitStreamingController.loudSpeaker.value);
-        //       await rtc.Helper.setSpeakerphoneOn(
-        //           _livekitStreamingController.loudSpeaker.value);
-
-        //       _livekitStreamingController.busyConnectingEngine.value = false;
-        //       _renderParticipants();
-        //     }, onError: (error) {
-        //       // _closeEverything();
-        //       rShowSnackBar(
-        //         context: context,
-        //         title: 'Connection failed. Please try again.',
-        //         color: AppColors.error,
-        //         durationInSeconds: 2,
-        //       );
-        //     });
-        //   }
-        // }
-        /////////////////////
-        initWebSocketClientForActions();
-        // initWebSocketConnectionForActions();
-        if (_isFirstTimeLoad) {
-          _isFirstTimeLoad = false;
-
-          // _updateBroadcasterStates();
-          _loadStateData();
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _timeConsumingTasks();
-            _scrollingStuff();
-            // _listenLiveRoomStateChangeEvent();
-          });
-          // Testing
-          // _loadFakeViews();
-          // if (widget.isBroadcaster) {
-          //   _useIsolateLoadFakeViews();
-          // }
-          // _setUpEventListeners();
-        }
-      } else if (!connected && mounted) {
-        // Disconnected internet
-        rShowMendatoryAlertDialog(
-          context: context,
-          title: 'Net connection lost',
-          content:
-              'Please check your internet connection or Reconnect your internet.',
-          onConfirm: () => Navigator.of(context).pop(),
-        );
-      }
-    });
+    } catch (e, stackTrace) {
+      debugPrint('❌ LIVE INIT ERROR: $e');
+      debugPrint('$stackTrace');
+    }
   }
 
   @override
   void dispose() {
     // _closeEverything();
+
+    _isDisposed = true;
+    _entryEffectTimer?.cancel();
+    unawaited(_disposeEntryEffectAudio());
+    _closeActionSocket();
 
     (() {
       _livekitStreamingController.stopLiveRoomHeartbeat();
@@ -1577,7 +1606,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                         );
                                       }
 
-                                      onUpdateAction({
+                                      final sent = onUpdateAction({
                                         'action': 'activity',
                                         'type': 'comment',
                                         'uid': _authController
@@ -1619,7 +1648,20 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                                 .value
                                                 .vvip_or_vip_preference,
                                       });
-                                      _editingControllerComment.clear();
+                                      if (sent) {
+                                        _editingControllerComment.clear();
+                                      } else {
+                                        unawaited(
+                                          initWebSocketClientForActions(),
+                                        );
+                                        rShowSnackBar(
+                                          context: context,
+                                          title:
+                                              'Comment connection is not ready. Please try again.',
+                                          color: AppColors.warning,
+                                          durationInSeconds: 2,
+                                        );
+                                      }
                                     }
                                   }
                                 },
@@ -2142,11 +2184,52 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           ),
                         );
                       }),
+                      // Camera On/Off
+                      Obx(() {
+                        if (!_livekitStreamingController
+                                .expandMediaController
+                                .value ||
+                            _livekitStreamingController.listActiveCall
+                                    .indexWhere(
+                                      (element) =>
+                                          element['uid'] ==
+                                          _authController
+                                              .profile
+                                              .value
+                                              .user!
+                                              .uid!,
+                                    ) ==
+                                -1) {
+                          return Container();
+                        }
+                        return RawMaterialButton(
+                          onPressed: _onToggleVideoEnable,
+                          shape: const CircleBorder(),
+                          elevation: 2.0,
+                          fillColor: AppColors.overlay,
+                          padding: const EdgeInsets.all(6.0),
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          child: Icon(
+                            _livekitStreamingController.videoDisabled.value
+                                ? Icons.videocam_off
+                                : Icons.videocam,
+                            color:
+                                _livekitStreamingController.videoDisabled.value
+                                ? AppColors.error
+                                : AppColors.onMediaMuted,
+                            size: 16.0,
+                          ),
+                        );
+                      }),
                       // Camera Switch
                       Obx(() {
                         if (!_livekitStreamingController
                                 .expandMediaController
                                 .value ||
+                            _livekitStreamingController.videoDisabled.value ||
                             _livekitStreamingController.listActiveCall
                                     .indexWhere(
                                       (element) =>
@@ -2241,6 +2324,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                     ],
                   ),
                 ),
+                if (_activeEntryEffect != null)
+                  Positioned.fill(
+                    child: _buildEntryEffectOverlay(_activeEntryEffect!),
+                  ),
               ],
             ),
           ),
@@ -2266,34 +2353,42 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       }
 
       try {
-        _livekitStreamingController
-            .createLiveKitToken(channelName: widget.channelName)
-            .then((credential) async {
-              if (credential != null) {
-                _engineName = credential['engine'];
-                _roomToken = credential['token'];
-                _serverUrl = credential['server_url'];
-                _preferredCodec = credential['codec'];
+        final credential = await _livekitStreamingController.createLiveKitToken(
+          channelName: widget.channelName,
+        );
+        if (credential == null || _isDisposed || !mounted) {
+          return;
+        }
 
-                _livekitStreamingController.liveRoomSocketBaseUrl =
-                    credential['websocket_base_url'];
-                //create new room
-                _room = Room(
-                  roomOptions: await LivekitStuffs().getRoomOptions(
-                    preferredCodec: _preferredCodec,
-                    isHost: widget.isBroadcaster,
-                    enableHostHDRoom:
-                        credential['enable_host_hd_room'] ?? false,
-                    allowVideoCall: true,
-                  ),
-                );
-                // Create a Listener before connecting
-                _listener = _room!.createListener();
-                await _connectingRoom(token: _roomToken);
-                _room!.addListener(_onRoomDidUpdate);
-                _setUpEventListeners();
-              }
-            });
+        _engineName = credential['engine'];
+        _roomToken = credential['token'];
+        _serverUrl = credential['server_url'];
+        _preferredCodec = credential['codec'];
+
+        final socketBaseUrl = credential['websocket_base_url']
+            ?.toString()
+            .trim();
+        if (socketBaseUrl == null || socketBaseUrl.isEmpty) {
+          throw StateError('Missing websocket_base_url in LiveKit credential');
+        }
+        _liveRoomSocketBaseUrl = socketBaseUrl;
+        _livekitStreamingController.liveRoomSocketBaseUrl = socketBaseUrl;
+        await initWebSocketClientForActions(forceReconnect: true);
+
+        //create new room
+        _room = Room(
+          roomOptions: await LivekitStuffs().getRoomOptions(
+            preferredCodec: _preferredCodec,
+            isHost: widget.isBroadcaster,
+            enableHostHDRoom: credential['enable_host_hd_room'] ?? false,
+            allowVideoCall: true,
+          ),
+        );
+        // Create a Listener before connecting
+        _listener = _room!.createListener();
+        await _connectingRoom(token: _roomToken);
+        _room!.addListener(_onRoomDidUpdate);
+        _setUpEventListeners();
       } catch (e) {
         _livekitStreamingController.busyConnectingEngine.value = false;
       }
@@ -2436,6 +2531,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                 'level': _authController.profile.value.level,
                 'vvip_or_vip_preference':
                     _authController.profile.value.vvip_or_vip_preference,
+                'entry_effect': _authController.profile.value.entryEffect
+                    ?.toJson(),
               };
 
               onUpdateAction(userJoined);
@@ -3386,9 +3483,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     //   webSocketChannelForComments?.sink.close(status.goingAway);
     // }
 
-    if (webSocketClientForActions != null) {
-      webSocketClientForActions!.close(1000, 'CLOSE_NORMAL');
-    }
+    _closeActionSocket();
 
     // try {
     //   _editingControllerComment.dispose();
@@ -3409,46 +3504,47 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     Get.back();
   }
 
-  void onUpdateAction(dynamic data) async {
-    onUpdateAgtionWithWebSocketClient(data);
-  }
+  bool onUpdateAction(dynamic data) => onUpdateAgtionWithWebSocketClient(data);
 
-  void onUpdateAgtionWithWebSocketClient(dynamic data) {
-    // web_socket_client
-    if (webSocketClientForActions != null) {
-      Map<String, dynamic> mapData = data as Map<String, dynamic>;
+  bool onUpdateAgtionWithWebSocketClient(dynamic data) {
+    if (!_isActionSocketConnected || data is! Map) {
+      return false;
+    }
 
-      mapData.addIf(!mapData.containsKey('type'), 'type', data['action']);
+    final mapData = Map<String, dynamic>.from(data);
+    mapData.addIf(!mapData.containsKey('type'), 'type', data['action']);
 
-      // final jsonEncodedData = jsonEncode({
-      //   'message': mapData,
-      // });
+    // final jsonEncodedData = jsonEncode({
+    //   'message': mapData,
+    // });
 
-      final jsonEncodedData = jsonEncode(mapData);
+    final jsonEncodedData = jsonEncode(mapData);
 
-      // print(
-      //     'jsonEncodedData Action Socket: ${jsonEncodedData.length}.................................');
-      final gzipEncodedData = gzip.encode(utf8.encode(jsonEncodedData));
-      // print(
-      //     'gzipEncodedData Action Socket: ${gzipEncodedData.length}.................................');
+    // print(
+    //     'jsonEncodedData Action Socket: ${jsonEncodedData.length}.................................');
+    final gzipEncodedData = gzip.encode(utf8.encode(jsonEncodedData));
+    // print(
+    //     'gzipEncodedData Action Socket: ${gzipEncodedData.length}.................................');
 
-      dynamic sendableData;
+    dynamic sendableData;
 
-      if (jsonEncodedData.length > gzipEncodedData.length) {
-        sendableData = jsonEncode({
-          'message': {'gzip': gzipEncodedData},
-        });
-      } else {
-        sendableData = jsonEncode({'message': mapData});
+    if (jsonEncodedData.length > gzipEncodedData.length) {
+      sendableData = jsonEncode({
+        'message': {'gzip': gzipEncodedData},
+      });
+    } else {
+      sendableData = jsonEncode({'message': mapData});
+    }
+
+    try {
+      webSocketClientForActions!.send(sendableData);
+      return true;
+    } catch (e) {
+      _webSocketConnectionState = 'disconnected';
+      if (data['action'] == 'end_call' || data['action'] == 'end_pk_call') {
+        _closeEverything();
       }
-
-      try {
-        webSocketClientForActions!.send(sendableData);
-      } catch (e) {
-        if (data['action'] == 'end_call' || data['action'] == 'end_pk_call') {
-          _closeEverything();
-        }
-      }
+      return false;
     }
   }
 
@@ -3460,8 +3556,13 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     }
   }
 
-  void _onToggleMute() async {
+  Future<void> _onToggleMute() async {
     try {
+      final muted = !_livekitStreamingController.muted.value;
+      await _room!.localParticipant?.setMicrophoneEnabled(!muted);
+      _livekitStreamingController.muted.value = muted;
+      _updateLocalActiveCallMediaState(muted: muted);
+
       String action = 'controller';
       if (_livekitStreamingController.pkState.value) {
         action = 'controller_pk';
@@ -3484,7 +3585,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         // 'followers': _authController.profile.value.followers,
         // 'blocks': _authController.profile.value.blocks,
         'call_type': _livekitStreamingController.callType.value,
-        'muted': !_livekitStreamingController.muted.value,
+        'muted': muted,
         'video_disabled': _livekitStreamingController.videoDisabled.value,
       };
       onUpdateAction(data);
@@ -3492,6 +3593,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       //     !_livekitStreamingController.muted.value;
     } catch (e) {
       //
+      if (!mounted) {
+        return;
+      }
       rShowSnackBar(
         context: context,
         title:
@@ -3529,8 +3633,13 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     await rtc.Helper.setSpeakerphoneOn(speakerOn);
   }
 
-  void _onToggleVideoEnable() async {
+  Future<void> _onToggleVideoEnable() async {
     try {
+      final videoDisabled = !_livekitStreamingController.videoDisabled.value;
+      await _room!.localParticipant?.setCameraEnabled(!videoDisabled);
+      _livekitStreamingController.videoDisabled.value = videoDisabled;
+      _updateLocalActiveCallMediaState(videoDisabled: videoDisabled);
+
       String action = 'controller';
       if (_livekitStreamingController.pkState.value) {
         action = 'controller_pk';
@@ -3553,13 +3662,16 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         // 'blocks': _authController.profile.value.blocks,
         'call_type': 'video',
         'muted': _livekitStreamingController.muted.value,
-        'video_disabled': !_livekitStreamingController.videoDisabled.value,
+        'video_disabled': videoDisabled,
       };
       onUpdateAction(data);
       //  _livekitStreamingController.videoDisabled.value =
       //     !_livekitStreamingController.videoDisabled.value;
     } catch (e) {
       //
+      if (!mounted) {
+        return;
+      }
       rShowSnackBar(
         context: context,
         title:
@@ -3568,6 +3680,26 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         durationInSeconds: 1,
       );
     }
+  }
+
+  void _updateLocalActiveCallMediaState({bool? muted, bool? videoDisabled}) {
+    final activeCalls = _livekitStreamingController.listActiveCall;
+    final index = activeCalls.indexWhere(
+      (element) => _toInt(element['uid']) == _myUid,
+    );
+    if (index == -1) {
+      return;
+    }
+
+    final updatedData = Map<String, dynamic>.from(activeCalls[index] as Map);
+    if (muted != null) {
+      updatedData['muted'] = muted;
+    }
+    if (videoDisabled != null) {
+      updatedData['video_disabled'] = videoDisabled;
+    }
+    activeCalls[index] = updatedData;
+    activeCalls.refresh();
   }
 
   void _onSwitchCamera() async {
@@ -4247,6 +4379,13 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       }
     });
   }
+}
+
+class _RoomEntryEffect {
+  const _RoomEntryEffect({required this.effect, this.userName});
+
+  final EntryEffect effect;
+  final String? userName;
 }
 
 void sortingUserJoined(List<dynamic> args) {

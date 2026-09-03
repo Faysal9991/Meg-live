@@ -26,6 +26,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('King Package'), findsOneWidget);
+    expect(find.text('Entry Effect'), findsOneWidget);
     expect(find.text('Withdraw Requests'), findsOneWidget);
   });
 }

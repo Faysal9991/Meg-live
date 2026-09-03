@@ -9,6 +9,7 @@ import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_fun
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/participant.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/participant_info.dart';
+import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/no_video.dart';
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -92,57 +93,11 @@ class RoomDisplayLayout {
                       : Border.all(color: AppColors.onMediaSubtle),
                 ),
 
-                // TODO: Kyaw
                 child:
-                    data['call_type'] == 'audio' ||
-                        view == null ||
-                        // data['video_disabled'] == true
-                        !view.participant.isCameraEnabled()
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          serial == null
-                              ? Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 4.0,
-                                    horizontal: 8.0,
-                                  ),
-                                  margin: const EdgeInsets.only(bottom: 8.0),
-                                  decoration: BoxDecoration(
-                                    // color: AppColors.overlayStrong,
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        AppColors.overlayLight,
-                                        AppColors.overlay,
-                                        AppColors.textSecondary,
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(20.0),
-                                  ),
-                                  child: Text(
-                                    '${data['full_name']}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: AppColors.surface,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                )
-                              : Container(),
-                          view == null
-                              ? Center(
-                                  child: Image.asset(
-                                    'assets/logos/biho.png',
-                                    width: 32,
-                                    height: 32,
-                                  ),
-                                )
-                              : Container(),
-                        ],
-                      )
-                    // : view,
+                    view == null ||
+                        data['call_type'] == 'audio' ||
+                        data['video_disabled'] == true
+                    ? NoVideoWidget(data: data)
                     : ParticipantWidget.widgetFor(
                         participantTrack: view,
                         data: data,

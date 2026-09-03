@@ -20,7 +20,7 @@ val keystorePath = keystoreProperties.getProperty("storeFile")?.let { path ->
     configuredFile
 }
 android {
-    namespace = "com.taksoft.doyel_live"
+    namespace = "com.biholive.net"
     compileSdk = 36
     // ndkVersion = flutter.ndkVersion
     ndkVersion = "28.2.13676358"
@@ -40,7 +40,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.taksoft.doyel_live"
+        applicationId = "com.biholive.net"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

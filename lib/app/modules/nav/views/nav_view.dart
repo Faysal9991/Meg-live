@@ -17,6 +17,7 @@ import 'package:doyel_live/app/modules/profile/views/profile_view.dart';
 import 'package:doyel_live/app/modules/profile/views/search_view.dart';
 import 'package:doyel_live/app/utils/NetworkConnectivity.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
+import 'package:doyel_live/app/utils/api_logger.dart';
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/firebase_functions.dart';
@@ -109,6 +110,11 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     recievePort.listen((data) {
       //listening data from isolate
       if (data != null) {
+        ApiLogger.info(
+          'Profile payload received and applied to AuthController.',
+          tag: 'PROFILE DATA',
+          data: data['profile'],
+        );
         _authController.profile.value = Profile();
         _authController.profile.value = Profile.fromJson(data['profile']);
         _authController.preferences.setString(
@@ -153,6 +159,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     _livekitStreamingController = Get.find();
     _navController = Get.put(NavController());
     _profileController = Get.put(ProfileController());
+    _livekitStreamingController.startLiveRoomListAutoRefresh();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Same fetching during internet reconnection
@@ -176,6 +183,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _isDisposed = true;
+    _livekitStreamingController.stopLiveRoomListAutoRefresh();
     _navController.dispose();
     _profileController.dispose();
     super.dispose();
@@ -218,6 +226,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.resumed:
         _isDisposed = false;
+        _livekitStreamingController.startLiveRoomListAutoRefresh();
         _initializeNetworkConnectivity();
         _checkAndForceUpdate();
 
@@ -227,11 +236,13 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
         // print("app in inactive");
         break;
       case AppLifecycleState.paused:
+        _livekitStreamingController.stopLiveRoomListAutoRefresh();
         // print("app in paused");
         break;
       case AppLifecycleState.detached:
         // print("app in detached");
         _isDisposed = true;
+        _livekitStreamingController.stopLiveRoomListAutoRefresh();
         _authController.preferences.setBool('internet', false);
         _networkConnectivity.disposeStream();
 
@@ -735,9 +746,12 @@ void _fetchProfile(List<dynamic> args) async {
   String token = args[1];
   int userId = args[2];
   var dio = Dio();
+  final url = kProfileRetrieveUrl(userId);
   try {
+    ApiLogger.hit(method: 'GET', url: url);
+
     final response = await dio.get(
-      kProfileRetrieveUrl(userId),
+      url,
       options: Options(
         headers: {
           'accept': '*/*',
@@ -746,12 +760,27 @@ void _fetchProfile(List<dynamic> args) async {
         },
       ),
     );
+    ApiLogger.response(
+      method: 'GET',
+      url: url,
+      statusCode: response.statusCode,
+      data: response.data,
+    );
+
     int? statusCode = response.statusCode;
     if (statusCode == 200) {
       Isolate.exit(sendPort, response.data);
     }
     Isolate.exit(sendPort);
-  } catch (e) {
+  } catch (error, stackTrace) {
+    ApiLogger.error(
+      method: 'GET',
+      url: url,
+      error: error,
+      stackTrace: stackTrace,
+      statusCode: error is DioException ? error.response?.statusCode : null,
+      data: error is DioException ? error.response?.data : null,
+    );
     Isolate.exit(sendPort);
   }
 }

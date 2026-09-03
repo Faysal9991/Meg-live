@@ -292,7 +292,7 @@ class StreamingListView extends StatelessWidget {
                   child: Container(
                     margin: const EdgeInsets.only(left: 4.0),
                     child: Text(
-                      data['owner_profile']['full_name'],
+                     data['owner_profile']?['full_name']?.toString() ?? '',
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         color: AppColors.onPrimary,

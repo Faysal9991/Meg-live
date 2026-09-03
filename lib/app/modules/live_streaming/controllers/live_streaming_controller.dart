@@ -78,7 +78,8 @@ class LiveStreamingController extends GetxController {
   final RxList<dynamic> listActiveCall = <dynamic>[].obs;
   Timer? _timerAnimatedGiftSendAnimcation,
       _timerShowingMarqueeText,
-      _timerTopContributorList;
+      _timerTopContributorList,
+      _liveRoomListRefreshTimer;
 
   final showUserJoinedAnimation = false.obs,
       showGiftSendAnimation = false.obs,
@@ -131,7 +132,7 @@ class LiveStreamingController extends GetxController {
   final RxList<ParticipantTrack> listRenderView = <ParticipantTrack>[].obs;
   final liveStreamData = {}.obs;
 
-  String liveRoomSocketBaseUrl = 'ws://195.26.253.191/ws/livekit-live-room';
+  String liveRoomSocketBaseUrl = '';
 
   Rx<CameraPosition> cameraPosition = CameraPosition.front.obs;
 
@@ -216,6 +217,7 @@ class LiveStreamingController extends GetxController {
   @override
   void onClose() {
     webSocketClientForStreaming?.close();
+    stopLiveRoomListAutoRefresh();
     stopLiveRoomHeartbeat();
     if (_timerAnimatedGiftSendAnimcation != null) {
       _timerAnimatedGiftSendAnimcation?.cancel();
@@ -231,7 +233,7 @@ class LiveStreamingController extends GetxController {
 
   Map<String, String> _publicHeaders() {
     return {
-       'accept': '*/*',
+      'accept': '*/*',
       'Authorization': 'Token ${_authController.token.value}',
       'X-Api-Key': DRF_API_KEY,
     };
@@ -248,8 +250,7 @@ class LiveStreamingController extends GetxController {
   Future<LiveRoomUpdateResult> sendLiveRoomUpdate(
     LiveRoomUpdateRequest request,
   ) async {
-
-   return sendLiveRoomUpdateRequest(dio: _dio, request: request);
+    return sendLiveRoomUpdateRequest(dio: _dio, request: request);
   }
 
   void startLiveRoomHeartbeat({
@@ -909,10 +910,10 @@ class LiveStreamingController extends GetxController {
 
     try {
       ApiLogger.hit(
-      method: 'post======>',
-      url: kLiveKitEngineCheckAndTokenCreateUrl,
-      body: data,
-    );
+        method: 'post======>',
+        url: kLiveKitEngineCheckAndTokenCreateUrl,
+        body: data,
+      );
 
       Response response = await _dio.post(
         kLiveKitEngineCheckAndTokenCreateUrl,
@@ -924,10 +925,11 @@ class LiveStreamingController extends GetxController {
       // print('Data 1');
       // print(response.data);
       ApiLogger.response(
-      method: 'post=====response=>',
-      url: kLiveKitEngineCheckAndTokenCreateUrl,
-      data: response.data, statusCode: response.statusCode,
-    );
+        method: 'post=====response=>',
+        url: kLiveKitEngineCheckAndTokenCreateUrl,
+        data: response.data,
+        statusCode: response.statusCode,
+      );
       return response.data;
 
       // String engine = response.data['engine'];
@@ -1047,6 +1049,19 @@ class LiveStreamingController extends GetxController {
     ]);
   }
 
+  void startLiveRoomListAutoRefresh() {
+    stopLiveRoomListAutoRefresh();
+    _liveRoomListRefreshTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (_) => tryToLoadLiveRoomList(),
+    );
+  }
+
+  void stopLiveRoomListAutoRefresh() {
+    _liveRoomListRefreshTimer?.cancel();
+    _liveRoomListRefreshTimer = null;
+  }
+
   Future<void> loadBannerList() async {
     if (loadingBannerList.value) {
       return;
@@ -1114,11 +1129,12 @@ class LiveStreamingController extends GetxController {
               )
               .toList(),
         );
-      }else{
+      } else {
         ApiLogger.error(
           method: 'GET',
           url: kTopHostListUrl,
-          error: 'Unexpected status code: ${response.statusCode}--{${response.data}}',
+          error:
+              'Unexpected status code: ${response.statusCode}--{${response.data}}',
           stackTrace: StackTrace.current,
         );
       }
@@ -1154,14 +1170,81 @@ class LiveStreamingController extends GetxController {
         ),
       );
       int? statusCode = response.statusCode;
-      loadingLiveRoomList.value = false;
       if (statusCode == 200) {
-        listLiveRoom.assignAll(response.data['live_room_list']);
+        final responseData = response.data;
+        if (responseData is! Map || responseData['live_room_list'] is! List) {
+          return;
+        }
+        final incomingRooms = responseData['live_room_list'] as List;
+        _reconcileLiveRoomCollection(listLiveRoom, incomingRooms.toList());
         _useIsolateLoadLiveStreamingList(liveData: null);
       }
-    } catch (e) {
+    } catch (_) {
+      // Keep the current dashboard list when a periodic refresh fails.
+    } finally {
       loadingLiveRoomList.value = false;
     }
+  }
+
+  void _reconcileLiveRoomCollection(
+    List<dynamic> currentRooms,
+    List<dynamic> incomingRooms, {
+    bool notifyDashboard = false,
+  }) {
+    final incomingById = <String, dynamic>{};
+    for (final room in incomingRooms) {
+      final roomId = _liveRoomId(room);
+      if (roomId != null) {
+        incomingById[roomId] = room;
+      }
+    }
+
+    currentRooms.removeWhere((room) {
+      final roomId = _liveRoomId(room);
+      return roomId == null || !incomingById.containsKey(roomId);
+    });
+
+    for (final entry in incomingById.entries) {
+      final existingIndex = currentRooms.indexWhere(
+        (room) => _liveRoomId(room) == entry.key,
+      );
+      if (existingIndex == -1) {
+        currentRooms.add(entry.value);
+        continue;
+      }
+
+      final existingRoom = currentRooms[existingIndex];
+      final incomingRoom = entry.value;
+      if (existingRoom is Map && incomingRoom is Map) {
+        existingRoom
+          ..clear()
+          ..addAll(incomingRoom);
+      } else {
+        currentRooms[existingIndex] = incomingRoom;
+      }
+    }
+
+    final incomingOrder = <String, int>{};
+    var order = 0;
+    for (final roomId in incomingById.keys) {
+      incomingOrder[roomId] = order++;
+    }
+    currentRooms.sort(
+      (first, second) => (incomingOrder[_liveRoomId(first)] ?? 0).compareTo(
+        incomingOrder[_liveRoomId(second)] ?? 0,
+      ),
+    );
+
+    if (notifyDashboard) {
+      listFilterLiveStreams.refresh();
+    }
+  }
+
+  String? _liveRoomId(dynamic room) {
+    if (room is! Map || room['channel_id'] == null) {
+      return null;
+    }
+    return room['channel_id'].toString();
   }
 
   Future<LiveRoomUpdateResult> tryToUpdateLiveRoom({
@@ -1552,16 +1635,29 @@ class LiveStreamingController extends GetxController {
       listLiveRoom.toList(),
       liveData,
     ]); //spawing/creating new thread as isolates.
-    recievePort.listen((data) {
+    late final StreamSubscription<dynamic> subscription;
+    subscription = recievePort.listen((data) {
       //listening data from isolate
+      if (_isDisposed) {
+        subscription.cancel();
+        recievePort.close();
+        return;
+      }
       if (data != null) {
         if (data['type'] == 'liveStreamData') {
           liveStreamData.value = {};
           liveStreamData.value = data['data'];
           allowCommentAndEmojiSend.value = data['data']['allow_send'] ?? true;
         } else if (data['type'] == 'listLiveStreams') {
-          listLiveRoom.assignAll(data['listLiveStreams']);
-          listFilterLiveStreams.assignAll(data['listLiveStreams']);
+          final incomingRooms = (data['listLiveStreams'] as List).toList();
+          _reconcileLiveRoomCollection(listLiveRoom, incomingRooms);
+          _reconcileLiveRoomCollection(
+            listFilterLiveStreams,
+            incomingRooms,
+            notifyDashboard: true,
+          );
+          subscription.cancel();
+          recievePort.close();
         }
       }
     });

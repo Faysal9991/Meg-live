@@ -21,14 +21,12 @@ class NoVideoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profileImage = data['profile_image']?.toString().trim() ?? '';
     return Container(
       width: data['width'],
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            AppColors.textPrimary,
-            Theme.of(context).primaryColor,
-          ],
+          colors: [AppColors.textPrimary, Theme.of(context).primaryColor],
           begin: Alignment.bottomLeft,
           end: Alignment.topRight,
         ),
@@ -54,51 +52,63 @@ class NoVideoWidget extends StatelessWidget {
                           )
                         : null,
                   ),
-                  child: data['profile_image'] == null
+                  child: profileImage.isEmpty
                       ? Center(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(100),
+                          child: ClipOval(
                             child: Image.asset(
                               'assets/others/person.jpg',
                               width: (data['width'] / 3).round().toDouble(),
                               height: (data['width'] / 3).round().toDouble(),
+                              fit: BoxFit.cover,
                             ),
                           ),
                         )
                       : Center(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(100),
+                          child: ClipOval(
                             child: CachedNetworkImage(
-                              imageUrl: data['profile_image'],
+                              imageUrl: profileImage,
                               width: (data['width'] / 3).round().toDouble(),
                               height: (data['width'] / 3).round().toDouble(),
+                              fit: BoxFit.cover,
                               placeholder: (context, url) => const Center(
-                                  child: CircularProgressIndicator(
-                                      color: AppColors.error)),
+                                child: CircularProgressIndicator(
+                                  color: AppColors.error,
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Image.asset(
+                                'assets/others/person.jpg',
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                         ),
                 )
-              : (data['profile_image'] == null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(100),
-                      child: Image.asset(
-                        'assets/others/person.jpg',
-                        width: (data['width'] / 3).round().toDouble(),
-                        height: (data['width'] / 3).round().toDouble(),
-                      ),
-                    )
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(100),
-                      child: CachedNetworkImage(
-                        imageUrl: data['profile_image'],
-                        width: (data['width'] / 3).round().toDouble(),
-                        height: (data['width'] / 3).round().toDouble(),
-                        placeholder: (context, url) => const Center(
-                            child:
-                                CircularProgressIndicator(color: AppColors.error)),
-                      ),
-                    )),
+              : (profileImage.isEmpty
+                    ? ClipOval(
+                        child: Image.asset(
+                          'assets/others/person.jpg',
+                          width: (data['width'] / 3).round().toDouble(),
+                          height: (data['width'] / 3).round().toDouble(),
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: profileImage,
+                          width: (data['width'] / 3).round().toDouble(),
+                          height: (data['width'] / 3).round().toDouble(),
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.error,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Image.asset(
+                            'assets/others/person.jpg',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )),
           // serial == null
           //     ? const SizedBox(
           //         height: 8,

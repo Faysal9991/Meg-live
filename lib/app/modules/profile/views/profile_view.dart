@@ -11,6 +11,7 @@ import 'package:doyel_live/app/modules/business/views/host_requst_view.dart';
 import 'package:doyel_live/app/modules/business/views/moderator/moderator_view.dart';
 import 'package:doyel_live/app/modules/business/views/reseller/reseller_view.dart';
 import 'package:doyel_live/app/modules/balance/views/withdraw_requests_view.dart';
+import 'package:doyel_live/app/modules/products/views/entry_effect_package_view.dart';
 import 'package:doyel_live/app/modules/products/views/king_package_view.dart';
 import 'package:doyel_live/app/modules/products/views/vip_package_view.dart';
 import 'package:doyel_live/app/modules/products/views/vvip_package_view.dart';
@@ -389,6 +390,16 @@ class ProfileView extends GetView<ProfileController> {
                     leading: const Icon(Icons.important_devices_rounded),
                     title: const Text(
                       'VIP Package',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
+                  ListTile(
+                    onTap: () => Get.to(() => const EntryEffectPackageView()),
+                    dense: true,
+                    leading: const Icon(Icons.auto_awesome_motion),
+                    title: const Text(
+                      'Entry Effect',
                       style: TextStyle(fontSize: 18),
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
