@@ -80,6 +80,7 @@ String kProfileRetrieveUrl(int userId) =>
 String kProfileForUserInfoRetrieveUrl(int userId) =>
     '$_baseUrl/profiles/profile-for-user-info-retrieve/$userId/';
 const kTopHostListUrl = '$_baseUrl/profiles/top-host-list/';
+const kTopContributorListUrl = '$_baseUrl/profiles/top-contributor-list/';
 String kFollowerListUrl = '$_baseUrl/profiles/follower-list/';
 // # Perform both add and remove
 String kFollowerCreateUrl(int uid) =>

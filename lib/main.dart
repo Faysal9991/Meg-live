@@ -70,7 +70,7 @@ void main() async {
   final GoogleSignIn googleSignIn = GoogleSignIn.instance;
   await googleSignIn.initialize(
     serverClientId:
-        'firebase-adminsdk-mbp7w@doyel-live.iam.gserviceaccount.com',
+        '107414380235-s5cmfapqeosv3r63d6g51e377vp4sdkq.apps.googleusercontent.com',
   );
 
   await notificationInitialization();

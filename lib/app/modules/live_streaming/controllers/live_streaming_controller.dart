@@ -51,11 +51,13 @@ class LiveStreamingController extends GetxController {
   final loadingContributionRankingList = false.obs;
   final loadingBannerList = false.obs;
   final loadingTopHostList = false.obs;
+  final loadingTopContributorList = false.obs;
 
   final countryName = ''.obs;
   final phoneCode = ''.obs;
   final RxList<HomeBanner> bannerList = <HomeBanner>[].obs;
   final RxList<TopHost> topHostList = <TopHost>[].obs;
+  final RxList<TopHost> topContributorList = <TopHost>[].obs;
   final RxList<dynamic> listNormalGift = <dynamic>[].obs;
   final RxList<dynamic> listAnimatedGift = <dynamic>[].obs;
 
@@ -1045,6 +1047,7 @@ class LiveStreamingController extends GetxController {
     await Future.wait([
       loadBannerList(),
       loadTopHostList(),
+      loadTopContributorList(),
       tryToLoadLiveRoomList(),
     ]);
   }
@@ -1120,14 +1123,8 @@ class LiveStreamingController extends GetxController {
         data: response.data,
       );
       if (response.statusCode == 200) {
-        final data = response.data['top_hosts'] as List? ?? const [];
         topHostList.assignAll(
-          data
-              .map(
-                (dynamic item) =>
-                    TopHost.fromJson(Map<String, dynamic>.from(item)),
-              )
-              .toList(),
+          _rankedProfilesFromResponse(response.data, const ['top_hosts']),
         );
       } else {
         ApiLogger.error(
@@ -1148,6 +1145,75 @@ class LiveStreamingController extends GetxController {
     } finally {
       loadingTopHostList.value = false;
     }
+  }
+
+  Future<void> loadTopContributorList() async {
+    if (loadingTopContributorList.value) {
+      return;
+    }
+    loadingTopContributorList.value = true;
+    ApiLogger.hit(method: 'GET', url: kTopContributorListUrl);
+    try {
+      final response = await _dio.get(
+        kTopContributorListUrl,
+        options: Options(headers: _publicHeaders()),
+      );
+      ApiLogger.response(
+        method: 'GET',
+        url: kTopContributorListUrl,
+        statusCode: response.statusCode,
+        data: response.data,
+      );
+      if (response.statusCode == 200) {
+        topContributorList.assignAll(
+          _rankedProfilesFromResponse(response.data, const [
+            'top_contributors',
+            'top_contributor_list',
+            'top_hosts',
+          ]),
+        );
+      } else {
+        ApiLogger.error(
+          method: 'GET',
+          url: kTopContributorListUrl,
+          error:
+              'Unexpected status code: ${response.statusCode}--{${response.data}}',
+          stackTrace: StackTrace.current,
+        );
+      }
+    } catch (error, stackTrace) {
+      ApiLogger.error(
+        method: 'GET',
+        url: kTopContributorListUrl,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    } finally {
+      loadingTopContributorList.value = false;
+    }
+  }
+
+  List<TopHost> _rankedProfilesFromResponse(
+    dynamic responseData,
+    List<String> keys,
+  ) {
+    dynamic rawList = responseData;
+    if (responseData is Map) {
+      rawList = null;
+      for (final key in [...keys, 'results']) {
+        if (responseData[key] is List) {
+          rawList = responseData[key];
+          break;
+        }
+      }
+    }
+    if (rawList is! List) {
+      return const <TopHost>[];
+    }
+    return rawList
+        .whereType<Map>()
+        .map((item) => TopHost.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
   }
 
   // Live Room

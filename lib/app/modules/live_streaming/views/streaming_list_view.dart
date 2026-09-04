@@ -28,7 +28,8 @@ class StreamingListView extends StatelessWidget {
         child: Obx(() {
           if (_livekitStreamingController.loadingLiveRoomList.value ||
               _livekitStreamingController.loadingBannerList.value ||
-              _livekitStreamingController.loadingTopHostList.value) {
+              _livekitStreamingController.loadingTopHostList.value ||
+              _livekitStreamingController.loadingTopContributorList.value) {
             return const SizedBox(
               width: 24,
               height: 24,
@@ -292,7 +293,7 @@ class StreamingListView extends StatelessWidget {
                   child: Container(
                     margin: const EdgeInsets.only(left: 4.0),
                     child: Text(
-                     data['owner_profile']?['full_name']?.toString() ?? '',
+                      data['owner_profile']?['full_name']?.toString() ?? '',
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         color: AppColors.onPrimary,

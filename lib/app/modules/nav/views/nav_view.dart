@@ -415,8 +415,9 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _showTopHostsBottomSheet() async {
+  Future<void> _showTopRankingsBottomSheet() async {
     _livekitStreamingController.loadTopHostList();
+    _livekitStreamingController.loadTopContributorList();
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -425,89 +426,104 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
-        return SafeArea(
-          child: SizedBox(
-            height: MediaQuery.of(sheetContext).size.height * 0.72,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.workspace_premium,
-                        color: AppColors.premium,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          'Top Hosts',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+        return DefaultTabController(
+          length: 2,
+          child: SafeArea(
+            child: SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * 0.72,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.workspace_premium,
+                          color: AppColors.premium,
+                          size: 24,
                         ),
-                      ),
-                      Obx(() {
-                        return IconButton(
-                          tooltip: 'Refresh',
-                          onPressed:
-                              _livekitStreamingController
-                                  .loadingTopHostList
-                                  .value
-                              ? null
-                              : _livekitStreamingController.loadTopHostList,
-                          icon:
-                              _livekitStreamingController
-                                  .loadingTopHostList
-                                  .value
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.refresh),
-                        );
-                      }),
-                      IconButton(
-                        tooltip: 'Close',
-                        onPressed: () => Navigator.of(sheetContext).pop(),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: Obx(() {
-                      final loading =
-                          _livekitStreamingController.loadingTopHostList.value;
-                      final hosts = _livekitStreamingController.topHostList;
-                      if (loading && hosts.isEmpty) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (hosts.isEmpty) {
-                        return const Center(
+                        const SizedBox(width: 8),
+                        const Expanded(
                           child: Text(
-                            'No top hosts found.',
+                            'Top Rankings',
                             style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        );
-                      }
-                      return ListView.separated(
-                        itemCount: hosts.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (_, index) =>
-                            _buildTopHostSheetItem(host: hosts[index]),
-                      );
-                    }),
-                  ),
-                ],
+                        ),
+                        Obx(() {
+                          final loading =
+                              _livekitStreamingController
+                                  .loadingTopHostList
+                                  .value ||
+                              _livekitStreamingController
+                                  .loadingTopContributorList
+                                  .value;
+                          return IconButton(
+                            tooltip: 'Refresh',
+                            onPressed: loading
+                                ? null
+                                : () {
+                                    _livekitStreamingController
+                                        .loadTopHostList();
+                                    _livekitStreamingController
+                                        .loadTopContributorList();
+                                  },
+                            icon: loading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.refresh),
+                          );
+                        }),
+                        IconButton(
+                          tooltip: 'Close',
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const TabBar(
+                      tabs: [
+                        Tab(text: 'Hosts'),
+                        Tab(text: 'Contributors'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          Obx(
+                            () => _buildRankingList(
+                              profiles: _livekitStreamingController.topHostList,
+                              loading: _livekitStreamingController
+                                  .loadingTopHostList
+                                  .value,
+                              emptyMessage: 'No top hosts found.',
+                              trailingIcon: Icons.workspace_premium,
+                            ),
+                          ),
+                          Obx(
+                            () => _buildRankingList(
+                              profiles: _livekitStreamingController
+                                  .topContributorList,
+                              loading: _livekitStreamingController
+                                  .loadingTopContributorList
+                                  .value,
+                              emptyMessage: 'No top contributors found.',
+                              trailingIcon: Icons.diamond_outlined,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -516,8 +532,42 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildTopHostSheetItem({required TopHost host}) {
-    final hasImage = host.profileImage != null && host.profileImage!.isNotEmpty;
+  Widget _buildRankingList({
+    required List<TopHost> profiles,
+    required bool loading,
+    required String emptyMessage,
+    required IconData trailingIcon,
+  }) {
+    if (loading && profiles.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (profiles.isEmpty) {
+      return Center(
+        child: Text(
+          emptyMessage,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+    return ListView.separated(
+      itemCount: profiles.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (_, index) => _buildRankingSheetItem(
+        profile: profiles[index],
+        trailingIcon: trailingIcon,
+      ),
+    );
+  }
+
+  Widget _buildRankingSheetItem({
+    required TopHost profile,
+    required IconData trailingIcon,
+  }) {
+    final hasImage =
+        profile.profileImage != null && profile.profileImage!.isNotEmpty;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -529,7 +579,9 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
           CircleAvatar(
             radius: 24,
             backgroundColor: AppColors.overlayLight,
-            backgroundImage: hasImage ? NetworkImage(host.profileImage!) : null,
+            backgroundImage: hasImage
+                ? NetworkImage(profile.profileImage!)
+                : null,
             child: hasImage ? null : const Icon(Icons.person),
           ),
           const SizedBox(width: 12),
@@ -538,7 +590,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  host.fullName,
+                  profile.fullName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -549,7 +601,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'UID #${host.uid}',
+                  'UID #${profile.uid}',
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
@@ -558,7 +610,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _formatTopHostSeconds(host.seconds),
+                  _formatRankingSeconds(profile.seconds),
                   style: const TextStyle(
                     color: AppColors.warning,
                     fontWeight: FontWeight.w700,
@@ -568,17 +620,13 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
               ],
             ),
           ),
-          const Icon(
-            Icons.workspace_premium,
-            color: AppColors.premium,
-            size: 22,
-          ),
+          Icon(trailingIcon, color: AppColors.premium, size: 22),
         ],
       ),
     );
   }
 
-  String _formatTopHostSeconds(int seconds) {
+  String _formatRankingSeconds(int seconds) {
     final duration = Duration(seconds: seconds);
     String twoDigits(int value) => value.toString().padLeft(2, '0');
     return [
@@ -599,7 +647,10 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
           length: _navItems.length,
           child: Obx(() {
             return Scaffold(
-              extendBody: true,
+              // Keep every tab's scrollable content above the floating-style
+              // navigation card. When this is true, Scaffold intentionally
+              // lays the body out behind the bottomNavigationBar.
+              extendBody: false,
               appBar: _navController.pageIndex.value != LIVE_STREAM
                   ? AppBar(
                       leading: Center(
@@ -617,8 +668,8 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                         Padding(
                           padding: const EdgeInsets.only(right: 12),
                           child: NeumorphicIconButton(
-                            tooltip: 'Top Hosts',
-                            onPressed: _showTopHostsBottomSheet,
+                            tooltip: 'Top Hosts and Contributors',
+                            onPressed: _showTopRankingsBottomSheet,
                             icon: Icons.workspace_premium,
                             iconColor: AppColors.primary,
                             size: 38,

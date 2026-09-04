@@ -2,6 +2,13 @@ import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('top contributor URL uses the profiles API', () {
+    expect(
+      kTopContributorListUrl,
+      'http://169.58.127.58:8085/api/v1/profiles/top-contributor-list/',
+    );
+  });
+
   test('VIP and VVIP purchase URLs use the products API', () {
     expect(
       kVipPackagePurchaseUrl,

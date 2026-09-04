@@ -2,7 +2,7 @@ import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/theme/app_spacing.dart';
 import 'package:doyel_live/app/theme/app_text_styles.dart';
 import 'package:doyel_live/app/widgets/app_design_widgets.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:doyel_live/app/widgets/vip_profile_avatar.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/auth/views/change_password_view.dart';
 import 'package:doyel_live/app/modules/business/views/agent/agent_for_host_view.dart';
@@ -68,203 +68,103 @@ class ProfileView extends GetView<ProfileController> {
               ),
               child: Row(
                 children: [
-                  SizedBox(
-                    width: 72,
-                    height: 72,
-                    child: Obx(() {
-                      return Stack(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(100.0),
-                              border: Border.all(
-                                width: 2.0,
+                  Obx(() {
+                    final profile = _authController.profile.value;
+                    return VipProfileAvatar(
+                      profileImage: profile.profile_image ?? profile.photo_url,
+                      vipPreference: profile.vvip_or_vip_preference,
+                    );
+                  }),
+                  const SizedBox(width: 8.0),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          constraints: const BoxConstraints(maxWidth: 200),
+                          child: Obx(() {
+                            return Text(
+                              '${_authController.profile.value.full_name}',
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.surface,
                               ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(100.0),
-                              child:
-                                  _authController.profile.value.profile_image ==
-                                          null &&
-                                      _authController.profile.value.photo_url ==
-                                          null
-                                  ? Image.asset(
-                                      'assets/others/person.jpg',
-                                      width:
-                                          _authController
-                                                  .profile
-                                                  .value
-                                                  .vvip_or_vip_preference['vvip_or_vip_gif'] !=
-                                              null
-                                          ? 60
-                                          : 72,
-                                      height:
-                                          _authController
-                                                  .profile
-                                                  .value
-                                                  .vvip_or_vip_preference['vvip_or_vip_gif'] !=
-                                              null
-                                          ? 60
-                                          : 72,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : CachedNetworkImage(
-                                      imageUrl:
-                                          '${_authController.profile.value.profile_image ?? _authController.profile.value.photo_url}',
-                                      width:
-                                          _authController
-                                                  .profile
-                                                  .value
-                                                  .vvip_or_vip_preference['vvip_or_vip_gif'] !=
-                                              null
-                                          ? 60
-                                          : 72,
-                                      height:
-                                          _authController
-                                                  .profile
-                                                  .value
-                                                  .vvip_or_vip_preference['vvip_or_vip_gif'] !=
-                                              null
-                                          ? 60
-                                          : 72,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) =>
-                                          const Center(
-                                            child: CircularProgressIndicator(
-                                              color: AppColors.error,
-                                            ),
-                                          ),
-                                    ),
-                            ),
-                          ),
-                          _authController
-                                      .profile
-                                      .value
-                                      .vvip_or_vip_preference['vvip_or_vip_gif'] !=
-                                  null
-                              ? Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: AppColors.overlay,
-                                      // borderRadius: BorderRadius.only(
-                                      //   bottomLeft: Radius.circular(20.0),
-                                      //   bottomRight: Radius.circular(20.0),
-                                      // ),
-                                      border: Border.all(
-                                        color: AppColors.warning,
-                                        width: 2.0,
-                                      ),
-                                      borderRadius: BorderRadius.circular(
-                                        100.0,
-                                      ),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(
-                                        100.0,
-                                      ),
-                                      child: CachedNetworkImage(
-                                        imageUrl: _authController
-                                            .profile
-                                            .value
-                                            .vvip_or_vip_preference['vvip_or_vip_gif'],
-                                        width: 40,
-                                        height: 40,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : Container(),
-                        ],
-                      );
-                    }),
-                  ),
-                  const SizedBox(width: 8.0),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        constraints: const BoxConstraints(maxWidth: 200),
-                        child: Obx(() {
-                          return Text(
-                            '${_authController.profile.value.full_name}',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.surface,
-                            ),
-                          );
-                        }),
-                      ),
-                      Container(
-                        constraints: const BoxConstraints(maxWidth: 200),
-                        child: Obx(() {
-                          return Text(
-                            _authController.profile.value.user?.phone ?? '',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.surface,
-                            ),
-                          );
-                        }),
-                      ),
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.start,
-                      //   children: [
-                      //     Text(
-                      //       'ID:  ${_authController.profile.value.user!.uid!}',
-                      //       style: const TextStyle(
-                      //         color: AppColors.surface,
-                      //       ),
-                      //     ),
-                      //     const SizedBox(
-                      //       width: 16,
-                      //     ),
-                      //     Obx(() {
-                      //       return Text(
-                      //         'Level:  ${_authController.profile.value.level != null ? _authController.profile.value.level['level']['level'] : 0}',
-                      //         style: const TextStyle(
-                      //           color: AppColors.surface,
-                      //         ),
-                      //       );
-                      //     }),
-                      //   ],
-                      // ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Image.asset(
-                            'assets/others/diamond.png',
-                            width: 16,
-                            height: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Obx(() {
-                            return Text(
-                              '${_authController.profile.value.diamonds ?? 0}',
-                              style: const TextStyle(color: AppColors.surface),
                             );
                           }),
-                          const SizedBox(width: 16),
-                          const Icon(
-                            Icons.perm_identity,
-                            color: AppColors.surface,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Obx(() {
+                        ),
+                        Container(
+                          constraints: const BoxConstraints(maxWidth: 200),
+                          child: Obx(() {
                             return Text(
-                              '${_authController.profile.value.followers!.length}',
-                              style: const TextStyle(color: AppColors.surface),
+                              _authController.profile.value.user?.phone ?? '',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.surface,
+                              ),
                             );
                           }),
-                        ],
-                      ),
-                    ],
+                        ),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.start,
+                        //   children: [
+                        //     Text(
+                        //       'ID:  ${_authController.profile.value.user!.uid!}',
+                        //       style: const TextStyle(
+                        //         color: AppColors.surface,
+                        //       ),
+                        //     ),
+                        //     const SizedBox(
+                        //       width: 16,
+                        //     ),
+                        //     Obx(() {
+                        //       return Text(
+                        //         'Level:  ${_authController.profile.value.level != null ? _authController.profile.value.level['level']['level'] : 0}',
+                        //         style: const TextStyle(
+                        //           color: AppColors.surface,
+                        //         ),
+                        //       );
+                        //     }),
+                        //   ],
+                        // ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Image.asset(
+                              'assets/others/diamond.png',
+                              width: 16,
+                              height: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Obx(() {
+                              return Text(
+                                '${_authController.profile.value.diamonds ?? 0}',
+                                style: const TextStyle(
+                                  color: AppColors.surface,
+                                ),
+                              );
+                            }),
+                            const SizedBox(width: 16),
+                            const Icon(
+                              Icons.perm_identity,
+                              color: AppColors.surface,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Obx(() {
+                              return Text(
+                                '${_authController.profile.value.followers!.length}',
+                                style: const TextStyle(
+                                  color: AppColors.surface,
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -530,9 +430,76 @@ class ProfileView extends GetView<ProfileController> {
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            AppCard(
+              child: Obx(() {
+                final isSigningOut = _authController.authLoading.value;
+                return ListTile(
+                  onTap: isSigningOut ? null : () => _confirmSignOut(context),
+                  dense: true,
+                  leading: isSigningOut
+                      ? const SizedBox.square(
+                          dimension: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.error,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.logout_rounded,
+                          color: AppColors.error,
+                        ),
+                  title: Text(
+                    isSigningOut ? 'Logging out…' : 'Log Out',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.error,
+                    ),
+                  ),
+                  trailing: isSigningOut
+                      ? null
+                      : const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: AppColors.error,
+                        ),
+                );
+              }),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final shouldSignOut = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Log out?'),
+        content: const Text(
+          'Are you sure you want to log out of your account?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.onPrimary,
+            ),
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSignOut == true) {
+      _authController.tryToSignOut();
+    }
   }
 }
