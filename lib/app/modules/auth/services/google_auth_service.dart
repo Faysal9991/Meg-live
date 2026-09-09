@@ -17,12 +17,15 @@ class GoogleLoginIdentity {
 }
 
 /// Initializes on demand so a Google configuration error cannot prevent app
-/// startup. Android normally reads its web OAuth client from google-services.json.
+/// startup. The web OAuth client is supplied explicitly because the Firebase
+/// configuration does not contain OAuth clients for the authentication project.
 class GoogleAuthService {
   static final instance = GoogleAuthService();
   static Future<void>? _initialization;
   static const _serverClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue:
+        '107414380235-s5cmfapqeosv3r63d6g51e377vp4sdkq.apps.googleusercontent.com',
   );
 
   Future<void> _initialize() async {

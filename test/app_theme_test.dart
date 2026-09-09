@@ -37,6 +37,9 @@ void main() {
         expect(contrast(color, AppColors.surface), greaterThanOrEqualTo(4.5));
       }
       for (final color in [
+        AppColors.agentBannerStart,
+        AppColors.agentBannerMiddle,
+        AppColors.agentBannerEnd,
         AppColors.primary,
         AppColors.accent,
         AppColors.error,

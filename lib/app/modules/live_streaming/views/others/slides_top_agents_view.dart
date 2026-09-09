@@ -1,4 +1,4 @@
-import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
+import 'package:doyel_live/app/theme/app_radius.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
@@ -15,7 +15,6 @@ class SlidesTopAgentsView extends StatefulWidget {
 
 class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
   late LiveStreamingController _livekitStreamingController;
-  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -36,8 +35,15 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
         children: [
           CarouselSlider.builder(
             options: CarouselOptions(
-              autoPlay: list.length > 1,
-              height: 132,
+              autoPlay:
+                  list.length > 1 && !MediaQuery.disableAnimationsOf(context),
+              height:
+                  132 +
+                  (MediaQuery.textScalerOf(context).scale(13) - 13).clamp(
+                        0,
+                        26,
+                      ) *
+                      6,
               viewportFraction: 1.0,
               padEnds: false,
               enlargeCenterPage: false,
@@ -46,38 +52,12 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               autoPlayInterval: const Duration(seconds: 3),
               autoPlayAnimationDuration: const Duration(milliseconds: 700),
               autoPlayCurve: Curves.easeOutCubic,
-              onPageChanged: (index, _) {
-                if (!mounted) return;
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
             ),
             itemCount: list.length,
             itemBuilder: (_, index, __) {
               return _agentCard(data: list[index], serial: index + 1);
             },
           ),
-
-          // if (list.length > 1) ...[
-          //   const SizedBox(height: 8),
-          //   Row(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     children: List.generate(list.length, (index) {
-          //       final active = _currentIndex == index;
-          //       return AnimatedContainer(
-          //         duration: const Duration(milliseconds: 220),
-          //         margin: const EdgeInsets.symmetric(horizontal: 3),
-          //         width: active ? 14 : 6,
-          //         height: 6,
-          //         decoration: BoxDecoration(
-          //           color: active ? AppColors.textPrimary : AppColors.onMediaSubtle,
-          //           borderRadius: BorderRadius.circular(20),
-          //         ),
-          //       );
-          //     }),
-          //   ),
-          // ],
         ],
       );
     });
@@ -94,7 +74,19 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2),
       width: double.infinity,
-      decoration: AppNeumorphicStyles.decoration(),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.agentBannerStart,
+            AppColors.agentBannerMiddle,
+            AppColors.agentBannerEnd,
+          ],
+        ),
+      ),
       child: Stack(
         children: [
           Positioned(
@@ -104,7 +96,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               width: 90,
               height: 90,
               decoration: BoxDecoration(
-                color: AppColors.primarySoft,
+                color: AppColors.white12,
                 borderRadius: BorderRadius.circular(90),
               ),
             ),
@@ -125,7 +117,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: AppColors.textPrimary,
+                          color: AppColors.onMedia,
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
                         ),
@@ -136,53 +128,63 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: AppColors.textSecondary,
+                          color: AppColors.onMedia,
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Image.asset('assets/others/diamond.png', height: 16),
-                          const SizedBox(width: 5),
-                          Text(
-                            diamonds,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.asset(
+                                'assets/others/diamond.png',
+                                height: 16,
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  diamonds,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.onMedia,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           if (isAppOwner) ...[
-                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.premium.withValues(alpha: 0.2),
+                                color: AppColors.premium,
                                 borderRadius: BorderRadius.circular(999),
-                                border: Border.all(
-                                  color: AppColors.premium.withValues(
-                                    alpha: 0.65,
-                                  ),
-                                ),
+                                border: Border.all(color: AppColors.premium),
                               ),
                               child: const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
                                     Icons.workspace_premium,
-                                    color: AppColors.premiumText,
+                                    color: AppColors.primaryDark,
                                     size: 12,
                                   ),
                                   SizedBox(width: 4),
                                   Text(
                                     'Owner',
                                     style: TextStyle(
-                                      color: AppColors.premiumText,
+                                      color: AppColors.primaryDark,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -233,7 +235,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                       alignment: Alignment.center,
                       child: const Icon(
                         Icons.person,
-                        color: AppColors.textPrimary,
+                        color: AppColors.onMedia,
                         size: 28,
                       ),
                     )
@@ -244,7 +246,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const Center(
                         child: CircularProgressIndicator(
-                          color: AppColors.textPrimary,
+                          color: AppColors.onMedia,
                           strokeWidth: 2,
                         ),
                       ),
@@ -253,7 +255,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         alignment: Alignment.center,
                         child: const Icon(
                           Icons.person,
-                          color: AppColors.textPrimary,
+                          color: AppColors.onMedia,
                           size: 28,
                         ),
                       ),
@@ -268,14 +270,14 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               height: 24,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppColors.premiumSoft,
+                color: AppColors.premium,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.textPrimary, width: 1.2),
+                border: Border.all(color: AppColors.onMedia, width: 1.2),
               ),
               child: Text(
                 '$serial',
                 style: const TextStyle(
-                  color: AppColors.textPrimary,
+                  color: AppColors.primaryDark,
                   fontWeight: FontWeight.w800,
                   fontSize: 11,
                 ),
@@ -291,7 +293,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primarySoft,
+        color: AppColors.premium,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.onMediaSubtle),
       ),
@@ -301,7 +303,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           const Text(
             'TOP',
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: AppColors.primaryDark,
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.7,
@@ -311,7 +313,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           Text(
             topLabel,
             style: const TextStyle(
-              color: AppColors.premiumText,
+              color: AppColors.primaryDark,
               fontSize: 14,
               fontWeight: FontWeight.w800,
             ),

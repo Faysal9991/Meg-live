@@ -1200,6 +1200,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                   }
 
                                   return CircleButton(
+                                    depth: 0,
                                     icon: Icons.close_outlined,
                                     iconSize: 24.0,
                                     minHeight: 32,
@@ -1525,6 +1526,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                   top: 4,
                   right: 0,
                   child: CircleButton(
+                    depth: 0,
                     icon: Icons.close,
                     iconSize: 24,
                     minHeight: 32,
@@ -1801,6 +1803,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               children: [
                                 Center(
                                   child: CircleButton(
+                                    depth: 0,
                                     onPressed: () {
                                       _livekitStreamingController.setCallTab(
                                         tabName: 'waiting',
@@ -2096,6 +2099,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                     children: [
                       // Share
                       CircleButton(
+                        depth: 0,
                         icon: Icons.share,
                         iconSize: 24.0,
                         minHeight: 32,
@@ -2131,7 +2135,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               return RawMaterialButton(
                                 onPressed: _onHostSwitchPosition,
                                 shape: const CircleBorder(),
-                                elevation: 2.0,
+                                elevation: 0,
+                                focusElevation: 0,
+                                hoverElevation: 0,
+                                highlightElevation: 0,
                                 fillColor: AppColors.overlay,
                                 padding: const EdgeInsets.all(6.0),
                                 constraints: const BoxConstraints(
@@ -2179,7 +2186,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                   );
                                 },
                                 shape: const CircleBorder(),
-                                elevation: 2.0,
+                                elevation: 0,
+                                focusElevation: 0,
+                                hoverElevation: 0,
+                                highlightElevation: 0,
                                 // fillColor: _livekitStreamingController.muted.value
                                 //     ? AppColors.info
                                 //     : AppColors.surface,
@@ -2226,7 +2236,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         return RawMaterialButton(
                           onPressed: _onToggleMute,
                           shape: const CircleBorder(),
-                          elevation: 2.0,
+                          elevation: 0,
+                          focusElevation: 0,
+                          hoverElevation: 0,
+                          highlightElevation: 0,
                           // fillColor: _livekitStreamingController.muted.value
                           //     ? AppColors.info
                           //     : AppColors.surface,
@@ -2268,7 +2281,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         return RawMaterialButton(
                           onPressed: _onToggleVideoEnable,
                           shape: const CircleBorder(),
-                          elevation: 2.0,
+                          elevation: 0,
+                          focusElevation: 0,
+                          hoverElevation: 0,
+                          highlightElevation: 0,
                           fillColor: AppColors.overlay,
                           padding: const EdgeInsets.all(6.0),
                           constraints: const BoxConstraints(
@@ -2309,7 +2325,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         return RawMaterialButton(
                           onPressed: _onSwitchCamera,
                           shape: const CircleBorder(),
-                          elevation: 2.0,
+                          elevation: 0,
+                          focusElevation: 0,
+                          hoverElevation: 0,
+                          highlightElevation: 0,
                           fillColor: AppColors.overlay,
                           padding: const EdgeInsets.all(6.0),
                           constraints: const BoxConstraints(
@@ -2334,6 +2353,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           return Container();
                         }
                         return CircleButton(
+                          depth: 0,
                           onPressed: () {
                             _livekitStreamingController
                                 .expandMediaController

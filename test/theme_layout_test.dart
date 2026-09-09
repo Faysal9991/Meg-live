@@ -84,6 +84,16 @@ void main() {
     Get.put<AuthController>(auth);
     Get.put(ProfileController());
     final live = Get.put(LiveStreamingController());
+    live.topSlidingAgentRankingList.assignAll([
+      {
+        'agent_name': 'Nadia Agency',
+        'user_id': 1024,
+        'diamonds': 125000,
+        'top': 1,
+        'logo': '',
+        'is_app_owner': true,
+      },
+    ]);
     live.topHostList.assignAll(const [
       TopHost(
         uid: 21,

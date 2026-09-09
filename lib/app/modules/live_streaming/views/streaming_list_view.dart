@@ -1,9 +1,7 @@
-import 'package:doyel_live/app/modules/live_streaming/views/widgets/top_hosts_section.dart';
 import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
-import 'package:doyel_live/app/modules/live_streaming/models/top_host.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/live_streaming_view.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/others/slides_top_agents_view.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/widgets/home_banner_carousel.dart';
@@ -72,15 +70,6 @@ class StreamingListView extends StatelessWidget {
                 ),
               ),
 
-            if (_livekitStreamingController.topHostList.isNotEmpty ||
-                _livekitStreamingController.loadingTopHostList.value)
-              SliverToBoxAdapter(
-                child: TopHostsSection(
-                  hosts: _livekitStreamingController.topHostList.toList(),
-                  loading: _livekitStreamingController.loadingTopHostList.value,
-                  onHostTap: _onTapTopHost,
-                ),
-              ),
             if (liveRooms.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
@@ -148,25 +137,6 @@ class StreamingListView extends StatelessWidget {
         );
       }),
     );
-  }
-
-  void _onTapTopHost(TopHost host) {
-    final match = _livekitStreamingController.listFilterLiveStreams
-        .firstWhereOrNull(
-          (element) => _extractLiveRoomHostUid(element) == host.uid,
-        );
-    if (match == null) {
-      Get.snackbar(
-        'Unavailable',
-        'Host is not live right now.',
-        backgroundColor: AppColors.warning,
-        colorText: AppColors.onPrimary,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 2),
-      );
-      return;
-    }
-    _onClickingLiveRoom(data: match);
   }
 
   Widget _buildLiveRoomCard({

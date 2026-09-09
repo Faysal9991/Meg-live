@@ -13,12 +13,14 @@ class _ControlSurface extends StatefulWidget {
     required this.color,
     required this.radius,
     this.circle = false,
+    this.showShadow = true,
   });
   final Widget Function(WidgetStatesController) builder;
   final bool enabled;
   final Color color;
   final double radius;
   final bool circle;
+  final bool showShadow;
 
   @override
   State<_ControlSurface> createState() => _ControlSurfaceState();
@@ -63,7 +65,7 @@ class _ControlSurfaceState extends State<_ControlSurface> {
             pressed: states.contains(WidgetState.pressed),
             compact: true,
             shape: widget.circle ? BoxShape.circle : BoxShape.rectangle,
-          ),
+          ).copyWith(boxShadow: widget.showShadow ? null : const []),
           child: widget.builder(_states),
         ),
       );
@@ -179,6 +181,7 @@ class NeumorphicIconButton extends StatelessWidget {
       color: backgroundColor,
       radius: AppRadius.pill,
       circle: true,
+      showShadow: depth != 0,
       builder: (states) => IconButton(
         statesController: states,
         tooltip: tooltip,

@@ -67,6 +67,11 @@ abstract final class AppColors {
   static const Color premiumText = Color(0xFF785510);
   static const Color premiumSoft = Color(0xFFF1E9D7);
 
+  // Agent ranking banner uses a vivid gradient with white foregrounds.
+  static const Color agentBannerStart = Color(0xFF4338CA);
+  static const Color agentBannerMiddle = Color(0xFF7C3AED);
+  static const Color agentBannerEnd = Color(0xFFBE185D);
+
   // Backwards-compatible semantic aliases used by older widgets.
   static const Color onPrimary = textOnPrimary;
   static const Color primaryContainer = primarySoft;
