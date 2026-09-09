@@ -37,6 +37,7 @@ class ApiLogger {
     'token',
     'accesstoken',
     'refreshtoken',
+    'serverauthcode',
     'authorization',
     'apikey',
     'xapikey',

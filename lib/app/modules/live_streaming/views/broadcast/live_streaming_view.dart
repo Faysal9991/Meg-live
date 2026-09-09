@@ -9,6 +9,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/data/entry_effect_model.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
+import 'package:doyel_live/app/data/vip_preference.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
 import 'package:doyel_live/app/modules/live_streaming/utlls/livekit_stuffs.dart';
@@ -108,7 +109,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
   final ScrollController _scrollController = ScrollController();
   double? _scrollPosition;
-  late double _screenGlobalWidth, _screenGlobalHeight;
+  double get _screenGlobalWidth => MediaQuery.sizeOf(context).width;
+  double get _screenGlobalHeight => MediaQuery.sizeOf(context).height;
+  Map<String, dynamic> get _hostVipPreference =>
+      normalizeVipPreference(widget.vVipOrVipPreference);
   // Keep track of whether a scroll is needed.
   bool _isFirstTimeLoad = true;
 
@@ -946,18 +950,14 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     _liveGroupRoomCount = 1;
     _packageController.ensureKingPackageCatalogLoaded();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _screenGlobalWidth = MediaQuery.of(context).size.width;
-      _screenGlobalHeight = MediaQuery.of(context).size.height;
-    });
-
     _authController.setShowingOverlay(overlay: false);
 
-    _initializeLiveRoom();
-
     _editingControllerComment = TextEditingController();
-
-    // remaining headset/internet listener code...
+    // These must exist before socket events or a control can rebuild the room.
+    _timeConsumingTasks();
+    _scrollingStuff();
+    _loadStateData();
+    unawaited(_initializeLiveRoom());
   }
 
   Future<void> _initializeLiveRoom() async {
@@ -982,9 +982,13 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     // _closeEverything();
 
     _isDisposed = true;
-    _entryEffectTimer?.cancel();
+    _cancelRoomTimers();
     unawaited(_disposeEntryEffectAudio());
     _closeActionSocket();
+    _animationController?.dispose();
+    _editingControllerComment.dispose();
+    _focusNode.dispose();
+    _scrollController.dispose();
 
     (() {
       _livekitStreamingController.stopLiveRoomHeartbeat();
@@ -1051,8 +1055,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                   'uid': int.parse(widget.channelName),
                                   'full_name': widget.fullName,
                                   'profile_image': widget.profileImage,
-                                  'vvip_or_vip_preference': widget
-                                      .vVipOrVipPreference['vvip_or_vip_preference'],
+                                  'vvip_or_vip_preference': _hostVipPreference,
                                 },
                                 onUpdateAction: onUpdateAction,
                               );
@@ -1212,8 +1215,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               'uid': int.parse(widget.channelName),
                               'full_name': widget.fullName,
                               'profile_image': widget.profileImage,
-                              'vvip_or_vip_preference':
-                                  widget.vVipOrVipPreference,
+                              'vvip_or_vip_preference': _hostVipPreference,
                             },
                             onUpdateAction: onUpdateAction,
                           );
@@ -1249,12 +1251,12 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                             ? Image.asset(
                                                 'assets/others/person.jpg',
                                                 width:
-                                                    widget.vVipOrVipPreference['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
+                                                    _hostVipPreference['vvip_or_vip_gif'] !=
                                                         null
                                                     ? 22
                                                     : 28,
                                                 height:
-                                                    widget.vVipOrVipPreference['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
+                                                    _hostVipPreference['vvip_or_vip_gif'] !=
                                                         null
                                                     ? 22
                                                     : 28,
@@ -1264,12 +1266,12 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                                 imageUrl:
                                                     '${widget.profileImage}',
                                                 width:
-                                                    widget.vVipOrVipPreference['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
+                                                    _hostVipPreference['vvip_or_vip_gif'] !=
                                                         null
                                                     ? 22
                                                     : 28,
                                                 height:
-                                                    widget.vVipOrVipPreference['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
+                                                    _hostVipPreference['vvip_or_vip_gif'] !=
                                                         null
                                                     ? 22
                                                     : 28,
@@ -1285,7 +1287,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                               ),
                                       ),
                                     ),
-                                    widget.vVipOrVipPreference['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
+                                    _hostVipPreference['vvip_or_vip_gif'] !=
                                             null
                                         ? Positioned(
                                             bottom: 0,
@@ -1312,8 +1314,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                                       100.0,
                                                     ),
                                                 child: CachedNetworkImage(
-                                                  imageUrl: widget
-                                                      .vVipOrVipPreference['vvip_or_vip_preference']['vvip_or_vip_gif'],
+                                                  imageUrl:
+                                                      _hostVipPreference['vvip_or_vip_gif'],
                                                   width: 14,
                                                   height: 14,
                                                 ),
@@ -1706,8 +1708,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                     'uid': int.parse(widget.channelName),
                                     'full_name': widget.fullName,
                                     'profile_image': widget.profileImage,
-                                    'vvip_or_vip_preference': widget
-                                        .vVipOrVipPreference['vvip_or_vip_preference'],
+                                    'vvip_or_vip_preference':
+                                        _hostVipPreference,
                                   },
                                   onUpdateAction: onUpdateAction,
                                 );
@@ -2428,7 +2430,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
           "full_name": widget.fullName,
           "profile_image": widget.profileImage,
           "cover_image": null,
-          "vvip_or_vip_gif": widget.vVipOrVipPreference['vvip_or_vip_gif'],
+          "vvip_or_vip_gif": _hostVipPreference['vvip_or_vip_gif'],
           "diamonds": myProfile.diamonds,
           "blocks": myProfile.blocks,
           // "designation": "agent"
@@ -3230,50 +3232,27 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   }
 
   void _closeStreamingEvent() {
-    if (_livekitStreamingController.isBroadcaster.value) {
-      dynamic userData = {'action': 'end_streaming'};
-
-      onUpdateAction(userData);
-
-      // Signaling to hide from Live streaming list
-      dynamic liveData = {
+    if (_isDisposed || !mounted) return;
+    if (widget.isBroadcaster) {
+      onUpdateAction({'action': 'end_streaming'});
+      _livekitStreamingController.onUpdateLiveStreamStatus({
         'type': STREAMING,
         'channelName': _myUid,
         'online': false,
         'datetime': DateTime.now().toString(),
-      };
-
-      _livekitStreamingController.onUpdateLiveStreamStatus(liveData);
-
-      // _onCallEnd(context);
-
-      _closeEverything();
-    } else {
-      if (_livekitStreamingController.listActiveCall.indexWhere(
-            (element) => element['uid'] == _myUid,
-          ) !=
-          -1) {
-        // _livekitStreamingController.tryToEndCallInLiveKitRoom(
-        //   channelName: widget.channelName,
-        //   uid: _myUid,
-        // );
-        dynamic actionData = {"action": "end_call", "uid": _myUid};
-        onUpdateAction(actionData);
-
-        LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-          submissionData: LiveRoomUpdateRequest.removeUserFromCallingGroup(
-            channelId: int.parse(widget.channelName),
-            uid: _myUid,
-          ),
-        );
-      } else {
-        // _onCallEnd(context);
-
-        _closeEverything();
-      }
+      });
+    } else if (_livekitStreamingController.listActiveCall.any(
+      (element) => element['uid'] == _myUid,
+    )) {
+      onUpdateAction({'action': 'end_call', 'uid': _myUid});
+      LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
+        submissionData: LiveRoomUpdateRequest.removeUserFromCallingGroup(
+          channelId: int.parse(widget.channelName),
+          uid: _myUid,
+        ),
+      );
     }
-
-    Navigator.pop(context);
+    _closeEverything();
   }
 
   void _timeConsumingTasks() {
@@ -3345,6 +3324,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       duration: const Duration(seconds: 6),
     );
     _animationController!.addStatusListener((AnimationStatus status) {
+      if (_isDisposed || !mounted) return;
       setState(() {});
 
       if (status == AnimationStatus.completed) {
@@ -3428,84 +3408,62 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
   }
 
-  void _closeLiveRoom() async {
+  Future<void> _closeLiveRoom() async {
+    final room = _room;
+    final listener = _listener;
+    _room = null;
+    _listener = null;
+    room?.removeListener(_onRoomDidUpdate);
     try {
-      _room!.removeListener(_onRoomDidUpdate);
-      // await _listener!.dispose();
-      // // await _room!.disconnect();
-      // await _room!.dispose();
-    } catch (e) {
-      //
+      await listener?.dispose();
+    } catch (_) {
+      // Continue releasing the room if listener teardown failed.
     }
     try {
-      await _listener!.dispose();
-    } catch (e) {
-      //
-    }
-    // _room!.engine.cleanUp();
-    try {
-      await _room!.disconnect();
-    } catch (e) {
-      //
+      await room?.disconnect();
+    } catch (_) {
+      // A disconnected transport must still be disposed.
     }
     try {
-      await _room!.dispose();
-    } catch (e) {
-      //
+      await room?.dispose();
+    } catch (_) {
+      debugPrint('[LIVE-ROOM] Room disposal failed');
     }
   }
 
-  void _closeEverything() async {
-    // // destroy sdk and leave channel
+  void _cancelRoomTimers() {
+    _timerAfterInternetConnectionCheck?.cancel();
+    _timer?.cancel();
+    _timerTrackingExpiredStreams?.cancel();
+    _timerTrackingExpiredNormalGifts?.cancel();
+    _entryEffectTimer?.cancel();
+  }
+
+  void _closeEverything() {
+    if (_isDisposed || !mounted) return;
+    _isDisposed = true;
     _authController.setShowingOverlay(overlay: true);
     _livekitStreamingController.stopLiveRoomHeartbeat();
-
-    _closeLiveRoom();
-
-    if (_timerAfterInternetConnectionCheck != null) {
-      _timerAfterInternetConnectionCheck?.cancel();
-    }
-
-    if (_timer != null) {
-      _timer?.cancel();
-    }
-    if (_timerTrackingExpiredStreams != null) {
-      _timerTrackingExpiredStreams?.cancel();
-    }
-    if (_timerTrackingExpiredNormalGifts != null) {
-      _timerTrackingExpiredNormalGifts?.cancel();
-    }
-    _isDisposed = true;
-
-    // if (webSocketChannel != null) {
-    //   webSocketChannel?.sink.close(status.goingAway);
-    // }
-    // if (webSocketChannelForActions != null) {
-    //   webSocketChannelForActions?.sink.close(status.goingAway);
-    // }
-    // if (webSocketChannelForComments != null) {
-    //   webSocketChannelForComments?.sink.close(status.goingAway);
-    // }
-
+    _cancelRoomTimers();
+    _animationController?.stop();
     _closeActionSocket();
-
-    // try {
-    //   _editingControllerComment.dispose();
-    // } catch (e) {
-    //   //
-    // }
-    try {
-      _animationController?.dispose();
-    } catch (e) {
-      //
-    }
-    try {
-      _scrollController.dispose();
-    } catch (e) {
-      //
-    }
+    unawaited(_closeLiveRoom());
     _livekitStreamingController.setClearAnimationStuffs();
-    Get.back();
+
+    // Get.back() can close only a sheet/dialog. Repeated callbacks then used
+    // to pop the page underneath; keep navigation tied to this room's route.
+    final route = ModalRoute.of(context);
+    if (route == null) return;
+    final navigator = Navigator.of(context);
+    navigator.popUntil((candidate) => candidate == route || candidate.isFirst);
+    if (!route.isCurrent) return;
+    if (route.isFirst) {
+      navigator.pushReplacement(MaterialPageRoute(builder: (_) => NavView()));
+    } else {
+      navigator.pop();
+    }
+    // Widget controllers stay alive during the route's exit animation and are
+    // disposed exactly once in dispose().
   }
 
   bool onUpdateAction(dynamic data) => onUpdateAgtionWithWebSocketClient(data);

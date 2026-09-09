@@ -14,7 +14,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 
 import 'package:get/get.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import 'app/routes/app_pages.dart';
 
@@ -66,12 +65,6 @@ void main() async {
   );
 
   await Firebase.initializeApp();
-
-  final GoogleSignIn googleSignIn = GoogleSignIn.instance;
-  await googleSignIn.initialize(
-    serverClientId:
-        '107414380235-s5cmfapqeosv3r63d6g51e377vp4sdkq.apps.googleusercontent.com',
-  );
 
   await notificationInitialization();
   // FCM Background
