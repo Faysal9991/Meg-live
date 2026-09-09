@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/live_streaming_view.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/participant_info.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
 import 'package:doyel_live/app/theme/app_theme.dart';
+import 'package:doyel_live/app/widgets/animated_media_widget.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
+import 'package:flutter_svga/flutter_svga.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -66,6 +70,117 @@ void main() {
           const MethodChannel('flutter.baseflow.com/permissions/methods'),
           null,
         );
+  });
+
+  testWidgets('sent SVGA gifts finish fully and replay while headlines update', (
+    tester,
+  ) async {
+    final cache = Directory.systemTemp.createTempSync('doyel-sent-gift-test-');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    const pathChannel = MethodChannel('plugins.flutter.io/path_provider');
+    messenger.setMockMethodCallHandler(pathChannel, (_) async => cache.path);
+    final wasCacheEnabled = SVGACache.shared.isEnabled;
+    SVGACache.shared.setEnabled(true);
+    addTearDown(() {
+      messenger.setMockMethodCallHandler(pathChannel, null);
+      SVGACache.shared.setEnabled(wasCacheEnabled);
+      cache.deleteSync(recursive: true);
+    });
+    const url = 'https://example.com/five-second-sent-gift.svga';
+    final movie = MovieEntity(
+      params: MovieParams(
+        viewBoxWidth: 40,
+        viewBoxHeight: 40,
+        frames: 100,
+        fps: 20,
+      ),
+    );
+    await tester.runAsync(
+      () => SVGACache.shared.putRawBytes(
+        url,
+        Uint8List.fromList(zlib.encode(movie.writeToBuffer())),
+      ),
+    );
+    movie.dispose();
+
+    await tester.pumpWidget(
+      NeumorphicTheme(
+        theme: AppTheme.neumorphicTheme,
+        child: GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const LiveStreamingView(
+            channelName: '100',
+            isBroadcaster: false,
+            followers: [],
+            blocks: [],
+            level: null,
+            vVipOrVipPreference: {},
+            fullName: 'Host',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final controller = Get.find<LiveStreamingController>();
+    controller.listAnimatedGiftSend.addAll([
+      {'gift_type': 'animation', 'gift_id': 1, 'svga': url},
+      {'gift_type': 'animation', 'gift_id': 1, 'svga': url},
+    ]);
+    controller.showNextAnimatedGift();
+
+    Future<void> waitForMovie() async {
+      for (var attempt = 0; attempt < 50; attempt++) {
+        await tester.pump();
+        if (find.byType(SVGAImage).evaluate().isNotEmpty) return;
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)),
+        );
+      }
+      fail('The cached SVGA did not load');
+    }
+
+    await waitForMovie();
+    final firstPlayer = tester.widget<AnimatedMediaWidget>(
+      find.byType(AnimatedMediaWidget),
+    );
+    expect(firstPlayer.loop, isFalse);
+    expect(firstPlayer.enableSvgaAudio, isTrue);
+    controller.listLiveHeadlines.add('A room announcement');
+    controller.setMarqueeText();
+    await tester.pump(const Duration(seconds: 3));
+    expect(controller.showGiftSendAnimation.value, isTrue);
+    expect(controller.listAnimatedGiftSend, hasLength(2));
+    expect(find.byType(SVGAImage), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 2016));
+    await tester.pump();
+    expect(controller.listAnimatedGiftSend, hasLength(1));
+    await waitForMovie();
+    final secondPlayer = tester.widget<AnimatedMediaWidget>(
+      find.byType(AnimatedMediaWidget),
+    );
+    expect(secondPlayer.key, isNot(firstPlayer.key));
+    // A delayed callback from the old player must not remove the new gift.
+    firstPlayer.onCompleted!();
+    await tester.pump(const Duration(seconds: 3));
+    expect(controller.listAnimatedGiftSend, hasLength(1));
+    expect(find.byType(SVGAImage), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 2016));
+    await tester.pump();
+    expect(controller.listAnimatedGiftSend, isEmpty);
+    expect(find.byType(AnimatedMediaWidget), findsNothing);
+
+    // Directly leaving the route must also clear a gift that is still loading.
+    controller.listAnimatedGiftSend.add({
+      'gift_type': 'animation',
+      'svga': url,
+    });
+    controller.showNextAnimatedGift();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    expect(controller.listAnimatedGiftSend, isEmpty);
+    expect(controller.showGiftSendAnimation.value, isFalse);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets(

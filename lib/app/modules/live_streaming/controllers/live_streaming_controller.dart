@@ -25,6 +25,7 @@ import 'package:doyel_live/app/utils/api_logger.dart';
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
+import 'package:doyel_live/app/widgets/animated_media_widget.dart';
 // import 'package:web_socket_channel/io.dart';
 // import 'package:web_socket_channel/status.dart' as status;
 import 'package:web_socket_client/web_socket_client.dart';
@@ -79,7 +80,7 @@ class LiveStreamingController extends GetxController {
   final callType = ''.obs;
   final RxList<dynamic> listRequestedCall = <dynamic>[].obs;
   final RxList<dynamic> listActiveCall = <dynamic>[].obs;
-  Timer? _timerAnimatedGiftSendAnimcation,
+  Timer? _animatedGiftLoadTimer,
       _timerShowingMarqueeText,
       _timerTopContributorList,
       _liveRoomListRefreshTimer;
@@ -90,6 +91,11 @@ class LiveStreamingController extends GetxController {
   // Gift stuffs
   final RxList<dynamic> listNormalGiftSend = <dynamic>[].obs;
   final RxList<dynamic> listAnimatedGiftSend = <dynamic>[].obs;
+  final animatedGiftPlaybackId = 0.obs;
+  dynamic _activeAnimatedGift;
+  bool _animatedGiftStarted = false;
+  bool _animatedGiftFinishing = false;
+  AudioPlayer? _animatedGiftAudioPlayer;
   final RxList<dynamic> listLiveHeadlines = <dynamic>[].obs;
 
   final liveRunningDuration = '00:00:00'.obs;
@@ -225,9 +231,7 @@ class LiveStreamingController extends GetxController {
     webSocketClientForStreaming?.close();
     stopLiveRoomListAutoRefresh();
     stopLiveRoomHeartbeat();
-    if (_timerAnimatedGiftSendAnimcation != null) {
-      _timerAnimatedGiftSendAnimcation?.cancel();
-    }
+    setClearAnimationStuffs();
     if (_timerShowingMarqueeText != null) {
       _timerShowingMarqueeText?.cancel();
     }
@@ -681,7 +685,6 @@ class LiveStreamingController extends GetxController {
       marqueeText.value = headline + "\t\t\t";
 
       _timerShowingMarqueeText = Timer(duration, () async {
-        showGiftSendAnimation.value = false;
         _timerShowingMarqueeText?.cancel();
         _timerShowingMarqueeText = null;
         marqueeText.value = '';
@@ -716,50 +719,99 @@ class LiveStreamingController extends GetxController {
     });
   }
 
-  void setTimerForShowAnimatedGiftSendAnimation() async {
+  void showNextAnimatedGift() {
+    if (_isDisposed || _activeAnimatedGift != null) return;
+    while (listAnimatedGiftSend.isNotEmpty &&
+        listAnimatedGiftSend.first is! Map) {
+      listAnimatedGiftSend.removeAt(0);
+    }
+    if (listAnimatedGiftSend.isEmpty) return;
+
+    final gift = listAnimatedGiftSend.first;
+    _activeAnimatedGift = gift;
+    _animatedGiftStarted = false;
+    _animatedGiftFinishing = false;
+    final playbackId = ++animatedGiftPlaybackId.value;
+    showGiftSendAnimation.value = true;
+    final source = AnimatedMediaSource.fromMap(gift);
+
+    // A failed download must not block the queue. Cancel this loading deadline
+    // when playback starts; the animation then controls its own lifetime.
+    _animatedGiftLoadTimer = Timer(
+      source.isPlayable
+          ? const Duration(seconds: 30)
+          : const Duration(seconds: 3),
+      () => unawaited(finishAnimatedGift(playbackId)),
+    );
+    if (!source.isPlayable) unawaited(_playAnimatedGiftAudio(playbackId));
+  }
+
+  bool _isCurrentAnimatedGift(int playbackId) =>
+      !_isDisposed &&
+      _activeAnimatedGift != null &&
+      animatedGiftPlaybackId.value == playbackId;
+
+  void onAnimatedGiftPlaybackStarted(int playbackId) {
+    if (!_isCurrentAnimatedGift(playbackId) ||
+        _animatedGiftFinishing ||
+        _animatedGiftStarted) {
+      return;
+    }
+    _animatedGiftStarted = true;
+    _animatedGiftLoadTimer?.cancel();
+    _animatedGiftLoadTimer = null;
+    unawaited(_playAnimatedGiftAudio(playbackId));
+  }
+
+  Future<void> _playAnimatedGiftAudio(int playbackId) async {
+    if (!_isCurrentAnimatedGift(playbackId) || _animatedGiftFinishing) return;
+    final audioUrl = _activeAnimatedGift['audio']?.toString().trim();
+    if (audioUrl == null || audioUrl.isEmpty) return;
+    final player = AudioPlayer(
+      playerId:
+          'sent-gift-$playbackId-${DateTime.now().microsecondsSinceEpoch}',
+    );
+    _animatedGiftAudioPlayer = player;
+    try {
+      await player.play(UrlSource(audioUrl), volume: .4);
+    } catch (_) {
+      if (identical(_animatedGiftAudioPlayer, player)) {
+        await _disposeAnimatedGiftAudio();
+      }
+    }
+  }
+
+  Future<void> finishAnimatedGift(int playbackId) async {
+    if (!_isCurrentAnimatedGift(playbackId) || _animatedGiftFinishing) return;
+    _animatedGiftFinishing = true;
+    showGiftSendAnimation.value = false;
+    _animatedGiftLoadTimer?.cancel();
+    _animatedGiftLoadTimer = null;
+    await _disposeAnimatedGiftAudio();
+    // Room cleanup or a newer playback can invalidate an asynchronous callback.
+    if (!_isCurrentAnimatedGift(playbackId)) return;
     if (listAnimatedGiftSend.isNotEmpty &&
-        _timerAnimatedGiftSendAnimcation == null) {
-      // if (_timerAnimatedGiftSendAnimcation != null) {
-      //   _timerAnimatedGiftSendAnimcation?.cancel();
-      // }
-      final giftData = listAnimatedGiftSend[0];
-      Duration duration = const Duration(milliseconds: 1300);
-      if (giftData['gift_type'] == 'animation') {
-        duration = const Duration(seconds: 3);
-      }
-      AudioPlayer? audioPlayer;
-      if (giftData['audio'] != null) {
-        audioPlayer = AudioPlayer(playerId: giftData['gift_id'].toString());
+        identical(listAnimatedGiftSend.first, _activeAnimatedGift)) {
+      listAnimatedGiftSend.removeAt(0);
+    }
+    _activeAnimatedGift = null;
+    _animatedGiftFinishing = false;
+    showNextAnimatedGift();
+  }
 
-        try {
-          await audioPlayer.play(UrlSource(giftData['audio']), volume: .4);
-        } catch (e) {
-          //
-        }
-      }
-
-      showGiftSendAnimation.value = true;
-      _timerAnimatedGiftSendAnimcation = Timer(duration, () async {
-        showGiftSendAnimation.value = false;
-        _timerAnimatedGiftSendAnimcation?.cancel();
-        _timerAnimatedGiftSendAnimcation = null;
-        if (giftData['audio'] != null) {
-          // AudioPlayer audioPlayer =
-          //     AudioPlayer(playerId: giftData['gift_id'].toString());
-          try {
-            await audioPlayer?.stop();
-            await audioPlayer?.release();
-          } catch (e) {
-            //
-          }
-        }
-        try {
-          listAnimatedGiftSend.removeAt(0);
-        } catch (e) {
-          //
-        }
-        setTimerForShowAnimatedGiftSendAnimation();
-      });
+  Future<void> _disposeAnimatedGiftAudio() async {
+    final player = _animatedGiftAudioPlayer;
+    _animatedGiftAudioPlayer = null;
+    if (player == null) return;
+    try {
+      await player.stop();
+    } catch (_) {
+      // Continue disposal if the platform has already stopped the sound.
+    }
+    try {
+      await player.dispose();
+    } catch (_) {
+      // The platform may already have released this player during room cleanup.
     }
   }
 
@@ -817,6 +869,14 @@ class LiveStreamingController extends GetxController {
   }
 
   void setClearAnimationStuffs() {
+    _animatedGiftLoadTimer?.cancel();
+    _animatedGiftLoadTimer = null;
+    _activeAnimatedGift = null;
+    _animatedGiftStarted = false;
+    _animatedGiftFinishing = false;
+    animatedGiftPlaybackId.value++;
+    showGiftSendAnimation.value = false;
+    unawaited(_disposeAnimatedGiftAudio());
     listNormalGiftSend.clear();
     listAnimatedGiftSend.clear();
   }

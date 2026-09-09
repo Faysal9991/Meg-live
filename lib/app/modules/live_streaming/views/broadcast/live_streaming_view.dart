@@ -262,7 +262,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       // Animated Gifts
       if (data['gift_type'] == 'animation') {
         _livekitStreamingController.listAnimatedGiftSend.add(data);
-        _livekitStreamingController.setTimerForShowAnimatedGiftSendAnimation();
+        _livekitStreamingController.showNextAnimatedGift();
       } else {
         // Normal Gifts
         _livekitStreamingController.listNormalGiftSend.insert(0, data);
@@ -1024,6 +1024,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
     _isDisposed = true;
     _cancelRoomTimers();
+    _livekitStreamingController.setClearAnimationStuffs();
     unawaited(_disposeEntryEffectAudio());
     _closeActionSocket();
     _animationController?.dispose();
@@ -1579,6 +1580,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                 }),
                 // Animation Gift Send
                 Obx(() {
+                  final playbackId =
+                      _livekitStreamingController.animatedGiftPlaybackId.value;
                   return _livekitStreamingController.showGiftSendAnimation.value
                       ? Positioned(
                           top: 80,
@@ -1586,7 +1589,21 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           right: 0,
                           bottom: 80,
                           child: AnimatedMediaWidget(
+                            key: ValueKey<int>(playbackId),
                             source: _getAnimatedGiftMedia(),
+                            loop: false,
+                            onPlaybackStarted: () => _livekitStreamingController
+                                .onAnimatedGiftPlaybackStarted(playbackId),
+                            onCompleted: () => unawaited(
+                              _livekitStreamingController.finishAnimatedGift(
+                                playbackId,
+                              ),
+                            ),
+                            onError: (_) => unawaited(
+                              _livekitStreamingController.finishAnimatedGift(
+                                playbackId,
+                              ),
+                            ),
                             fit: BoxFit.contain,
                             placeholder: const Center(
                               child: CircularProgressIndicator(),
