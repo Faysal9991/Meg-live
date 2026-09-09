@@ -40,435 +40,412 @@ class ProfileView extends GetView<ProfileController> {
     final isReseller = profile.is_reseller ?? false;
     final isHost = profile.is_host ?? false;
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.screenHorizontal,
         vertical: AppSpacing.xs,
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Profile', style: AppTextStyles.pageTitle),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                // color: AppColors.overlayStrong,
-                borderRadius: BorderRadius.circular(16.0),
-                gradient: const LinearGradient(
-                  colors: [
-                    AppColors.primaryDark,
-                    AppColors.primary,
-                    AppColors.accentDark,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Profile', style: AppTextStyles.pageTitle),
+          const SizedBox(height: 16),
+          AppCard(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Obx(() {
+                  final profile = _authController.profile.value;
+                  return VipProfileAvatar(
+                    profileImage: profile.profile_image ?? profile.photo_url,
+                    vipPreference: profile.vvip_or_vip_preference,
+                  );
+                }),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        constraints: const BoxConstraints(maxWidth: 200),
+                        child: Obx(() {
+                          return Text(
+                            '${_authController.profile.value.full_name}',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          );
+                        }),
+                      ),
+                      Container(
+                        constraints: const BoxConstraints(maxWidth: 200),
+                        child: Obx(() {
+                          return Text(
+                            _authController.profile.value.user?.phone ?? '',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          );
+                        }),
+                      ),
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.start,
+                      //   children: [
+                      //     Text(
+                      //       'ID:  ${_authController.profile.value.user!.uid!}',
+                      //       style: const TextStyle(
+                      //         color: AppColors.textPrimary,
+                      //       ),
+                      //     ),
+                      //     const SizedBox(
+                      //       width: 16,
+                      //     ),
+                      //     Obx(() {
+                      //       return Text(
+                      //         'Level:  ${_authController.profile.value.level != null ? _authController.profile.value.level['level']['level'] : 0}',
+                      //         style: const TextStyle(
+                      //           color: AppColors.textPrimary,
+                      //         ),
+                      //       );
+                      //     }),
+                      //   ],
+                      // ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 8,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.asset(
+                                'assets/others/diamond.png',
+                                width: 16,
+                                height: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Obx(
+                                () => Text(
+                                  '${_authController.profile.value.diamonds ?? 0}',
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Obx(
+                            () => Text(
+                              'ID ${_authController.profile.value.user?.uid}',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Obx(() {
-                    final profile = _authController.profile.value;
-                    return VipProfileAvatar(
-                      profileImage: profile.profile_image ?? profile.photo_url,
-                      vipPreference: profile.vvip_or_vip_preference,
-                    );
-                  }),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          constraints: const BoxConstraints(maxWidth: 200),
-                          child: Obx(() {
-                            return Text(
-                              '${_authController.profile.value.full_name}',
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.surface,
-                              ),
-                            );
-                          }),
-                        ),
-                        Container(
-                          constraints: const BoxConstraints(maxWidth: 200),
-                          child: Obx(() {
-                            return Text(
-                              _authController.profile.value.user?.phone ?? '',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.surface,
-                              ),
-                            );
-                          }),
-                        ),
-                        // Row(
-                        //   mainAxisAlignment: MainAxisAlignment.start,
-                        //   children: [
-                        //     Text(
-                        //       'ID:  ${_authController.profile.value.user!.uid!}',
-                        //       style: const TextStyle(
-                        //         color: AppColors.surface,
-                        //       ),
-                        //     ),
-                        //     const SizedBox(
-                        //       width: 16,
-                        //     ),
-                        //     Obx(() {
-                        //       return Text(
-                        //         'Level:  ${_authController.profile.value.level != null ? _authController.profile.value.level['level']['level'] : 0}',
-                        //         style: const TextStyle(
-                        //           color: AppColors.surface,
-                        //         ),
-                        //       );
-                        //     }),
-                        //   ],
-                        // ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Image.asset(
-                              'assets/others/diamond.png',
-                              width: 16,
-                              height: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Obx(() {
-                              return Text(
-                                '${_authController.profile.value.diamonds ?? 0}',
-                                style: const TextStyle(
-                                  color: AppColors.surface,
-                                ),
-                              );
-                            }),
-                            const SizedBox(width: 16),
-                            const Icon(
-                              Icons.perm_identity,
-                              color: AppColors.surface,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Obx(() {
-                              return Text(
-                                '${_authController.profile.value.user?.uid}',
-                                style: const TextStyle(
-                                  color: AppColors.surface,
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
-            const SizedBox(height: 16),
-            AppCard(
-              child: Column(
-                children: [
-                  ListTile(
-                    onTap: () => Get.to(() => const EditProfileView()),
-                    dense: true,
-                    leading: const Icon(Icons.settings),
-                    title: const Text(
-                      'Edit Profile',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                  Obx(() {
-                    if (_authController.profile.value.login_type !=
-                        'password_login') {
-                      return Container();
-                    }
-                    return ListTile(
-                      onTap: () => Get.to(() => ChangePasswordView()),
-                      dense: true,
-                      leading: const Icon(Icons.password),
-                      title: const Text(
-                        'Change Password',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    );
-                  }),
-                  Obx(
-                    () => ListTile(
-                      onTap: () => Get.to(() => const BlockListView()),
-                      dense: true,
-                      leading: const Icon(Icons.no_accounts_rounded),
-                      title: Text(
-                        'Block List: ${_authController.profile.value.blocks!.length}',
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    ),
-                  ),
-                  ListTile(
-                    onTap: () => Get.to(
-                      () => BroadcastingHistoriesView(
-                        userId: _authController.profile.value.user!.uid!,
-                        isAgentSearch: false,
-                      ),
-                    ),
-                    dense: true,
-                    leading: Icon(MdiIcons.history),
-                    title: const Text(
-                      'History',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                  Obx(() {
-                    if (!(_authController.profile.value.is_moderator ??
-                        false)) {
-                      return Container();
-                    }
-                    return ListTile(
-                      onTap: () => Get.to(() => ModeratorView()),
-                      dense: true,
-                      leading: const Icon(Icons.local_activity),
-                      title: const Text(
-                        'Moderator Activity',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    );
-                  }),
-                  Obx(() {
-                    if (!(_authController.profile.value.is_reseller ?? false)) {
-                      return Container();
-                    }
-                    return ListTile(
-                      onTap: () => Get.to(() => ResellerView()),
-                      dense: true,
-                      leading: Icon(MdiIcons.diamond),
-                      title: const Text(
-                        'Reseller Recharge',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    );
-                  }),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            AppCard(
-              child: Column(
-                children: [
-                  ListTile(
-                    onTap: () => Get.to(() => const VVIPPackageView()),
-                    dense: true,
-                    leading: const Icon(Icons.important_devices),
-                    title: const Text(
-                      'VVIP Package',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                  // ListTile(
-                  //   onTap: () => Get.to(() => const KingPackageView()),
-                  //   dense: true,
-                  //   leading: const Icon(Icons.workspace_premium),
-                  //   title: const Text(
-                  //     'King Package',
-                  //     style: TextStyle(fontSize: 18),
-                  //   ),
-                  //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  // ),
-                  ListTile(
-                    onTap: () => Get.to(() => const VIPPackageView()),
-                    dense: true,
-                    leading: const Icon(Icons.important_devices_rounded),
-                    title: const Text(
-                      'VIP Package',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                  ListTile(
-                    onTap: () => Get.to(() => const EntryEffectPackageView()),
-                    dense: true,
-                    leading: const Icon(Icons.auto_awesome_motion),
-                    title: const Text(
-                      'Entry Effect',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                  !isAgent
-                      ? Container()
-                      : ListTile(
-                          onTap: () => Get.to(
-                            () => HostsView(
-                              agentUserId:
-                                  _authController.profile.value.user?.uid!,
-                            ),
-                          ),
-                          dense: true,
-                          leading: const Icon(Icons.groups),
-                          title: const Text(
-                            'Host List',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 16,
-                          ),
-                        ),
-                  isAgent || isModerator || isReseller || isHost
-                      ? Container()
-                      : ListTile(
-                          onTap: () => Get.to(() => const HostRequstView()),
-                          dense: true,
-                          leading: const Icon(Icons.broadcast_on_home),
-                          title: const Text(
-                            'Host Request',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 16,
-                          ),
-                        ),
-                  !isHost
-                      ? Container()
-                      : ListTile(
-                          onTap: () => Get.to(() => AgentForHostView()),
-                          dense: true,
-                          leading: const Icon(Icons.support_agent),
-                          title: const Text(
-                            'My Agent',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 16,
-                          ),
-                        ),
-                  ListTile(
-                    onTap: () => Get.to(() => const WithdrawRequestsView()),
-                    dense: true,
-                    leading: const Icon(Icons.account_balance_wallet_outlined),
-                    title: const Text(
-                      'Withdraw Requests',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            AppCard(
-              child: Column(
-                children: [
-                  ListTile(
-                    onTap: () async {
-                      String title = 'Welcome to ';
-                      String playStoreAppUrl =
-                          'https://play.google.com/store/apps/details?id=com.taksoft.doyel_live';
-                      String sharedText =
-                          'You Can Join With Us for Fun.......\n\n$playStoreAppUrl';
-                      await SharePlus.instance.share(
-                        ShareParams(text: sharedText, subject: title),
-                      );
-                    },
-                    dense: true,
-                    leading: const Icon(Icons.share),
-                    title: const Text(
-                      'Share App',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                  ListTile(
-                    onTap: () {
-                      final Uri emailLaunchUri = Uri(
-                        scheme: 'mailto',
-                        path: 'toplive46@gmail.com',
-                      );
-
-                      launchUrl(emailLaunchUri);
-                    },
-                    dense: true,
-                    leading: Icon(MdiIcons.help),
-                    title: const Text(
-                      'Help & Feedback',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                  ListTile(
-                    onTap: () => Get.to(() => const PrivacyPolicyView()),
-                    dense: true,
-                    leading: Icon(MdiIcons.fileDocument),
-                    title: const Text(
-                      'Privacy Policy',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                  ListTile(
-                    onTap: () => Get.to(() => const TermsAndConditionsView()),
-                    dense: true,
-                    leading: Icon(MdiIcons.fileDocument),
-                    title: const Text(
-                      'Terms & Conditions',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            AppCard(
-              child: Obx(() {
-                final isSigningOut = _authController.authLoading.value;
-                return ListTile(
-                  onTap: isSigningOut ? null : () => _confirmSignOut(context),
+          ),
+          const SizedBox(height: 16),
+          const Text('Account', style: AppTextStyles.sectionTitle),
+          const SizedBox(height: 12),
+          AppCard(
+            child: Column(
+              children: [
+                ListTile(
+                  onTap: () => Get.to(() => const EditProfileView()),
                   dense: true,
-                  leading: isSigningOut
-                      ? const SizedBox.square(
-                          dimension: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.error,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.logout_rounded,
-                          color: AppColors.error,
-                        ),
-                  title: Text(
-                    isSigningOut ? 'Logging out…' : 'Log Out',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.error,
+                  leading: const Icon(Icons.settings),
+                  title: const Text(
+                    'Edit Profile',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+                Obx(() {
+                  if (_authController.profile.value.login_type !=
+                      'password_login') {
+                    return Container();
+                  }
+                  return ListTile(
+                    onTap: () => Get.to(() => ChangePasswordView()),
+                    dense: true,
+                    leading: const Icon(Icons.password),
+                    title: const Text(
+                      'Change Password',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  );
+                }),
+                Obx(
+                  () => ListTile(
+                    onTap: () => Get.to(() => const BlockListView()),
+                    dense: true,
+                    leading: const Icon(Icons.no_accounts_rounded),
+                    title: Text(
+                      'Block List: ${_authController.profile.value.blocks!.length}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
+                ),
+                ListTile(
+                  onTap: () => Get.to(
+                    () => BroadcastingHistoriesView(
+                      userId: _authController.profile.value.user!.uid!,
+                      isAgentSearch: false,
                     ),
                   ),
-                  trailing: isSigningOut
-                      ? null
-                      : const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
+                  dense: true,
+                  leading: Icon(MdiIcons.history),
+                  title: const Text('History', style: TextStyle(fontSize: 16)),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+                Obx(() {
+                  if (!(_authController.profile.value.is_moderator ?? false)) {
+                    return Container();
+                  }
+                  return ListTile(
+                    onTap: () => Get.to(() => ModeratorView()),
+                    dense: true,
+                    leading: const Icon(Icons.local_activity),
+                    title: const Text(
+                      'Moderator Activity',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  );
+                }),
+                Obx(() {
+                  if (!(_authController.profile.value.is_reseller ?? false)) {
+                    return Container();
+                  }
+                  return ListTile(
+                    onTap: () => Get.to(() => ResellerView()),
+                    dense: true,
+                    leading: Icon(MdiIcons.diamond),
+                    title: const Text(
+                      'Reseller Recharge',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text('Membership & wallet', style: AppTextStyles.sectionTitle),
+          const SizedBox(height: 12),
+          AppCard(
+            child: Column(
+              children: [
+                ListTile(
+                  onTap: () => Get.to(() => const VVIPPackageView()),
+                  dense: true,
+                  leading: const Icon(Icons.important_devices),
+                  title: const Text(
+                    'VVIP Package',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+                // ListTile(
+                //   onTap: () => Get.to(() => const KingPackageView()),
+                //   dense: true,
+                //   leading: const Icon(Icons.workspace_premium),
+                //   title: const Text(
+                //     'King Package',
+                //     style: TextStyle(fontSize: 16),
+                //   ),
+                //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                // ),
+                ListTile(
+                  onTap: () => Get.to(() => const VIPPackageView()),
+                  dense: true,
+                  leading: const Icon(Icons.important_devices_rounded),
+                  title: const Text(
+                    'VIP Package',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+                ListTile(
+                  onTap: () => Get.to(() => const EntryEffectPackageView()),
+                  dense: true,
+                  leading: const Icon(Icons.auto_awesome_motion),
+                  title: const Text(
+                    'Entry Effect',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+                !isAgent
+                    ? Container()
+                    : ListTile(
+                        onTap: () => Get.to(
+                          () => HostsView(
+                            agentUserId:
+                                _authController.profile.value.user?.uid!,
+                          ),
+                        ),
+                        dense: true,
+                        leading: const Icon(Icons.groups),
+                        title: const Text(
+                          'Host List',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      ),
+                isAgent || isModerator || isReseller || isHost
+                    ? Container()
+                    : ListTile(
+                        onTap: () => Get.to(() => const HostRequstView()),
+                        dense: true,
+                        leading: const Icon(Icons.broadcast_on_home),
+                        title: const Text(
+                          'Host Request',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      ),
+                !isHost
+                    ? Container()
+                    : ListTile(
+                        onTap: () => Get.to(() => AgentForHostView()),
+                        dense: true,
+                        leading: const Icon(Icons.support_agent),
+                        title: const Text(
+                          'My Agent',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      ),
+                ListTile(
+                  onTap: () => Get.to(() => const WithdrawRequestsView()),
+                  dense: true,
+                  leading: const Icon(Icons.account_balance_wallet_outlined),
+                  title: const Text(
+                    'Withdraw Requests',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text('Support', style: AppTextStyles.sectionTitle),
+          const SizedBox(height: 12),
+          AppCard(
+            child: Column(
+              children: [
+                ListTile(
+                  onTap: () async {
+                    String title = 'Welcome to ';
+                    String playStoreAppUrl =
+                        'https://play.google.com/store/apps/details?id=com.taksoft.doyel_live';
+                    String sharedText =
+                        'You Can Join With Us for Fun.......\n\n$playStoreAppUrl';
+                    await SharePlus.instance.share(
+                      ShareParams(text: sharedText, subject: title),
+                    );
+                  },
+                  dense: true,
+                  leading: const Icon(Icons.share),
+                  title: const Text(
+                    'Share App',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+                ListTile(
+                  onTap: () {
+                    final Uri emailLaunchUri = Uri(
+                      scheme: 'mailto',
+                      path: 'toplive46@gmail.com',
+                    );
+
+                    launchUrl(emailLaunchUri);
+                  },
+                  dense: true,
+                  leading: Icon(MdiIcons.help),
+                  title: const Text(
+                    'Help & Feedback',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+                ListTile(
+                  onTap: () => Get.to(() => const PrivacyPolicyView()),
+                  dense: true,
+                  leading: Icon(MdiIcons.fileDocument),
+                  title: const Text(
+                    'Privacy Policy',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+                ListTile(
+                  onTap: () => Get.to(() => const TermsAndConditionsView()),
+                  dense: true,
+                  leading: Icon(MdiIcons.fileDocument),
+                  title: const Text(
+                    'Terms & Conditions',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          AppCard(
+            child: Obx(() {
+              final isSigningOut = _authController.authLoading.value;
+              return ListTile(
+                onTap: isSigningOut ? null : () => _confirmSignOut(context),
+                dense: true,
+                leading: isSigningOut
+                    ? const SizedBox.square(
+                        dimension: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
                           color: AppColors.error,
                         ),
-                );
-              }),
-            ),
-          ],
-        ),
+                      )
+                    : const Icon(Icons.logout_rounded, color: AppColors.error),
+                title: Text(
+                  isSigningOut ? 'Logging out…' : 'Log Out',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.error,
+                  ),
+                ),
+                trailing: isSigningOut
+                    ? null
+                    : const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: AppColors.error,
+                      ),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }

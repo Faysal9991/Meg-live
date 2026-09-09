@@ -1,3 +1,5 @@
+import 'package:doyel_live/app/modules/live_streaming/views/widgets/top_hosts_section.dart';
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
@@ -23,8 +25,9 @@ class StreamingListView extends StatelessWidget {
         onPressed: () {
           _livekitStreamingController.refreshStreamingHomeFeed();
         },
-        backgroundColor: AppColors.danger,
-        elevation: 6.0,
+        backgroundColor: AppColors.accent,
+        tooltip: 'Refresh live rooms',
+        elevation: 3.0,
         child: Obx(() {
           if (_livekitStreamingController.loadingLiveRoomList.value ||
               _livekitStreamingController.loadingBannerList.value ||
@@ -51,7 +54,7 @@ class StreamingListView extends StatelessWidget {
                 _livekitStreamingController.loadingBannerList.value)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: HomeBannerCarousel(
                     banners: _livekitStreamingController.bannerList.toList(),
                   ),
@@ -64,11 +67,20 @@ class StreamingListView extends StatelessWidget {
                 .isNotEmpty)
               const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(8, 0, 8, 12),
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 20),
                   child: SlidesTopAgentsView(),
                 ),
               ),
 
+            if (_livekitStreamingController.topHostList.isNotEmpty ||
+                _livekitStreamingController.loadingTopHostList.value)
+              SliverToBoxAdapter(
+                child: TopHostsSection(
+                  hosts: _livekitStreamingController.topHostList.toList(),
+                  loading: _livekitStreamingController.loadingTopHostList.value,
+                  onHostTap: _onTapTopHost,
+                ),
+              ),
             if (liveRooms.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
@@ -82,7 +94,7 @@ class StreamingListView extends StatelessWidget {
                     ),
                     const SizedBox(height: 32),
                     Text(
-                      'Empty',
+                      'No live rooms yet',
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(color: AppColors.textMuted),
                     ),
@@ -92,7 +104,7 @@ class StreamingListView extends StatelessWidget {
             else ...[
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   child: Text(
                     'Live Now',
                     style: Theme.of(context).textTheme.titleLarge,
@@ -100,26 +112,33 @@ class StreamingListView extends StatelessWidget {
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final data = liveRooms[index];
-                    return InkWell(
-                      onTap: () => _onClickingLiveRoom(data: data),
-                      child: _buildLiveRoomCard(
-                        context: context,
-                        data: data,
-                        showKingIcon: _isTopHostLiveRoom(
-                          liveRoomData: data,
-                          topHostIds: topHostIds,
+                    return Semantics(
+                      button: true,
+                      label:
+                          'Join ${data['owner_profile']?['full_name'] ?? 'host'} live room',
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(24),
+                        onTap: () => _onClickingLiveRoom(data: data),
+                        child: _buildLiveRoomCard(
+                          context: context,
+                          data: data,
+                          showKingIcon: _isTopHostLiveRoom(
+                            liveRoomData: data,
+                            topHostIds: topHostIds,
+                          ),
                         ),
                       ),
                     );
                   }, childCount: liveRooms.length),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 4,
-                    mainAxisSpacing: 4,
+                    childAspectRatio: 0.8,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
                   ),
                 ),
               ),
@@ -155,152 +174,126 @@ class StreamingListView extends StatelessWidget {
     required dynamic data,
     required bool showKingIcon,
   }) {
-    return Container(
-      margin: const EdgeInsets.all(2),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.0)),
-      width: MediaQuery.of(context).size.width / 2 - 4,
-      height: MediaQuery.of(context).size.width / 2 - 4,
-      child: Stack(
+    final owner = data['owner_profile'];
+    final name = owner?['full_name']?.toString() ?? '';
+    final imageUrl = owner?['profile_image']?.toString();
+    return AppCard(
+      padding: const EdgeInsets.all(6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(
-            child: Container(
-              height: MediaQuery.of(context).size.width / 2 - 4,
-              width: MediaQuery.of(context).size.width / 2 - 4,
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(100.0),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: data['owner_profile']['profile_image'] == null
-                    ? Image.asset(
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (imageUrl == null || imageUrl.isEmpty)
+                    Image.asset('assets/others/person.jpg', fit: BoxFit.cover)
+                  else
+                    CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) =>
+                          const Center(child: CircularProgressIndicator()),
+                      errorWidget: (_, __, ___) => Image.asset(
                         'assets/others/person.jpg',
-                        height: MediaQuery.of(context).size.width / 2 - 4,
                         fit: BoxFit.cover,
-                      )
-                    : CachedNetworkImage(
-                        imageUrl: data['owner_profile']['profile_image'],
-                        height: MediaQuery.of(context).size.width / 2 - 4,
-                        width: MediaQuery.of(context).size.width / 2 - 4,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
-                          ),
+                      ),
+                    ),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.overlayStrong,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'LIVE',
+                        style: TextStyle(
+                          color: AppColors.onMedia,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
                         ),
                       ),
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [Colors.transparent, AppColors.black26],
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.black38,
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              padding: const EdgeInsets.all(4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.visibility,
-                    color: AppColors.onPrimary,
-                    size: 16,
+                    ),
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${data['viewers_count']}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.onPrimary,
+                  Positioned(
+                    right: 8,
+                    bottom: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.overlayStrong,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.visibility_outlined,
+                            color: AppColors.onMedia,
+                            size: 13,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${data['viewers_count'] ?? 0}',
+                            style: const TextStyle(
+                              color: AppColors.onMedia,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          if (showKingIcon)
-            Positioned(
-              top: 8,
-              left: 8,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.black45,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.workspace_premium,
-                      color: AppColors.premium,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Top Host',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppColors.onPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          Positioned(
-            bottom: 4,
-            left: 4,
-            right: 0,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 10, 6, 6),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                data['owner_profile']['vvip_or_vip_gif'] != null
-                    ? Container(
-                        margin: const EdgeInsets.only(left: 4.0),
-                        decoration: BoxDecoration(
-                          color: AppColors.black38,
-                          border: Border.all(
-                            color: AppColors.warning,
-                            width: 2.0,
-                          ),
-                          borderRadius: BorderRadius.circular(100.0),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(100.0),
-                          child: CachedNetworkImage(
-                            imageUrl: data['owner_profile']['vvip_or_vip_gif'],
-                            width: 40,
-                            height: 40,
-                          ),
-                        ),
-                      )
-                    : Container(),
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 4.0),
-                    child: Text(
-                      data['owner_profile']?['full_name']?.toString() ?? '',
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: AppColors.onPrimary,
-                        fontWeight: FontWeight.w700,
-                        backgroundColor: AppColors.black12,
-                      ),
+                if (showKingIcon) ...[
+                  const Tooltip(
+                    message: 'Top Host',
+                    child: Icon(
+                      Icons.workspace_premium,
+                      color: AppColors.premiumText,
+                      size: 18,
                     ),
+                  ),
+                  const SizedBox(width: 5),
+                ],
+                if (owner?['vvip_or_vip_gif'] != null) ...[
+                  CachedNetworkImage(
+                    imageUrl: owner['vvip_or_vip_gif'],
+                    width: 20,
+                    height: 20,
+                    errorWidget: (_, __, ___) => const Icon(
+                      Icons.stars,
+                      size: 18,
+                      color: AppColors.premiumText,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                Expanded(
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelLarge,
                   ),
                 ),
               ],

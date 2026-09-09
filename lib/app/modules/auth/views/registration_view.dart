@@ -1,3 +1,5 @@
+import 'package:doyel_live/app/theme/app_radius.dart';
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/widgets/country_phone_code_widget.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
@@ -27,6 +29,14 @@ class _RegistrationViewState extends State<RegistrationView> {
       TextEditingController();
 
   @override
+  void dispose() {
+    _editingControllerName.dispose();
+    _editingControllerPhoneNumber.dispose();
+    _editingControllerPassword.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Future.delayed(Duration.zero, () {
     //   _authController.setVisibilitySignUpPassword(false);
@@ -36,36 +46,36 @@ class _RegistrationViewState extends State<RegistrationView> {
         FocusScope.of(context).unfocus();
       },
       child: Scaffold(
+        appBar: AppBar(title: const Text('Phone sign in')),
         body: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 64),
-                  Center(
-                    child: Image.asset(
-                      'assets/logos/biho.png',
-                      width: 130,
-                      height: 130,
-                    ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                Center(
+                  child: Image.asset(
+                    'assets/logos/biho.png',
+                    width: 130,
+                    height: 130,
                   ),
-                  const SizedBox(height: 16),
-                  const Center(
-                    child: Text(
-                      'Your Phone!',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                ),
+                const SizedBox(height: 16),
+                const Center(
+                  child: Text(
+                    'Let’s get you connected',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                   ),
-                  showSignUpFormWidget(context),
-                  const SizedBox(height: 16),
-                ],
-              ),
+                ),
+                const SizedBox(height: 24),
+                AppCard(
+                  padding: const EdgeInsets.all(20),
+                  child: showSignUpFormWidget(context),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
           ),
         ),
@@ -82,17 +92,12 @@ class _RegistrationViewState extends State<RegistrationView> {
           controller: _editingControllerName,
           keyboardType: TextInputType.name,
           borderColor: AppColors.textSecondary,
-          hintText: 'Enter your name !!',
+          hintText: 'Your name',
         ),
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              // color: AppColors.textSecondary,
-              borderRadius: BorderRadius.circular(8.0),
-              border: Border.all(color: AppColors.textSecondary),
-            ),
+          child: AppInsetSurface(
             child: ListTile(
               dense: true,
               onTap: () => openCountryPickerDialog(
@@ -190,7 +195,7 @@ class _RegistrationViewState extends State<RegistrationView> {
           buttonText: 'LOGIN',
           fontSize: 16.0,
           fixedSize: Size(MediaQuery.of(context).size.width - 21, 46),
-          borderRadius: 8.0,
+          borderRadius: AppRadius.button,
         ),
       ],
     );

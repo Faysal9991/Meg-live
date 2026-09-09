@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_radius.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
@@ -294,7 +295,7 @@ class GiftsWidget extends StatelessWidget {
                           ),
                           primaryColor: AppColors.success,
                           buttonText: '+ Recharge',
-                          borderRadius: 8.0,
+                          borderRadius: AppRadius.button,
                           fontSize: 12.0,
                         ),
                         // const SizedBox(
@@ -520,7 +521,7 @@ class GiftsWidget extends StatelessWidget {
                                       ? AppColors.warning
                                       : AppColors.textSecondary,
                                   buttonTextColor: AppColors.surface,
-                                  borderRadius: 8.0,
+                                  borderRadius: AppRadius.button,
                                   buttonText: isSending
                                       ? 'Wait...'
                                       : selectedGiftId != 0
@@ -611,7 +612,7 @@ class giftItem extends StatelessWidget {
                                 'normal' &&
                             giftData['gift_image'] != null)
                     ? Theme.of(context).primaryColor
-                    : Colors.transparent,
+                    : AppColors.transparent,
               ),
               borderRadius: BorderRadius.circular(8.0),
               color: AppColors.overlayLight,

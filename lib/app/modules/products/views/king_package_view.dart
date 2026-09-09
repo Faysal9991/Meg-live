@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
@@ -129,7 +130,7 @@ class _KingPackageViewState extends State<KingPackageView> {
     String? expirationDateTime,
   }) {
     final data = packageItem.raw;
-    return Card(
+    return AppCard(
       margin: EdgeInsets.zero,
       elevation: 5,
       child: ListTile(
@@ -215,14 +216,14 @@ class _KingPackageViewState extends State<KingPackageView> {
                         );
                       }
                     },
-                    primaryColor: AppColors.onMediaMuted,
+                    primaryColor: AppColors.primary,
                     buttonText:
                         _packageController.purchasingKingPackageId.value ==
                             packageItem.id
                         ? 'Purchasing...'
                         : 'Purchase',
                     fontSize: 14.0,
-                    buttonTextColor: AppColors.textPrimary,
+                    buttonTextColor: AppColors.textOnPrimary,
                     borderRadius: 60.0,
                   )
                 : Text(

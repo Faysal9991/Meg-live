@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -80,27 +81,14 @@ class HistoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return AppCard(
       elevation: 10,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(20)),
       ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            // colors: [
-            //   AppColors.warning.withOpacity(.5),
-            //   Theme.of(context).primaryColor.withOpacity(.5),
-            //   AppColors.overlay,
-            // ],
-            colors: [AppColors.info, Theme.of(context).primaryColor],
-
-            begin: Alignment.bottomLeft,
-            end: Alignment.topRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-        ),
+        decoration: const BoxDecoration(color: AppColors.surface),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -108,14 +96,14 @@ class HistoryItem extends StatelessWidget {
             Text(
               'Date: ${data['broadcasting_date']}',
               style: const TextStyle(
-                color: AppColors.onMediaMuted,
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.w900,
               ),
             ),
             // Text(
             //   'Audio: ${(data['audio_broadcast_in_second'] / 60).toStringAsFixed(2)} minutes',
             //   style: const TextStyle(
-            //     color: AppColors.onMediaMuted,
+            //     color: AppColors.textSecondary,
             //     fontWeight: FontWeight.w900,
             //   ),
             // ),
@@ -123,7 +111,7 @@ class HistoryItem extends StatelessWidget {
               // 'Video: ${(data['video_broadcast_in_second'] / 60).toStringAsFixed(2)} minutes',
               '(H:M:S): ${_printDuration(Duration(seconds: data['video_broadcast_in_second']))}',
               style: const TextStyle(
-                color: AppColors.onMediaMuted,
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.w900,
               ),
             ),

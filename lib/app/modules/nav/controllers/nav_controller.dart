@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -5,7 +6,6 @@ import 'package:dio/dio.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/routes/app_pages.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class NavController extends GetxController {
@@ -53,8 +53,8 @@ class NavController extends GetxController {
           Get.snackbar(
             'Blocked',
             "Your device has been blocked.",
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
+            backgroundColor: AppColors.error,
+            colorText: AppColors.textOnPrimary,
             snackPosition: SnackPosition.BOTTOM,
           );
           authController.setShowingOverlay(overlay: false);

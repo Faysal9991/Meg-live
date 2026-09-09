@@ -1,6 +1,6 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:dio/dio.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
@@ -86,24 +86,24 @@ class DevicesController extends GetxController {
         Get.snackbar(
           'No Access',
           'You are not allowed to perform action.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
+          backgroundColor: AppColors.error,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
         Get.snackbar(
           'Failed',
           'Something is wrong. Please try again.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
+          backgroundColor: AppColors.error,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 201) {
         Get.snackbar(
           'Success',
           'Device has been blocked.',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
         userDevicesInfoList

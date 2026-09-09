@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_radius.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -97,7 +98,7 @@ class ChangePasswordView extends StatelessWidget {
                   buttonTextColor: AppColors.surface,
                   fontSize: 16.0,
                   fixedSize: Size(MediaQuery.of(context).size.width - 32, 46),
-                  borderRadius: 8.0,
+                  borderRadius: AppRadius.button,
                 ),
                 const SizedBox(height: 32),
               ],

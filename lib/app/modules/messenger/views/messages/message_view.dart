@@ -81,7 +81,7 @@ class _MessagesViewState extends State<MessagesView>
   }
 
   AppBar buildAppBar() {
-    final popupBackgroundColor = Theme.of(context).colorScheme.primary;
+    final popupBackgroundColor = Theme.of(context).colorScheme.surface;
     final popupTextColor =
         ThemeData.estimateBrightnessForColor(popupBackgroundColor) ==
             Brightness.dark
@@ -96,7 +96,7 @@ class _MessagesViewState extends State<MessagesView>
             padding: EdgeInsets.zero,
             onPressed: () => Get.back(),
             icon: const Icon(Icons.arrow_back_ios),
-            constraints: const BoxConstraints(maxHeight: 24, maxWidth: 24),
+            constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
           ),
           // widget.profile['profile_image'] == null
           //     ? const CircleAvatar(

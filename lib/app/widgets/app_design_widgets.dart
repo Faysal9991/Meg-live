@@ -2,8 +2,72 @@ import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
 import 'package:doyel_live/app/theme/app_radius.dart';
 import 'package:doyel_live/app/theme/app_spacing.dart';
-import 'package:doyel_live/app/theme/app_text_styles.dart';
 import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
+
+/// Soft depth around native Material controls preserves keyboard, focus,
+/// disabled, ink, and accessibility behavior.
+class _ControlSurface extends StatefulWidget {
+  const _ControlSurface({
+    required this.builder,
+    required this.enabled,
+    required this.color,
+    required this.radius,
+    this.circle = false,
+  });
+  final Widget Function(WidgetStatesController) builder;
+  final bool enabled;
+  final Color color;
+  final double radius;
+  final bool circle;
+
+  @override
+  State<_ControlSurface> createState() => _ControlSurfaceState();
+}
+
+class _ControlSurfaceState extends State<_ControlSurface> {
+  late final WidgetStatesController _states;
+
+  @override
+  void initState() {
+    super.initState();
+    _states = WidgetStatesController({
+      if (!widget.enabled) WidgetState.disabled,
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _ControlSurface oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _states.update(WidgetState.disabled, !widget.enabled);
+  }
+
+  @override
+  void dispose() {
+    _states.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      ValueListenableBuilder<Set<WidgetState>>(
+        valueListenable: _states,
+        builder: (context, states, _) => AnimatedContainer(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : AppNeumorphicStyles.duration,
+          curve: Curves.easeOutCubic,
+          decoration: AppNeumorphicStyles.decoration(
+            color: widget.enabled ? widget.color : AppColors.disabledBackground,
+            radius: widget.radius,
+            enabled: widget.enabled,
+            pressed: states.contains(WidgetState.pressed),
+            compact: true,
+            shape: widget.circle ? BoxShape.circle : BoxShape.rectangle,
+          ),
+          child: widget.builder(_states),
+        ),
+      );
+}
 
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
@@ -19,7 +83,6 @@ class PrimaryButton extends StatelessWidget {
     this.borderRadius = AppRadius.button,
     this.compact = false,
   });
-
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
@@ -33,40 +96,57 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedForeground =
+    final foreground =
         foregroundColor ??
         (ThemeData.estimateBrightnessForColor(backgroundColor) ==
                 Brightness.dark
             ? AppColors.textOnPrimary
             : AppColors.textPrimary);
-    final style = FilledButton.styleFrom(
-      backgroundColor: backgroundColor,
-      foregroundColor: resolvedForeground,
-      fixedSize: fixedSize,
-      minimumSize: fixedSize == null ? Size(0, compact ? 40 : 54) : null,
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? AppSpacing.sm : AppSpacing.lg,
-        vertical: compact ? AppSpacing.xs : AppSpacing.sm,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-      textStyle: AppTextStyles.button.copyWith(
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        color: resolvedForeground,
-      ),
+    final style =
+        FilledButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: foreground,
+          disabledBackgroundColor: AppColors.disabledBackground,
+          disabledForegroundColor: AppColors.disabled,
+          fixedSize: fixedSize,
+          minimumSize: fixedSize == null ? Size(48, compact ? 48 : 54) : null,
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? AppSpacing.sm : AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(borderRadius),
+          ),
+          textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+            fontSize: fontSize,
+            fontWeight: fontWeight,
+          ),
+        ).copyWith(
+          side: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.focused)
+                ? const BorderSide(color: AppColors.accentLight, width: 3)
+                : BorderSide.none,
+          ),
+        );
+    return _ControlSurface(
+      color: backgroundColor,
+      radius: borderRadius,
+      enabled: onPressed != null,
+      builder: (states) => icon == null
+          ? FilledButton(
+              statesController: states,
+              onPressed: onPressed,
+              style: style,
+              child: Text(label),
+            )
+          : FilledButton.icon(
+              statesController: states,
+              onPressed: onPressed,
+              style: style,
+              icon: Icon(icon),
+              label: Text(label),
+            ),
     );
-
-    if (icon != null) {
-      return FilledButton.icon(
-        onPressed: onPressed,
-        style: style,
-        icon: Icon(icon, color: resolvedForeground),
-        label: Text(label),
-      );
-    }
-    return FilledButton(onPressed: onPressed, style: style, child: Text(label));
   }
 }
 
@@ -76,13 +156,12 @@ class NeumorphicIconButton extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     this.tooltip,
-    this.size = 42,
+    this.size = 48,
     this.iconSize = 21,
     this.iconColor = AppColors.primary,
-    this.backgroundColor = AppColors.secondary,
-    this.depth = 3,
+    this.backgroundColor = AppColors.surface,
+    this.depth = AppNeumorphicStyles.controlDepth,
   });
-
   final IconData icon;
   final VoidCallback? onPressed;
   final String? tooltip;
@@ -93,64 +172,123 @@ class NeumorphicIconButton extends StatelessWidget {
   final double depth;
 
   @override
-  Widget build(BuildContext context) {
-    final button = SizedBox.square(
-      dimension: size,
-      child: NeumorphicButton(
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size < 48 ? 48 : size,
+    child: _ControlSurface(
+      enabled: onPressed != null,
+      color: backgroundColor,
+      radius: AppRadius.pill,
+      circle: true,
+      builder: (states) => IconButton(
+        statesController: states,
         tooltip: tooltip,
         onPressed: onPressed,
-        padding: EdgeInsets.zero,
-        style: AppNeumorphicStyles.circle(
-          color: backgroundColor,
-          depth: onPressed == null ? 0 : depth,
-        ),
-        child: Center(
-          child: Icon(
-            icon,
-            size: iconSize,
-            color: onPressed == null ? AppColors.disabled : iconColor,
-          ),
-        ),
+        icon: Icon(icon, size: iconSize),
+        style:
+            IconButton.styleFrom(
+              backgroundColor: backgroundColor,
+              foregroundColor: iconColor,
+              disabledForegroundColor: AppColors.disabled,
+              disabledBackgroundColor: AppColors.disabledBackground,
+              shape: const CircleBorder(),
+              padding: EdgeInsets.zero,
+            ).copyWith(
+              side: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.focused)
+                    ? const BorderSide(color: AppColors.primary, width: 2)
+                    : BorderSide.none,
+              ),
+            ),
       ),
-    );
-    return Semantics(button: true, label: tooltip, child: button);
-  }
+    ),
+  );
 }
 
+/// The standard surface for lists, panels, packages, and navigation.
+/// A Material child keeps InkWell feedback visible inside the soft shell.
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
     required this.child,
     this.padding = EdgeInsets.zero,
     this.margin = EdgeInsets.zero,
+    this.color = AppColors.card,
+    this.shape,
+    this.clipBehavior = Clip.antiAlias,
+    this.elevation = AppNeumorphicStyles.cardDepth,
+    this.surfaceTintColor,
   });
-
   final Widget child;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
+  final Color? color;
+  final ShapeBorder? shape;
+  final Clip clipBehavior;
+  final double elevation;
+  final Color? surfaceTintColor;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: margin,
-      color: AppColors.card,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        side: const BorderSide(color: AppColors.border),
+    final resolvedShape =
+        shape ??
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        );
+    return Padding(
+      padding: margin,
+      child: DecoratedBox(
+        decoration: ShapeDecoration(
+          color: color ?? AppColors.card,
+          shape: resolvedShape,
+          shadows: elevation <= 0
+              ? const []
+              : AppNeumorphicStyles.raisedShadows,
+        ),
+        child: Material(
+          color: color ?? AppColors.card,
+          shape: resolvedShape,
+          clipBehavior: clipBehavior,
+          child: Padding(padding: padding, child: child),
+        ),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Padding(padding: padding, child: child),
     );
   }
+}
+
+class AppInsetSurface extends StatelessWidget {
+  const AppInsetSurface({
+    super.key,
+    required this.child,
+    this.color = AppColors.surfaceInset,
+    this.radius = AppRadius.control,
+  });
+  final Widget child;
+  final Color color;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) => Neumorphic(
+    style: AppNeumorphicStyles.inset(color: color, radius: radius),
+    padding: EdgeInsets.zero,
+    duration: MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : AppNeumorphicStyles.duration,
+    child: Theme(
+      data: Theme.of(context).copyWith(
+        inputDecorationTheme: Theme.of(
+          context,
+        ).inputDecorationTheme.copyWith(fillColor: AppColors.transparent),
+      ),
+      child: child,
+    ),
+  );
 }
 
 class AppSearchField extends StatelessWidget {
   const AppSearchField({
     super.key,
     required this.controller,
-    required this.keyboardType,
+    this.keyboardType = TextInputType.text,
     this.focusNode,
     this.readOnly = false,
     this.hintText,
@@ -158,7 +296,6 @@ class AppSearchField extends StatelessWidget {
     this.suffixIcon,
     this.onChanged,
   });
-
   final TextEditingController controller;
   final TextInputType keyboardType;
   final FocusNode? focusNode;
@@ -169,33 +306,20 @@ class AppSearchField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
 
   @override
-  Widget build(BuildContext context) {
-    return Neumorphic(
-      style: AppNeumorphicStyles.inset(),
-      padding: EdgeInsets.zero,
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        readOnly: readOnly,
-        keyboardType: keyboardType,
-        onChanged: onChanged,
-        style: const TextStyle(color: AppColors.textPrimary),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.transparent,
-          hintText: hintText,
-          hintStyle: const TextStyle(color: AppColors.textHint),
-          prefixIcon: prefixIcon,
-          suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-        ),
+  Widget build(BuildContext context) => AppInsetSurface(
+    child: TextField(
+      controller: controller,
+      focusNode: focusNode,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      onChanged: onChanged,
+      style: const TextStyle(color: AppColors.textPrimary),
+      decoration: InputDecoration(
+        fillColor: AppColors.transparent,
+        hintText: hintText,
+        prefixIcon: prefixIcon,
+        suffixIcon: suffixIcon,
       ),
-    );
-  }
+    ),
+  );
 }

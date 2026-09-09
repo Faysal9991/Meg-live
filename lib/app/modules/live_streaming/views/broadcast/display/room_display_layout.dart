@@ -36,7 +36,7 @@ class RoomDisplayLayout {
         : Get.put(VVIPorVipPackageController());
     data['width'] = roomWidth;
     return Container(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       width: roomWidth,
       height: roomHeight ?? roomWidth,
       child: Stack(

@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -1539,7 +1540,7 @@ class LiveStreamingController extends GetxController {
           context: context,
           title:
               "You have no sufficient diamonds to send this gift. Please purchase diamonds.",
-          color: Colors.red,
+          color: AppColors.error,
           durationInSeconds: 6,
         );
       } else if (statusCode == 204) {
@@ -1554,7 +1555,7 @@ class LiveStreamingController extends GetxController {
         Get.defaultDialog(
           title: 'Locked',
           middleText: 'Your diamonds has been locked.',
-          titleStyle: const TextStyle(color: Colors.red),
+          titleStyle: const TextStyle(color: AppColors.error),
         );
       } else {
         // Get.snackbar(
@@ -1567,7 +1568,7 @@ class LiveStreamingController extends GetxController {
         rShowSnackBar(
           context: context,
           title: "Something is wrong. Please try again.",
-          color: Colors.red,
+          color: AppColors.error,
           durationInSeconds: 2,
         );
       }
@@ -1589,7 +1590,7 @@ class LiveStreamingController extends GetxController {
       rShowSnackBar(
         context: context,
         title: "Something is wrong. Please try again.",
-        color: Colors.red,
+        color: AppColors.error,
         durationInSeconds: 2,
       );
     }

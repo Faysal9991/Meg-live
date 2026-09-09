@@ -1,4 +1,5 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
+import 'package:doyel_live/app/theme/app_radius.dart';
 import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -20,26 +21,15 @@ Widget rPrimaryTextButton({
   required String buttonText,
   Color? buttonTextColor,
   double fontSize = 18.0,
-  double borderRadius = 10.0,
+  double borderRadius = AppRadius.button,
   required VoidCallback onPressed,
-}) => TextButton(
-  style: ButtonStyle(
-    foregroundColor: WidgetStateProperty.all<Color>(
-      _resolveReadableForegroundColor(
-        backgroundColor: backgroundColor,
-        requestedColor: buttonTextColor,
-      ),
-    ),
-    backgroundColor: WidgetStateProperty.all<Color>(backgroundColor),
-    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-      RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
-    ),
-  ),
+}) => PrimaryButton(
+  label: buttonText,
   onPressed: onPressed,
-  child: Padding(
-    padding: const EdgeInsets.all(4.0),
-    child: Text(buttonText, style: TextStyle(fontSize: fontSize)),
-  ),
+  backgroundColor: backgroundColor,
+  foregroundColor: buttonTextColor,
+  fontSize: fontSize,
+  borderRadius: borderRadius,
 );
 
 Widget rPrimaryTextField({
@@ -48,7 +38,7 @@ Widget rPrimaryTextField({
   readOnly = false,
   required TextInputType keyboardType,
   required borderColor,
-  fillColor = AppColors.surface,
+  fillColor = AppColors.surfaceInset,
   textColor = AppColors.textPrimary,
   helpTextColor = AppColors.textSecondary,
   prefixIcon,
@@ -59,44 +49,42 @@ Widget rPrimaryTextField({
   maxLines,
   prefixText,
   focusNode,
-  double borderRadius = 8.0,
+  double borderRadius = AppRadius.control,
   Function(String)? onChanged,
-  bool useNeumorphic = false,
+  bool useNeumorphic = true,
   EdgeInsetsGeometry contentPadding = const EdgeInsets.symmetric(
     horizontal: 16,
+    vertical: 16,
   ),
 }) {
-  if (useNeumorphic) {
-    return AppSearchField(
-      controller: controller,
-      focusNode: focusNode,
-      readOnly: readOnly,
-      keyboardType: keyboardType,
-      hintText: hintText,
-      prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
-      onChanged: onChanged,
-    );
-  }
-
-  return TextField(
+  final field = TextField(
     controller: controller,
     focusNode: focusNode,
     obscureText: obscureText,
+    autocorrect: !obscureText,
+    enableSuggestions: !obscureText,
     readOnly: readOnly,
     keyboardType: keyboardType,
     maxLength: maxLength,
-    maxLines: (keyboardType == TextInputType.multiline && maxLines == null)
+    maxLines: obscureText
+        ? 1
+        : (keyboardType == TextInputType.multiline && maxLines == null)
         ? null
         : maxLines ?? 1,
     style: TextStyle(color: textColor),
     decoration: InputDecoration(
       contentPadding: contentPadding,
       filled: true,
-      fillColor: fillColor,
-      border: OutlineInputBorder(
-        borderSide: BorderSide(color: borderColor),
-        borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+      fillColor: useNeumorphic ? AppColors.transparent : fillColor,
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(
+          color: useNeumorphic ? AppColors.transparent : borderColor,
+        ),
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        borderRadius: BorderRadius.circular(borderRadius),
       ),
       prefixIcon: prefixIcon,
       prefixText: prefixText,
@@ -108,6 +96,9 @@ Widget rPrimaryTextField({
     ),
     onChanged: onChanged,
   );
+  return useNeumorphic
+      ? AppInsetSurface(color: fillColor, radius: borderRadius, child: field)
+      : field;
 }
 
 Widget rPrimaryElevatedButton({
@@ -118,7 +109,7 @@ Widget rPrimaryElevatedButton({
   Color? buttonTextColor,
   required double fontSize,
   FontWeight? fontWeight,
-  double? borderRadius = 16.0,
+  double? borderRadius = AppRadius.button,
 }) {
   final resolvedTextColor = _resolveReadableForegroundColor(
     backgroundColor: primaryColor,
@@ -144,7 +135,7 @@ Widget rPrimaryElevatedButton2({
   Color? buttonTextColor,
   required double fontSize,
   FontWeight? fontWeight,
-  double? borderRadius = 16.0,
+  double? borderRadius = AppRadius.button,
 }) {
   final resolvedTextColor = _resolveReadableForegroundColor(
     backgroundColor: primaryColor,
@@ -171,7 +162,7 @@ Widget rPrimaryElevatedIconButton({
   Color? buttonTextColor,
   required double fontSize,
   FontWeight? fontWeight,
-  double? borderRadius = 16.0,
+  double? borderRadius = AppRadius.button,
   required IconData iconData,
 }) {
   final resolvedTextColor = _resolveReadableForegroundColor(

@@ -22,7 +22,7 @@ void showUserInteractBottomSheet({
   // final Function onUpdateAction;
   showModalBottomSheet(
     context: context,
-    barrierColor: Colors.transparent,
+    barrierColor: AppColors.transparent,
     enableDrag: false,
     // isScrollControlled: true,
     builder: (context) {

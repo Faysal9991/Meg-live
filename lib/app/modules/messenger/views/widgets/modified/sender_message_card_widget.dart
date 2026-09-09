@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -74,7 +75,7 @@ class _SenderMessageCardState extends State<SenderMessageCard> {
     } else if (widget.msgType == "text") {
       body = SelectableText(
         widget.msg,
-        style: const TextStyle(fontSize: 16, color: AppColors.surface),
+        style: const TextStyle(fontSize: 16, color: AppColors.textOnPrimary),
       );
     }
     return body;
@@ -84,7 +85,7 @@ class _SenderMessageCardState extends State<SenderMessageCard> {
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.centerRight,
-      child: Card(
+      child: AppCard(
         color: Theme.of(context).primaryColor,
         elevation: 5,
         shape: const RoundedRectangleBorder(
@@ -106,7 +107,10 @@ class _SenderMessageCardState extends State<SenderMessageCard> {
               padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
               child: Text(
                 widget.time,
-                style: const TextStyle(fontSize: 13, color: AppColors.surface),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textOnPrimary,
+                ),
               ),
             ),
           ],

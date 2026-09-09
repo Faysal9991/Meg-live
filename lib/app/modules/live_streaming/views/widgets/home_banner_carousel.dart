@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:doyel_live/app/modules/live_streaming/models/home_banner.dart';
@@ -26,22 +27,15 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
 
     return Column(
       children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                color: AppColors.overlayLight,
-                blurRadius: 14,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
+        AppCard(
+          padding: const EdgeInsets.all(6),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: CarouselSlider.builder(
               options: CarouselOptions(
-                autoPlay: widget.banners.length > 1,
+                autoPlay:
+                    widget.banners.length > 1 &&
+                    !MediaQuery.disableAnimationsOf(context),
                 autoPlayInterval: const Duration(seconds: 4),
                 autoPlayAnimationDuration: const Duration(milliseconds: 700),
                 autoPlayCurve: Curves.easeInOutCubic,
@@ -83,7 +77,10 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, AppColors.overlayStrong],
+                          colors: [
+                            AppColors.transparent,
+                            AppColors.overlayStrong,
+                          ],
                         ),
                       ),
                     ),

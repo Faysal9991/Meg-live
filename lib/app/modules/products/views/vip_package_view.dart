@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
@@ -126,7 +127,7 @@ class _VIPPackageViewState extends State<VIPPackageView> {
     bool isPurchased = false,
     String? expirationDateTime,
   }) {
-    return Card(
+    return AppCard(
       margin: EdgeInsets.zero,
       elevation: 5,
       child: ListTile(
@@ -180,7 +181,7 @@ class _VIPPackageViewState extends State<VIPPackageView> {
                         packageName: 'VIP',
                       );
                     },
-                    primaryColor: AppColors.onMediaMuted,
+                    primaryColor: AppColors.primary,
                     buttonText:
                         _vvipOrVipPackageController
                                 .purchasingVIPPackageId
@@ -189,7 +190,7 @@ class _VIPPackageViewState extends State<VIPPackageView> {
                         ? 'Purchasing...'
                         : 'Purchase',
                     fontSize: 14.0,
-                    buttonTextColor: AppColors.textPrimary,
+                    buttonTextColor: AppColors.textOnPrimary,
                     borderRadius: 60.0,
                     // fixedSize: const Size(154, 38),
                   )

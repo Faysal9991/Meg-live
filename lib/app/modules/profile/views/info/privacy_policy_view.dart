@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
@@ -12,7 +13,7 @@ class PrivacyPolicyView extends GetView {
         backgroundColor: Theme.of(context).primaryColor,
         appBar: AppBar(title: const Text('Privacy Policy'), centerTitle: true),
         body: SingleChildScrollView(
-          child: Card(
+          child: AppCard(
             elevation: 10,
             child: Padding(
               padding: const EdgeInsets.all(8.0),

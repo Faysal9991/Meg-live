@@ -1,3 +1,5 @@
+import 'package:doyel_live/app/theme/app_radius.dart';
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/modules/balance/controllers/balance_controller.dart';
 import 'package:doyel_live/app/modules/balance/models/withdraw_models.dart';
@@ -194,7 +196,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final item = _balanceController.withdrawRequests[index];
-            return Card(
+            return AppCard(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -295,21 +297,25 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
             ),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _receiverNumberController,
-            keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Receiver Number',
-              border: OutlineInputBorder(),
+          AppInsetSurface(
+            child: TextField(
+              controller: _receiverNumberController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Receiver Number',
+                border: OutlineInputBorder(),
+              ),
             ),
           ),
           if (_showAccountTypeField) ...[
             const SizedBox(height: 16),
-            TextField(
-              controller: _accountTypeController,
-              decoration: const InputDecoration(
-                labelText: 'Account Type',
-                border: OutlineInputBorder(),
+            AppInsetSurface(
+              child: TextField(
+                controller: _accountTypeController,
+                decoration: const InputDecoration(
+                  labelText: 'Account Type',
+                  border: OutlineInputBorder(),
+                ),
               ),
             ),
           ],
@@ -326,7 +332,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
                   ? 'Submitting...'
                   : 'Submit Request',
               fontSize: 16.0,
-              borderRadius: 12.0,
+              borderRadius: AppRadius.button,
             ),
           ),
         ],

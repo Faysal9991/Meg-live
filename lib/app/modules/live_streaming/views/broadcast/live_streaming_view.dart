@@ -873,7 +873,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
     return IgnorePointer(
       child: ColoredBox(
-        color: Colors.black26,
+        color: AppColors.overlayMedium,
         child: Center(
           child: Container(
             constraints: const BoxConstraints(maxWidth: 380, maxHeight: 420),
@@ -1578,7 +1578,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                         .allowCommentAndEmojiSend
                                         .value,
                               keyboardType: TextInputType.text,
-                              borderColor: Colors.transparent,
+                              borderColor: AppColors.transparent,
                               borderRadius: 100.0,
                               fillColor: AppColors.overlay,
                               textColor: AppColors.onMediaMuted,

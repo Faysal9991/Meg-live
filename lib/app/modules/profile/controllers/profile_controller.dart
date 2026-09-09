@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -6,7 +7,6 @@ import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide FormData, MultipartFile;
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
@@ -206,16 +206,16 @@ class ProfileController extends GetxController {
         Get.snackbar(
           'Success',
           "Your profile has been updated.",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else {
         Get.snackbar(
           'Failed',
           "Something is wrong. Please try again.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
+          backgroundColor: AppColors.error,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -224,8 +224,8 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Failed',
         "Something is wrong. Please try again.",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        backgroundColor: AppColors.error,
+        colorText: AppColors.textOnPrimary,
         snackPosition: SnackPosition.BOTTOM,
       );
     }

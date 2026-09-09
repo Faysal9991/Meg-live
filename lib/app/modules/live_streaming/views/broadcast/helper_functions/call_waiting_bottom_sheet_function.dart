@@ -143,7 +143,7 @@ void showCallWaitingBottomSheet({
 
   showModalBottomSheet(
     context: context,
-    barrierColor: Colors.transparent,
+    barrierColor: AppColors.transparent,
     enableDrag: false,
     isScrollControlled: true,
     // shape: const RoundedRectangleBorder(

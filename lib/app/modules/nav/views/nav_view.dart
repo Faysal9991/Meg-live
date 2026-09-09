@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:convert';
 import 'dart:isolate';
@@ -570,10 +571,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
         profile.profileImage != null && profile.profileImage!.isNotEmpty;
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.disabledBackground,
-        borderRadius: BorderRadius.circular(14),
-      ),
+      decoration: AppNeumorphicStyles.decoration(radius: 18, compact: true),
       child: Row(
         children: [
           CircleAvatar(

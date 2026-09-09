@@ -1,3 +1,5 @@
+import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -39,7 +41,7 @@ class _HostListViewState extends State<HostListView> {
                     color: AppColors.error,
                   )
                 : _businessController.hostList.isEmpty
-                    ? const Card(
+                    ? const AppCard(
                         elevation: 5,
                         child: Padding(
                           padding: EdgeInsets.all(16.0),
@@ -126,16 +128,7 @@ class _HostListViewState extends State<HostListView> {
                                       vertical: 8.0,
                                       horizontal: 16.0,
                                     ),
-                                    decoration: BoxDecoration(
-                                      // color: Theme.of(context).primaryColor,
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          AppColors.textSecondary,
-                                          AppColors.surface,
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(20.0),
-                                    ),
+                                    decoration: AppNeumorphicStyles.decoration(),
                                     child: Row(
                                       children: [
                                         Expanded(

@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:country_pickers/country.dart';
 import 'package:flutter/material.dart';
@@ -20,18 +21,12 @@ Widget rBuildCountryPickerDropdown({
   return Container(
     decoration: BoxDecoration(
       // color: AppColors.textSecondary,
-      borderRadius: BorderRadius.circular(
-        8.0,
-      ),
-      border: Border.all(
-        color: AppColors.textSecondary,
-      ),
+      borderRadius: BorderRadius.circular(8.0),
+      border: Border.all(color: AppColors.textSecondary),
     ),
     child: Row(
       children: <Widget>[
-        const SizedBox(
-          width: 16,
-        ),
+        const SizedBox(width: 16),
         CountryPickerDropdown(
           /* underline: Container(
               height: 2,
@@ -51,7 +46,9 @@ Widget rBuildCountryPickerDropdown({
           //than itemBuilder's(dropdown menu item UI), then provide this selectedItemBuilder.
           selectedItemBuilder: hasSelectedItemBuilder == true
               ? (Country country) => _buildDropdownSelectedItemBuilder(
-                  country, dropdownSelectedItemWidth)
+                  country,
+                  dropdownSelectedItemWidth,
+                )
               : null,
           itemBuilder: (Country country) => hasSelectedItemBuilder == true
               ? _buildDropdownItemWithLongText(country, dropdownItemWidth)
@@ -74,21 +71,21 @@ Widget rBuildCountryPickerDropdown({
             onCountryPicked(country);
           },
         ),
-        const SizedBox(
-          width: 8.0,
-        ),
+        const SizedBox(width: 8.0),
         Expanded(
-          child: TextField(
-            controller: textEditingControllerPhoneNumber,
-            decoration: const InputDecoration(
-              hintText: "Phone Number",
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-              border: InputBorder.none,
+          child: AppInsetSurface(
+            child: TextField(
+              controller: textEditingControllerPhoneNumber,
+              decoration: const InputDecoration(
+                hintText: "Phone Number",
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                border: InputBorder.none,
+              ),
+              keyboardType: TextInputType.number,
             ),
-            keyboardType: TextInputType.number,
           ),
-        )
+        ),
       ],
     ),
   );
@@ -100,110 +97,114 @@ Widget _buildDropdownItem(Country country, double dropdownItemWidth) =>
       child: Row(
         children: <Widget>[
           CountryPickerUtils.getDefaultFlagImage(country),
-          const SizedBox(
-            width: 8.0,
-          ),
+          const SizedBox(width: 8.0),
           Expanded(child: Text("+${country.phoneCode}")),
         ],
       ),
     );
 
 Widget _buildDropdownItemWithLongText(
-        Country country, double dropdownItemWidth) =>
-    SizedBox(
-      width: dropdownItemWidth,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: <Widget>[
-            CountryPickerUtils.getDefaultFlagImage(country),
-            const SizedBox(
-              width: 8.0,
-            ),
-            Expanded(child: Text("${country.name}")),
-          ],
-        ),
-      ),
-    );
-
-Widget _buildDropdownSelectedItemBuilder(
-        Country country, double dropdownItemWidth) =>
-    SizedBox(
-        width: dropdownItemWidth,
-        child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: <Widget>[
-                CountryPickerUtils.getDefaultFlagImage(country),
-                const SizedBox(
-                  width: 8.0,
-                ),
-                Expanded(
-                    child: Text(
-                  '${country.name}',
-                  style: const TextStyle(
-                      color: AppColors.error, fontWeight: FontWeight.bold),
-                )),
-              ],
-            )));
-
-// Dialog
-Widget buildCountryPickerDialogItem(
-        {required Country country,
-        bool showAsSelected = false,
-        TextEditingController? textEditingControllerPhoneNumber}) =>
-    Row(
+  Country country,
+  double dropdownItemWidth,
+) => SizedBox(
+  width: dropdownItemWidth,
+  child: Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: Row(
       children: <Widget>[
         CountryPickerUtils.getDefaultFlagImage(country),
         const SizedBox(width: 8.0),
-        Text("(${country.isoCode}) +${country.phoneCode}"),
-        !showAsSelected ? const SizedBox(width: 8.0) : Container(),
-        !showAsSelected ? Flexible(child: Text(country.name)) : Container(),
-        showAsSelected
-            ? const Text(
-                '   ▾   ',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-              )
-            : Container(),
-        showAsSelected
-            ? Expanded(
-                child: TextField(
-                  controller: textEditingControllerPhoneNumber,
-                  decoration: const InputDecoration(
-                    hintText: "Phone Number",
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                    border: InputBorder.none,
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              )
-            : Container(),
+        Expanded(child: Text("${country.name}")),
       ],
-    );
+    ),
+  ),
+);
+
+Widget _buildDropdownSelectedItemBuilder(
+  Country country,
+  double dropdownItemWidth,
+) => SizedBox(
+  width: dropdownItemWidth,
+  child: Padding(
+    padding: const EdgeInsets.all(8),
+    child: Row(
+      children: <Widget>[
+        CountryPickerUtils.getDefaultFlagImage(country),
+        const SizedBox(width: 8.0),
+        Expanded(
+          child: Text(
+            '${country.name}',
+            style: const TextStyle(
+              color: AppColors.error,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
+// Dialog
+Widget buildCountryPickerDialogItem({
+  required Country country,
+  bool showAsSelected = false,
+  TextEditingController? textEditingControllerPhoneNumber,
+}) {
+  final countryRow = Row(
+    children: [
+      CountryPickerUtils.getDefaultFlagImage(country),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Text(
+          showAsSelected
+              ? '+${country.phoneCode}'
+              : '${country.name} (+${country.phoneCode})',
+        ),
+      ),
+      if (showAsSelected) const Icon(Icons.expand_more_rounded),
+    ],
+  );
+  if (!showAsSelected) return countryRow;
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      countryRow,
+      const SizedBox(height: 8),
+      TextField(
+        controller: textEditingControllerPhoneNumber,
+        decoration: const InputDecoration(
+          hintText: 'Phone number',
+          fillColor: AppColors.transparent,
+          contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        ),
+        keyboardType: TextInputType.phone,
+        autofillHints: const [AutofillHints.telephoneNumberNational],
+      ),
+    ],
+  );
+}
 
 void openCountryPickerDialog({
   required BuildContext context,
   AuthController? authController,
-}) =>
-    showDialog(
-      context: context,
-      builder: (context) => Theme(
-        data: Theme.of(context).copyWith(primaryColor: AppColors.accent),
-        child: CountryPickerDialog(
-          titlePadding: const EdgeInsets.all(8.0),
-          searchCursorColor: AppColors.accentLight,
-          searchInputDecoration: const InputDecoration(hintText: 'Search...'),
-          isSearchable: true,
-          title: const Text('Select your phone code'),
-          onValuePicked: (Country country) =>
-              authController?.setCountryPicked(country),
-          itemBuilder: (country) =>
-              buildCountryPickerDialogItem(country: country),
-          priorityList: [
-            CountryPickerUtils.getCountryByPhoneCode('880'),
-            // CountryPickerUtils.getCountryByIsoCode('US'),
-          ],
-        ),
-      ),
-    );
+}) => showDialog(
+  context: context,
+  builder: (context) => Theme(
+    data: Theme.of(context).copyWith(primaryColor: AppColors.accent),
+    child: CountryPickerDialog(
+      titlePadding: const EdgeInsets.all(8.0),
+      searchCursorColor: AppColors.accentLight,
+      searchInputDecoration: const InputDecoration(hintText: 'Search...'),
+      isSearchable: true,
+      title: const Text('Select your phone code'),
+      onValuePicked: (Country country) =>
+          authController?.setCountryPicked(country),
+      itemBuilder: (country) => buildCountryPickerDialogItem(country: country),
+      priorityList: [
+        CountryPickerUtils.getCountryByPhoneCode('880'),
+        // CountryPickerUtils.getCountryByIsoCode('US'),
+      ],
+    ),
+  ),
+);

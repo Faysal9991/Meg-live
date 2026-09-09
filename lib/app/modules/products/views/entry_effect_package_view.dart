@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/widgets/animated_media_widget.dart';
@@ -115,7 +116,7 @@ class _EntryEffectPackageViewState extends State<EntryEffectPackageView> {
   }) {
     final packageId = int.tryParse(package['id']?.toString() ?? '');
     final price = _packageController.entryEffectDiamondCost(package);
-    return Card(
+    return AppCard(
       margin: EdgeInsets.zero,
       elevation: 5,
       child: Padding(
@@ -163,7 +164,7 @@ class _EntryEffectPackageViewState extends State<EntryEffectPackageView> {
                   else
                     rPrimaryElevatedButton(
                       onPressed: () => _purchase(packageId, price),
-                      primaryColor: AppColors.onMediaMuted,
+                      primaryColor: AppColors.primary,
                       buttonText:
                           _packageController
                                   .purchasingEntryEffectPackageId
@@ -172,7 +173,7 @@ class _EntryEffectPackageViewState extends State<EntryEffectPackageView> {
                           ? 'Purchasing...'
                           : 'Purchase',
                       fontSize: 14,
-                      buttonTextColor: AppColors.textPrimary,
+                      buttonTextColor: AppColors.textOnPrimary,
                       borderRadius: 60,
                     ),
                 ],

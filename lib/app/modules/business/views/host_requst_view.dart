@@ -1,3 +1,5 @@
+import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -55,7 +57,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            Card(
+                            AppCard(
                               elevation: 5,
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
@@ -95,7 +97,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                         ),
                       )
                     : _businessController.agentListForHost.isEmpty
-                    ? const Card(
+                    ? const AppCard(
                         elevation: 5,
                         child: Padding(
                           padding: EdgeInsets.all(16.0),
@@ -305,17 +307,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                       vertical: 8.0,
                                       horizontal: 16.0,
                                     ),
-                                    decoration: BoxDecoration(
-                                      // color:
-                                      //     Theme.of(context).primaryColor,
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.textSecondary,
-                                          AppColors.surface,
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(20.0),
-                                    ),
+                                    decoration: AppNeumorphicStyles.decoration(),
                                     child: InkWell(
                                       onTap: () {
                                         // if (_authController.profile.value

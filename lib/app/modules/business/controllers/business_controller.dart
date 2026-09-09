@@ -1,5 +1,5 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/profile/controllers/profile_controller.dart';
@@ -87,32 +87,32 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Success',
           "Your request is pending now",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 226) {
         Get.snackbar(
           'Failed',
           "You are already a Moderator",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 207) {
         Get.snackbar(
           'Failed',
           "You are already Agent / Host / Reseller",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 208) {
         Get.snackbar(
           'Failed',
           "You already requested for Moderator",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -140,16 +140,16 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Success',
           "Your request has been removed",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
         Get.snackbar(
           'Failed',
           "Something is wrong",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -199,32 +199,32 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Success',
           "Your request is pending now",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 226) {
         Get.snackbar(
           'Failed',
           "You are already an Reseller",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 207) {
         Get.snackbar(
           'Failed',
           "You are already a Host / Agent / Moderator",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 208) {
         Get.snackbar(
           'Failed',
           "You already requested for Reseller",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -252,16 +252,16 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Success',
           "Your request has been removed",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
         Get.snackbar(
           'Failed',
           "Something is wrong",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -299,8 +299,8 @@ class BusinessController extends GetxController {
       Get.snackbar(
         'Failed',
         "You haven't sufficient diamonds to recharge the client",
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
+        backgroundColor: AppColors.warning,
+        colorText: AppColors.textOnPrimary,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 1),
       );
@@ -330,8 +330,8 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Success',
           "You have recharged $diamonds daimonds",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
         final ProfileController profileController = Get.find();
@@ -342,8 +342,8 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Failed',
           "Something is wrong",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -376,16 +376,16 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Success',
           "History removed successfully",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
         Get.snackbar(
           'Failed',
           "Incorrect data",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -419,40 +419,40 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Success',
           "Your request is pending now",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 226) {
         Get.snackbar(
           'Failed',
           "You are already a Host",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 207) {
         Get.snackbar(
           'Failed',
           "You are already an Agent / Moderator / Reseller",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 208) {
         Get.snackbar(
           'Failed',
           "You already requested for Host",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
         Get.snackbar(
           'Failed',
           "Your selected Agent is incorrect",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -604,32 +604,32 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Success',
           "Host request has been confirmed",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 226) {
         Get.snackbar(
           'Failed',
           "Candidate is already a Host",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 207) {
         Get.snackbar(
           'Failed',
           "candidate is already an Agent / Moderator / Reseller",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
         Get.snackbar(
           'Failed',
           "Incorrect data",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -675,16 +675,16 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Success',
           "Host removed successfully",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
         Get.snackbar(
           'Failed',
           "Incorrect data",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -712,16 +712,16 @@ class BusinessController extends GetxController {
         Get.snackbar(
           'Success',
           "Your request has been removed",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
         Get.snackbar(
           'Failed',
           "Something is wrong",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }

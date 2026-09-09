@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:flutter/material.dart';
@@ -31,139 +32,97 @@ class _MessagesComposeState extends State<MessagesCompose>
   bool sendChatButton = false;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SizedBox(
-            width: MediaQuery.of(context).size.width - 65,
-            child: Card(
-              color: Theme.of(context).primaryColor,
-              margin: const EdgeInsets.only(left: 5, right: 5, bottom: 8),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25)),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: TextField(
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                  ),
-                  controller: _textController,
-                  textAlignVertical: TextAlignVertical.center,
-                  keyboardType: TextInputType.multiline,
-                  maxLines: 5,
-                  minLines: 1,
-                  onChanged: (value) {
-                    if (value.isNotEmpty) {
-                      //   FireBaseHelper().updateUserStatus(
-                      //     userStatus: "typing....",
-                      //     uid: _authController.profile.value.user!.uid!,
-                      //   );
-                      setState(() {
-                        sendChatButton = true;
-                      });
-                    } else {
-                      //   FireBaseHelper().updateUserStatus(
-                      //     userStatus: "Active",
-                      //     uid: _authController.profile.value.user!.uid!,
-                      //   );
-                      setState(() {
-                        sendChatButton = false;
-                      });
-                    }
-                  },
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    hintText: "Type your message",
-                    hintStyle: TextStyle(
-                      color: AppColors.surface,
-                    ),
-                    contentPadding: EdgeInsets.all(16),
-                  ),
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    top: false,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: AppInsetSurface(
+              child: TextField(
+                controller: _textController,
+                textAlignVertical: TextAlignVertical.center,
+                keyboardType: TextInputType.multiline,
+                maxLines: 5,
+                minLines: 1,
+                onChanged: (value) =>
+                    setState(() => sendChatButton = value.trim().isNotEmpty),
+                decoration: const InputDecoration(
+                  fillColor: AppColors.transparent,
+                  hintText: 'Type your message',
+                  contentPadding: EdgeInsets.all(16),
                 ),
               ),
-            )),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8.0, right: 2),
-          child: CircleAvatar(
-            radius: 25,
-            backgroundColor: Theme.of(context).primaryColor,
-            child: IconButton(
-                onPressed: () async {
-                  if (_messengerController.isChatBlocked.value) {
-                    Get.snackbar(
-                      "Can't send message",
-                      "Chat is blocked by ${_messengerController.chatBlockedBy.value == _authController.profile.value.user!.uid! ? "you" : widget.peerUserFullName}",
-                      backgroundColor: AppColors.error,
-                      animationDuration: Duration.zero,
-                      duration: const Duration(seconds: 3),
-                    );
-                    return;
-                  }
-                  if (_messengerController.loadingMessageList.value) {
-                    return;
-                  }
-                  String textMessage = _textController.text.trim();
-                  if (sendChatButton && textMessage.isNotEmpty) {
-                    String datetimeStr = DateTime.now().toIso8601String();
-                    dynamic data = {
-                      "key": "${widget.chatId}-$datetimeStr",
-                      "chat_id": widget.chatId,
-                      "sender_id": _authController.profile.value.user!.uid!,
-                      "receiver_id": widget.peerUserId,
-                      "type": "text",
-                      "message": textMessage,
-                      "sender_image":
-                          _authController.profile.value.profile_image,
-                      "receiver_image": widget.peerUserProfileImage,
-                      "sender_full_name":
-                          _authController.profile.value.full_name,
-                      "receiver_full_name": widget.peerUserFullName,
-                    };
-
-                    //              {
-                    //     "_id": "2-3-2",
-                    //     "chat_id": "2-3",
-                    //     "datetime": "2024-06-08T08:45:50.143Z",
-                    //     "full_name": "Than Aung Kyow",
-                    //     "key": "2-3-2024-06-08T14:45:48.525542",
-                    //     "message": "tttt",
-                    //     "profile_image": "https://lh3.googleusercontent.com/a/AAcHTtedUejF-3mKlCXdgOinxLaaPE48tI5jMpRWcuV6SZKP7A=s96-c",
-                    //     "receiver_id": 2,
-                    //     "sender_id": 2,
-                    //     "type": "text",
-                    //     "user_id": 2
-                    // };
-
-                    Map<String, dynamic> globalData = {};
-                    globalData.assignAll(data);
-
-                    globalData['type'] = 'chat_text_message';
-
-                    // _messengerController.listChatMessage.add(data);
-                    widget.onUpdateChatMessageWithWebSocketClient(data);
-                    _livekitStreamingController
-                        .onUpdateLiveStreamStatus(globalData);
-
-                    _messengerController.tryToSendChatMessage(data: data);
-
-                    _textController.clear();
-                    setState(() {
-                      sendChatButton = false;
-                    });
-                    // FireBaseHelper().updateUserStatus(
-                    //   userStatus: "Active",
-                    //   uid: _authController.profile.value.user!.uid!,
-                    // );
-                  }
-                },
-                icon: const Icon(
-                  Icons.send,
-                  color: AppColors.surface,
-                )),
+            ),
           ),
-        ),
-      ],
-    );
+          const SizedBox(width: 12),
+          Obx(() {
+            final loading = _messengerController.loadingMessageList.value;
+            return NeumorphicIconButton(
+              icon: Icons.send_rounded,
+              tooltip: 'Send message',
+              backgroundColor: AppColors.primary,
+              iconColor: AppColors.textOnPrimary,
+              onPressed: sendChatButton && !loading ? _sendMessage : null,
+            );
+          }),
+        ],
+      ),
+    ),
+  );
+
+  Future<void> _sendMessage() async {
+    if (_messengerController.isChatBlocked.value) {
+      Get.snackbar(
+        "Can't send message",
+        "Chat is blocked by ${_messengerController.chatBlockedBy.value == _authController.profile.value.user!.uid! ? "you" : widget.peerUserFullName}",
+        backgroundColor: AppColors.error,
+        animationDuration: Duration.zero,
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
+    if (_messengerController.loadingMessageList.value) {
+      return;
+    }
+    String textMessage = _textController.text.trim();
+    if (sendChatButton && textMessage.isNotEmpty) {
+      String datetimeStr = DateTime.now().toIso8601String();
+      dynamic data = {
+        "key": "${widget.chatId}-$datetimeStr",
+        "chat_id": widget.chatId,
+        "sender_id": _authController.profile.value.user!.uid!,
+        "receiver_id": widget.peerUserId,
+        "type": "text",
+        "message": textMessage,
+        "sender_image": _authController.profile.value.profile_image,
+        "receiver_image": widget.peerUserProfileImage,
+        "sender_full_name": _authController.profile.value.full_name,
+        "receiver_full_name": widget.peerUserFullName,
+      };
+
+      Map<String, dynamic> globalData = {};
+      globalData.assignAll(data);
+
+      globalData['type'] = 'chat_text_message';
+
+      widget.onUpdateChatMessageWithWebSocketClient(data);
+      _livekitStreamingController.onUpdateLiveStreamStatus(globalData);
+
+      _messengerController.tryToSendChatMessage(data: data);
+
+      _textController.clear();
+      setState(() {
+        sendChatButton = false;
+      });
+    }
   }
 }

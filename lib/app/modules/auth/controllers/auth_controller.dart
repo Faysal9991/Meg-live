@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -542,8 +543,8 @@ Payload:
         Get.snackbar(
           'Forbidden',
           'Your device has been blocked.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
+          backgroundColor: AppColors.error,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
 
@@ -572,8 +573,8 @@ Payload:
       Get.snackbar(
         'Google Login Failed',
         'Backend returned HTTP $statusCode',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        backgroundColor: AppColors.error,
+        colorText: AppColors.textOnPrimary,
         snackPosition: SnackPosition.BOTTOM,
       );
     }
@@ -651,8 +652,8 @@ Payload:
       Get.snackbar(
         'Google Login Failed',
         'Backend/network error. Check debug console.',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        backgroundColor: AppColors.error,
+        colorText: AppColors.textOnPrimary,
         snackPosition: SnackPosition.BOTTOM,
       );
     }
@@ -713,8 +714,8 @@ Payload:
     Get.snackbar(
       'Google Login Failed',
       '${e.code}: ${e.description ?? "Unknown Google authentication error"}',
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
+      backgroundColor: AppColors.error,
+      colorText: AppColors.textOnPrimary,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 5),
     );
@@ -760,8 +761,8 @@ Payload:
     Get.snackbar(
       'Google Login Failed',
       '$e',
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
+      backgroundColor: AppColors.error,
+      colorText: AppColors.textOnPrimary,
       snackPosition: SnackPosition.BOTTOM,
       duration: const Duration(seconds: 5),
     );
@@ -840,8 +841,8 @@ Payload:
         Get.snackbar(
           'Forbidden',
           "Your device has been blocked.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
+          backgroundColor: AppColors.error,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 203) {
@@ -849,8 +850,8 @@ Payload:
         Get.snackbar(
           'Failed',
           message,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
+          backgroundColor: AppColors.error,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -869,8 +870,8 @@ Payload:
       Get.snackbar(
         'Failed',
         "Something is wrong. Please try again.",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        backgroundColor: AppColors.error,
+        colorText: AppColors.textOnPrimary,
         snackPosition: SnackPosition.BOTTOM,
       );
     }
@@ -903,8 +904,8 @@ Payload:
         Get.snackbar(
           'Failed',
           "Something is wrong. Please check your internet connection.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
+          backgroundColor: AppColors.error,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -913,8 +914,8 @@ Payload:
       Get.snackbar(
         'Failed',
         "Something is wrong. Please check your internet connection.",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        backgroundColor: AppColors.error,
+        colorText: AppColors.textOnPrimary,
         snackPosition: SnackPosition.BOTTOM,
       );
       preferences.clear();
@@ -950,8 +951,8 @@ Payload:
         Get.snackbar(
           'Success',
           "Your password has been changed.",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          backgroundColor: AppColors.success,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
         return true;
@@ -959,16 +960,16 @@ Payload:
         Get.snackbar(
           'Failed',
           "Your credential is mismatch.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
+          backgroundColor: AppColors.error,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else {
         Get.snackbar(
           'Failed',
           "Something is wrong. Please try again.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
+          backgroundColor: AppColors.error,
+          colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -977,8 +978,8 @@ Payload:
       Get.snackbar(
         'Failed',
         "Something is wrong. Please try again.",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        backgroundColor: AppColors.error,
+        colorText: AppColors.textOnPrimary,
         snackPosition: SnackPosition.BOTTOM,
       );
     }

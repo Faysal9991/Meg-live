@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -46,7 +47,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
         textStyle: const TextStyle(
           color: AppColors.textPrimary,
         ),
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Obx(
@@ -219,7 +220,7 @@ Widget chatItem({
 
   String? peerUserImageUrl = message['profile_image'];
   String peerUsername = message['full_name'];
-  return Card(
+  return AppCard(
     margin: EdgeInsets.zero,
     elevation: 5,
     child: InkWell(

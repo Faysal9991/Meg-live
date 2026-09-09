@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_radius.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:io';
 
@@ -212,7 +213,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                       primaryColor: Theme.of(context).primaryColor,
                       buttonText: 'SAVE CHANGES',
                       fontSize: 14.0,
-                      borderRadius: 8.0,
+                      borderRadius: AppRadius.button,
                       fixedSize: Size(
                         MediaQuery.of(context).size.width - 32,
                         46,

@@ -11,7 +11,7 @@ class ImageView extends StatelessWidget {
     return SafeArea(
       child: Scaffold(
         backgroundColor: AppColors.textPrimary,
-        appBar: AppBar(backgroundColor: Colors.transparent),
+        appBar: AppBar(backgroundColor: AppColors.transparent),
         body: Center(
           child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.contain),
         ),

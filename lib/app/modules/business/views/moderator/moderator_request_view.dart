@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -43,7 +44,7 @@ class _ModeratorRequestViewState extends State<ModeratorRequestView> {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            Card(
+                            AppCard(
                               elevation: 5,
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),

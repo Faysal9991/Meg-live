@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
@@ -26,8 +27,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
   Widget build(BuildContext context) {
     return Obx(() {
       final list = _livekitStreamingController.topSlidingAgentRankingList;
-          
-          
+
       if (list.isEmpty) {
         return const SizedBox.shrink();
       }
@@ -58,6 +58,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               return _agentCard(data: list[index], serial: index + 1);
             },
           ),
+
           // if (list.length > 1) ...[
           //   const SizedBox(height: 8),
           //   Row(
@@ -70,14 +71,13 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           //         width: active ? 14 : 6,
           //         height: 6,
           //         decoration: BoxDecoration(
-          //           color: active ? AppColors.onPrimary : AppColors.onMediaSubtle,
+          //           color: active ? AppColors.textPrimary : AppColors.onMediaSubtle,
           //           borderRadius: BorderRadius.circular(20),
           //         ),
           //       );
           //     }),
           //   ),
           // ],
-      
         ],
       );
     });
@@ -94,22 +94,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2),
       width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primaryDark, AppColors.accentDark, AppColors.accent],
-          begin: Alignment.topLeft,
-          end: Alignment.topRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.onMediaSubtle),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.overlayLight,
-            blurRadius: 18,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
+      decoration: AppNeumorphicStyles.decoration(),
       child: Stack(
         children: [
           Positioned(
@@ -119,7 +104,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               width: 90,
               height: 90,
               decoration: BoxDecoration(
-                color: AppColors.white12,
+                color: AppColors.primarySoft,
                 borderRadius: BorderRadius.circular(90),
               ),
             ),
@@ -140,7 +125,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: AppColors.onPrimary,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
                         ),
@@ -151,7 +136,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: AppColors.onMediaMuted,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                         ),
@@ -166,7 +151,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.onPrimary,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           if (isAppOwner) ...[
@@ -180,7 +165,9 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                                 color: AppColors.premium.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(999),
                                 border: Border.all(
-                                  color: AppColors.premium.withValues(alpha: 0.65),
+                                  color: AppColors.premium.withValues(
+                                    alpha: 0.65,
+                                  ),
                                 ),
                               ),
                               child: const Row(
@@ -188,14 +175,14 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                                 children: [
                                   Icon(
                                     Icons.workspace_premium,
-                                    color: AppColors.premium,
+                                    color: AppColors.premiumText,
                                     size: 12,
                                   ),
                                   SizedBox(width: 4),
                                   Text(
                                     'Owner',
                                     style: TextStyle(
-                                      color: AppColors.premium,
+                                      color: AppColors.premiumText,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -229,7 +216,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
-              border: Border.all(width: 2, color: AppColors.onPrimary),
+              border: Border.all(width: 2, color: AppColors.textPrimary),
               boxShadow: const [
                 BoxShadow(
                   color: AppColors.overlay,
@@ -246,7 +233,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                       alignment: Alignment.center,
                       child: const Icon(
                         Icons.person,
-                        color: AppColors.onPrimary,
+                        color: AppColors.textPrimary,
                         size: 28,
                       ),
                     )
@@ -257,7 +244,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const Center(
                         child: CircularProgressIndicator(
-                          color: AppColors.onPrimary,
+                          color: AppColors.textPrimary,
                           strokeWidth: 2,
                         ),
                       ),
@@ -266,7 +253,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         alignment: Alignment.center,
                         child: const Icon(
                           Icons.person,
-                          color: AppColors.onPrimary,
+                          color: AppColors.textPrimary,
                           size: 28,
                         ),
                       ),
@@ -281,14 +268,14 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               height: 24,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppColors.premium,
+                color: AppColors.premiumSoft,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.onPrimary, width: 1.2),
+                border: Border.all(color: AppColors.textPrimary, width: 1.2),
               ),
               child: Text(
                 '$serial',
                 style: const TextStyle(
-                  color: AppColors.onPrimary,
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 11,
                 ),
@@ -304,7 +291,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.white12,
+        color: AppColors.primarySoft,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.onMediaSubtle),
       ),
@@ -314,7 +301,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           const Text(
             'TOP',
             style: TextStyle(
-              color: AppColors.onMediaMuted,
+              color: AppColors.textSecondary,
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.7,
@@ -324,7 +311,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           Text(
             topLabel,
             style: const TextStyle(
-              color: AppColors.premium,
+              color: AppColors.premiumText,
               fontSize: 14,
               fontWeight: FontWeight.w800,
             ),

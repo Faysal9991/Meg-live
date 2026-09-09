@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -36,7 +37,7 @@ class _ResellerRechargeHistoryListViewState
                     color: AppColors.error,
                   )
                 : _businessController.resellerRechargeHistoryList.isEmpty
-                    ? const Card(
+                    ? const AppCard(
                         elevation: 5,
                         child: Padding(
                           padding: EdgeInsets.all(16.0),

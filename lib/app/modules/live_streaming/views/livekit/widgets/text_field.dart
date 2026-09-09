@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -27,11 +28,13 @@ class LKTextField extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: TextField(
-          controller: ctrl,
-          decoration: const InputDecoration.collapsed(hintText: ''),
-          keyboardType: TextInputType.url,
-          autocorrect: false,
+        child: AppInsetSurface(
+          child: TextField(
+            controller: ctrl,
+            decoration: const InputDecoration.collapsed(hintText: ''),
+            keyboardType: TextInputType.url,
+            autocorrect: false,
+          ),
         ),
       ),
     ],

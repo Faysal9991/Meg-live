@@ -6,45 +6,51 @@ import 'package:flutter/material.dart';
 /// that every screen responds consistently to future brand updates.
 abstract final class AppColors {
   // Brand colors
-  static const Color primary = Color(0xFF0D47A1);
-  static const Color secondary = Color(0xFFF4F7FB);
-  static const Color accent = Color(0xFF0A797B);
+  static const Color primary = Color(0xFF3156A6);
+  static const Color secondary = background;
+  static const Color accent = Color(0xFF087479);
 
   // Primary variants
-  static const Color primaryDark = Color(0xFF083875);
-  static const Color primaryLight = Color(0xFF4B7AC1);
-  static const Color primarySoft = Color(0xFFE8EFF9);
+  static const Color primaryDark = Color(0xFF213D7A);
+  static const Color primaryLight = Color(0xFF6686C4);
+  static const Color primarySoft = Color(0xFFDDE6F6);
 
   // Accent variants
-  static const Color accentDark = Color(0xFF075C5E);
-  static const Color accentLight = Color(0xFF3F9698);
-  static const Color accentSoft = Color(0xFFE5F2F2);
+  static const Color accentDark = Color(0xFF075C61);
+  static const Color accentLight = Color(0xFF52A4A7);
+  static const Color accentSoft = Color(0xFFDCEFED);
 
   // Backgrounds and surfaces
-  static const Color background = Color(0xFFF4F7FB);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color card = Color(0xFFFFFFFF);
+  static const Color background = Color(0xFFE9EEF5);
+  static const Color surface = background;
+  static const Color card = surface;
+  static const Color surfaceInset = Color(0xFFE3EAF3);
+  static const Color surfaceHighlight = Color(0xFFF4F7FB);
+  static const Color shadowLight = Color(0xFFFFFFFF);
+  static const Color shadowDark = Color(0xFFBCC9DB);
+  static const Color mediaBackground = Color(0xFF101827);
+  static const Color transparent = Color(0x00000000);
 
   // Text
-  static const Color textPrimary = Color(0xFF172033);
-  static const Color textSecondary = Color(0xFF667085);
-  static const Color textHint = Color(0xFF98A2B3);
+  static const Color textPrimary = Color(0xFF24334C);
+  static const Color textSecondary = Color(0xFF56657B);
+  static const Color textHint = Color(0xFF596980);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
   static const Color textOnAccent = Color(0xFFFFFFFF);
 
   // Borders and dividers
-  static const Color border = Color(0xFFE4E7EC);
-  static const Color divider = Color(0xFFEAECF0);
+  static const Color border = Color(0xFFC9D3E1);
+  static const Color divider = Color(0xFFD8E0EB);
 
   // Status
-  static const Color success = Color(0xFF12B76A);
-  static const Color warning = Color(0xFFF79009);
-  static const Color error = Color(0xFFD92D20);
-  static const Color info = Color(0xFF2E90FA);
+  static const Color success = Color(0xFF19734D);
+  static const Color warning = Color(0xFF895800);
+  static const Color error = Color(0xFFBB3444);
+  static const Color info = Color(0xFF3156A6);
 
   // Disabled
-  static const Color disabled = Color(0xFFD0D5DD);
-  static const Color disabledBackground = Color(0xFFF2F4F7);
+  static const Color disabled = Color(0xFF758296);
+  static const Color disabledBackground = Color(0xFFE0E6EF);
 
   // Media and modal overlays. These remain neutral to keep controls readable
   // over photos and live video, independent of the brand theme.
@@ -57,7 +63,9 @@ abstract final class AppColors {
   static const Color onMediaSubtle = Color(0x3DFFFFFF);
 
   // Premium content is intentionally distinct from operational statuses.
-  static const Color premium = Color(0xFFF5B700);
+  static const Color premium = Color(0xFFE9B84A);
+  static const Color premiumText = Color(0xFF785510);
+  static const Color premiumSoft = Color(0xFFF1E9D7);
 
   // Backwards-compatible semantic aliases used by older widgets.
   static const Color onPrimary = textOnPrimary;

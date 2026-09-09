@@ -8,18 +8,12 @@ class CustomTabItem {
     required this.activeIcon,
     required this.inactiveIcon,
   });
-
   final String label;
   final IconData activeIcon;
   final IconData inactiveIcon;
 }
 
 class CustomTabBar extends StatelessWidget {
-  final List<CustomTabItem> items;
-  final int selectedIndex;
-  final Function(int) onTap;
-  final bool isBottomIndicator;
-
   const CustomTabBar({
     super.key,
     required this.items,
@@ -27,83 +21,73 @@ class CustomTabBar extends StatelessWidget {
     required this.onTap,
     this.isBottomIndicator = false,
   });
+  final List<CustomTabItem> items;
+  final int selectedIndex;
+  final ValueChanged<int> onTap;
+  final bool isBottomIndicator;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final selectedColor = theme.colorScheme.primary;
-    final unselectedColor = AppColors.textSecondary;
-
-    return SizedBox(
-      height: 72,
-      child: TabBar(
-        indicatorPadding: EdgeInsets.zero,
-        indicator: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: Colors.transparent, width: 0.0),
-          ),
-        ),
-        padding: EdgeInsets.zero,
-        labelPadding: EdgeInsets.zero,
-        tabs: items
-            .asMap()
-            .map(
-              (i, item) => MapEntry(
-                i,
-                Tab(
-                  height: 72,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOutCubic,
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        i == selectedIndex
-                            ? Neumorphic(
-                                padding: const EdgeInsets.all(6),
-                                style: AppNeumorphicStyles.raised(
-                                  color: AppColors.secondary,
-                                  depth: 2,
-                                  radius: 12,
-                                ),
-                                child: Icon(
-                                  item.activeIcon,
-                                  color: selectedColor,
-                                  size: 21,
-                                ),
-                              )
-                            : Padding(
-                                padding: const EdgeInsets.all(6),
-                                child: Icon(
-                                  item.inactiveIcon,
-                                  color: unselectedColor,
-                                  size: 21,
-                                ),
-                              ),
-                        const SizedBox(height: 3),
-                        Text(
-                          item.label,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: i == selectedIndex
-                                ? selectedColor
-                                : unselectedColor,
-                            fontWeight: i == selectedIndex
-                                ? FontWeight.w700
-                                : FontWeight.w600,
-                          ),
-                        ),
-                      ],
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+    child: Row(
+      children: List.generate(items.length, (index) {
+        final item = items[index];
+        final selected = index == selectedIndex;
+        return Expanded(
+          child: Semantics(
+            selected: selected,
+            button: true,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => onTap(index),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Neumorphic(
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : AppNeumorphicStyles.duration,
+                      style: AppNeumorphicStyles.raised(
+                        color: selected
+                            ? AppColors.primarySoft
+                            : AppColors.surface,
+                        depth: selected ? AppNeumorphicStyles.insetDepth : 0,
+                        radius: 14,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
+                      child: Icon(
+                        selected ? item.activeIcon : item.inactiveIcon,
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        size: 22,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item.label,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            )
-            .values
-            .toList(),
-        onTap: onTap,
-      ),
-    );
-  }
+            ),
+          ),
+        );
+      }),
+    ),
+  );
 }
