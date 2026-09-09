@@ -11,6 +11,7 @@ void main() {
       'entry_effect': {
         'id': 1,
         'title': 'Super Car Entry',
+        'svga': 'https://example.com/car.svga',
         'gif': 'https://example.com/car.gif',
         'audio': 'https://example.com/car.mp3',
         'expired_datetime': '2028-08-27T10:18:36+00:00',
@@ -19,6 +20,7 @@ void main() {
 
     expect(profile.entryEffect?.id, 1);
     expect(profile.entryEffect?.title, 'Super Car Entry');
+    expect(profile.entryEffect?.svgaUrl, 'https://example.com/car.svga');
     expect(profile.entryEffect?.gifUrl, 'https://example.com/car.gif');
     expect(profile.toJson()['entry_effect']['audio'], contains('car.mp3'));
   });

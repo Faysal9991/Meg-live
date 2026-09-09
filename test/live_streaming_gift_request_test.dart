@@ -17,6 +17,7 @@ void main() {
       profileImage: null,
       level: null,
       giftImage: null,
+      svga: null,
       gif: null,
       audio: null,
       vvipOrVipPreference: null,
@@ -26,6 +27,7 @@ void main() {
 
     expect(json['profile_image'], isNull);
     expect(json['gift_image'], isNull);
+    expect(json['svga'], isNull);
     expect(json['gif'], isNull);
     expect(json['audio'], isNull);
   });

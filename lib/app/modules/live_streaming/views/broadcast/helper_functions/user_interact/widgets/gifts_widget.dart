@@ -2,6 +2,7 @@ import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
+import 'package:doyel_live/app/widgets/animated_media_widget.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter/material.dart';
@@ -156,7 +157,8 @@ class GiftsWidget extends StatelessWidget {
                                                   const Center(
                                                     child:
                                                         CircularProgressIndicator(
-                                                          color: AppColors.error,
+                                                          color:
+                                                              AppColors.error,
                                                         ),
                                                   ),
                                             ),
@@ -492,6 +494,11 @@ class GiftsWidget extends StatelessWidget {
                                                         .selectedGift
                                                         .value['gift_image']
                                                     as String?,
+                                            svga:
+                                                streamingController
+                                                        .selectedGift
+                                                        .value['svga']
+                                                    as String?,
                                             gif:
                                                 streamingController
                                                         .selectedGift
@@ -571,11 +578,14 @@ class giftItem extends StatelessWidget {
             return;
           }
           streamingController.setSelectedGift(
-            giftType: giftData['gif'] != null ? 'animation' : 'normal',
+            giftType: giftData['svga'] != null || giftData['gif'] != null
+                ? 'animation'
+                : 'normal',
             id: giftData['id'],
             diamonds: giftData['diamonds'],
             vat: giftData['vat'],
             giftImage: giftData['gift_image'],
+            svga: giftData['svga'],
             gif: giftData['gif'],
             audio: giftData['audio'],
           );
@@ -591,7 +601,8 @@ class giftItem extends StatelessWidget {
                                     .selectedGift
                                     .value['gift_type'] ==
                                 'animation' &&
-                            giftData['gif'] != null) ||
+                            (giftData['svga'] != null ||
+                                giftData['gif'] != null)) ||
                         (streamingController.selectedGift.value['id'] ==
                                 giftData['id'] &&
                             streamingController
@@ -610,13 +621,16 @@ class giftItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                CachedNetworkImage(
-                  imageUrl: giftData['gif'] ?? giftData['gift_image'],
-                  width: 46,
-                  height: 46,
-                  fit: BoxFit.contain,
-                  placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator(color: AppColors.error),
+                SizedBox.square(
+                  dimension: 46,
+                  child: AnimatedMediaWidget(
+                    source: AnimatedMediaSource.fromMap(
+                      giftData is Map ? giftData as Map : const {},
+                    ),
+                    fit: BoxFit.contain,
+                    placeholder: const Center(
+                      child: CircularProgressIndicator(color: AppColors.error),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),

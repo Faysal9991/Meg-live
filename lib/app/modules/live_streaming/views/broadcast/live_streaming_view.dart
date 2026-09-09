@@ -23,6 +23,7 @@ import 'package:doyel_live/app/modules/nav/views/nav_view.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/helper_functions.dart';
+import 'package:doyel_live/app/widgets/animated_media_widget.dart';
 import 'package:doyel_live/app/widgets/circle_button.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
 import 'package:emojis/emoji.dart';
@@ -886,13 +887,15 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (effect.gifUrl != null)
+                if (effect.svgaUrl != null || effect.gifUrl != null)
                   Flexible(
-                    child: CachedNetworkImage(
-                      key: ValueKey<String>(effect.gifUrl!),
-                      imageUrl: effect.gifUrl!,
+                    child: AnimatedMediaWidget(
+                      source: AnimatedMediaSource.fromUrls(
+                        svga: effect.svgaUrl,
+                        gif: effect.gifUrl,
+                      ),
                       fit: BoxFit.contain,
-                      placeholder: (_, __) => const SizedBox(
+                      placeholder: const SizedBox(
                         height: 180,
                         child: Center(
                           child: CircularProgressIndicator(
@@ -900,7 +903,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           ),
                         ),
                       ),
-                      errorWidget: (_, __, ___) => const Icon(
+                      errorWidget: const Icon(
                         Icons.auto_awesome,
                         color: AppColors.premium,
                         size: 100,
@@ -1539,10 +1542,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           left: 0,
                           right: 0,
                           bottom: 80,
-                          child: CachedNetworkImage(
-                            imageUrl: _getAnimatedGif(),
+                          child: AnimatedMediaWidget(
+                            source: _getAnimatedGiftMedia(),
                             fit: BoxFit.contain,
-                            placeholder: (context, url) => const Center(
+                            placeholder: const Center(
                               child: CircularProgressIndicator(),
                             ),
                           ),
@@ -2901,18 +2904,19 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       }
     });
 
-  String _getAnimatedGif() {
-    String gif = '';
+  AnimatedMediaSource _getAnimatedGiftMedia() {
     try {
       dynamic data = _livekitStreamingController.listAnimatedGiftSend[0];
-      if (data != null) {
-        gif = data['gif'];
+      if (data is Map) {
+        return AnimatedMediaSource.fromMap(data);
       }
-    } catch (e) {
-      //
+    } catch (_) {
+      // The animation queue can be cleared while the reactive view rebuilds.
     }
-
-    return gif;
+    return const AnimatedMediaSource(
+      url: null,
+      type: AnimatedMediaType.unsupported,
+    );
   }
 
   void _renderParticipants() {

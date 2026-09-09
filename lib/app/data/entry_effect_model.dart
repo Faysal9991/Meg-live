@@ -4,6 +4,7 @@ class EntryEffect {
   const EntryEffect({
     this.id,
     this.title,
+    this.svgaUrl,
     this.gifUrl,
     this.audioUrl,
     this.expiredDatetime,
@@ -11,6 +12,7 @@ class EntryEffect {
 
   final int? id;
   final String? title;
+  final String? svgaUrl;
   final String? gifUrl;
   final String? audioUrl;
   final DateTime? expiredDatetime;
@@ -41,6 +43,7 @@ class EntryEffect {
     return EntryEffect(
       id: int.tryParse(data['id']?.toString() ?? ''),
       title: _nullableText(data['title']),
+      svgaUrl: normalizeMediaUrl(data['svga']),
       gifUrl: normalizeMediaUrl(data['gif']),
       audioUrl: normalizeMediaUrl(data['audio']),
       expiredDatetime: DateTime.tryParse(
@@ -52,6 +55,7 @@ class EntryEffect {
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
     'title': title,
+    'svga': svgaUrl,
     'gif': gifUrl,
     'audio': audioUrl,
     'expired_datetime': expiredDatetime?.toIso8601String(),

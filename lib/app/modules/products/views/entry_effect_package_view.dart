@@ -1,6 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
+import 'package:doyel_live/app/widgets/animated_media_widget.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -123,7 +123,7 @@ class _EntryEffectPackageViewState extends State<EntryEffectPackageView> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _mediaPreview(package['gif']?.toString()),
+            _mediaPreview(package),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -184,38 +184,22 @@ class _EntryEffectPackageViewState extends State<EntryEffectPackageView> {
     );
   }
 
-  Widget _mediaPreview(String? url) {
-    final path = Uri.tryParse(url ?? '')?.path.toLowerCase() ?? '';
-    final isImage =
-        path.endsWith('.gif') ||
-        path.endsWith('.png') ||
-        path.endsWith('.jpg') ||
-        path.endsWith('.jpeg') ||
-        path.endsWith('.webp');
-    if (url != null && url.isNotEmpty && isImage) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: CachedNetworkImage(
-          imageUrl: url,
-          width: 76,
-          height: 76,
+  Widget _mediaPreview(Map<String, dynamic> package) {
+    final source = AnimatedMediaSource.fromMap(
+      package,
+      includeGiftImage: false,
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox.square(
+        dimension: 76,
+        child: AnimatedMediaWidget(
+          source: source,
           fit: BoxFit.cover,
-          placeholder: (_, __) => const SizedBox(
-            width: 76,
-            height: 76,
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          errorWidget: (_, __, ___) => _mediaPlaceholder('Effect'),
+          errorWidget: _mediaPlaceholder('Effect'),
         ),
-      );
-    }
-
-    final type = path.endsWith('.svga')
-        ? 'SVGA'
-        : path.endsWith('.mp4')
-        ? 'Video'
-        : 'Effect';
-    return _mediaPlaceholder(type);
+      ),
+    );
   }
 
   Widget _mediaPlaceholder(String type) {

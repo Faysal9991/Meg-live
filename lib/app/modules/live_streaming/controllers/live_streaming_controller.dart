@@ -149,6 +149,7 @@ class LiveStreamingController extends GetxController {
     'diamonds': 0,
     'vat': 0,
     'gift_image': null,
+    'svga': null,
     'gif': null,
     'audio': null,
   }.obs;
@@ -177,6 +178,7 @@ class LiveStreamingController extends GetxController {
     diamonds,
     vat,
     String? giftImage,
+    String? svga,
     String? gif,
     String? audio,
   }) {
@@ -186,6 +188,7 @@ class LiveStreamingController extends GetxController {
       'diamonds': diamonds ?? 0,
       'vat': vat ?? 0,
       'gift_image': giftImage,
+      'svga': svga,
       'gif': gif,
       'audio': audio,
     };
@@ -1444,6 +1447,7 @@ class LiveStreamingController extends GetxController {
     required int vat,
     required String receiverFullNames,
     String? giftImage,
+    String? svga,
     String? gif,
     String? audio,
     required BuildContext context,
@@ -1469,6 +1473,7 @@ class LiveStreamingController extends GetxController {
       profileImage: myProfile.profile_image ?? myProfile.photo_url,
       level: myProfile.level,
       giftImage: giftImage,
+      svga: svga,
       gif: gif,
       audio: audio,
       vvipOrVipPreference: myProfile.vvip_or_vip_preference,

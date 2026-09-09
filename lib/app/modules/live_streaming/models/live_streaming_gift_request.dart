@@ -13,6 +13,7 @@ class LiveStreamingGiftRequest {
     required this.profileImage,
     required this.level,
     required this.giftImage,
+    required this.svga,
     required this.gif,
     required this.audio,
     required this.vvipOrVipPreference,
@@ -31,6 +32,7 @@ class LiveStreamingGiftRequest {
   final String? profileImage;
   final dynamic level;
   final String? giftImage;
+  final String? svga;
   final String? gif;
   final String? audio;
   final dynamic vvipOrVipPreference;
@@ -50,6 +52,7 @@ class LiveStreamingGiftRequest {
       'profile_image': profileImage,
       'level': level,
       'gift_image': giftImage,
+      'svga': svga,
       'gif': gif,
       'audio': audio,
       'vvip_or_vip_preference': vvipOrVipPreference,

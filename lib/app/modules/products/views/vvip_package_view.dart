@@ -142,7 +142,7 @@ class _VVIPPackageViewState extends State<VVIPPackageView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${data['price']} BDT',
+              '${data['price']} Diamonds',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 // color: AppColors.surface,

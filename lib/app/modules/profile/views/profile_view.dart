@@ -155,7 +155,7 @@ class ProfileView extends GetView<ProfileController> {
                             const SizedBox(width: 4),
                             Obx(() {
                               return Text(
-                                '${_authController.profile.value.followers!.length}',
+                                '${_authController.profile.value.user?.uid}',
                                 style: const TextStyle(
                                   color: AppColors.surface,
                                 ),
@@ -274,16 +274,16 @@ class ProfileView extends GetView<ProfileController> {
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   ),
-                  ListTile(
-                    onTap: () => Get.to(() => const KingPackageView()),
-                    dense: true,
-                    leading: const Icon(Icons.workspace_premium),
-                    title: const Text(
-                      'King Package',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
+                  // ListTile(
+                  //   onTap: () => Get.to(() => const KingPackageView()),
+                  //   dense: true,
+                  //   leading: const Icon(Icons.workspace_premium),
+                  //   title: const Text(
+                  //     'King Package',
+                  //     style: TextStyle(fontSize: 18),
+                  //   ),
+                  //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  // ),
                   ListTile(
                     onTap: () => Get.to(() => const VIPPackageView()),
                     dense: true,
