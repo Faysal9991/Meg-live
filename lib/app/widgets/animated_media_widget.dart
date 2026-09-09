@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'dart:ui' as ui;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svga/flutter_svga.dart';
 import 'package:video_player/video_player.dart';
 
@@ -97,6 +101,12 @@ class AnimatedMediaWidget extends StatelessWidget {
     this.fit = BoxFit.contain,
     this.loop = true,
     this.autoPlay = true,
+    this.enableSvgaAudio = true,
+    this.svgaParser = SVGAParser.shared,
+    this.imageCodecLoader,
+    this.onPlaybackStarted,
+    this.onCompleted,
+    this.onError,
     this.placeholder,
     this.errorWidget,
   });
@@ -105,6 +115,18 @@ class AnimatedMediaWidget extends StatelessWidget {
   final BoxFit fit;
   final bool loop;
   final bool autoPlay;
+
+  /// Disable embedded sound for browsing thumbnails. Room effects retain sound
+  /// by default; video previews keep their existing muted playback behavior.
+  final bool enableSvgaAudio;
+  final SVGAParser svgaParser;
+  final Future<ui.Codec> Function(String url)? imageCodecLoader;
+
+  /// Playback starts after loading. Completion is emitted once for a non-looping
+  /// animation; still images are displayed for three seconds.
+  final VoidCallback? onPlaybackStarted;
+  final VoidCallback? onCompleted;
+  final ValueChanged<Object>? onError;
   final Widget? placeholder;
   final Widget? errorWidget;
 
@@ -115,6 +137,20 @@ class AnimatedMediaWidget extends StatelessWidget {
 
     switch (source.type) {
       case AnimatedMediaType.image:
+        if (!loop) {
+          return _SinglePlayImage(
+            key: ValueKey<String>('image:$url'),
+            url: url,
+            fit: fit,
+            autoPlay: autoPlay,
+            codecLoader: imageCodecLoader ?? _loadImageCodec,
+            onPlaybackStarted: onPlaybackStarted,
+            onCompleted: onCompleted,
+            onError: onError,
+            placeholder: placeholder,
+            errorWidget: errorWidget,
+          );
+        }
         return CachedNetworkImage(
           key: ValueKey<String>('image:$url'),
           imageUrl: url,
@@ -129,16 +165,26 @@ class AnimatedMediaWidget extends StatelessWidget {
           fit: fit,
           loop: loop,
           autoPlay: autoPlay,
+          onPlaybackStarted: onPlaybackStarted,
+          onCompleted: onCompleted,
+          onError: onError,
           placeholder: placeholder,
           errorWidget: errorWidget,
         );
       case AnimatedMediaType.svga:
         return _NetworkSvga(
-          key: ValueKey<String>('svga:$url'),
+          // The SVGA package creates audio layers when attaching a movie and
+          // has no mute API. Recreate the player when its audio policy changes.
+          key: ValueKey<String>('svga:$url:$enableSvgaAudio'),
           url: url,
           fit: fit,
           loop: loop,
           autoPlay: autoPlay,
+          enableAudio: enableSvgaAudio,
+          parser: svgaParser,
+          onPlaybackStarted: onPlaybackStarted,
+          onCompleted: onCompleted,
+          onError: onError,
           placeholder: placeholder,
           errorWidget: errorWidget,
         );
@@ -165,6 +211,9 @@ class _NetworkVideo extends StatefulWidget {
     required this.fit,
     required this.loop,
     required this.autoPlay,
+    this.onPlaybackStarted,
+    this.onCompleted,
+    this.onError,
     this.placeholder,
     this.errorWidget,
   });
@@ -173,6 +222,9 @@ class _NetworkVideo extends StatefulWidget {
   final BoxFit fit;
   final bool loop;
   final bool autoPlay;
+  final VoidCallback? onPlaybackStarted;
+  final VoidCallback? onCompleted;
+  final ValueChanged<Object>? onError;
   final Widget? placeholder;
   final Widget? errorWidget;
 
@@ -183,6 +235,7 @@ class _NetworkVideo extends StatefulWidget {
 class _NetworkVideoState extends State<_NetworkVideo> {
   VideoPlayerController? _controller;
   Object? _error;
+  bool _finished = false;
 
   @override
   void initState() {
@@ -193,22 +246,48 @@ class _NetworkVideoState extends State<_NetworkVideo> {
   Future<void> _initialize() async {
     final controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
     _controller = controller;
+    controller.addListener(_onVideoChanged);
     try {
       await controller.initialize();
       if (!mounted || _controller != controller) return;
       await controller.setLooping(widget.loop);
+      if (!mounted) return;
       await controller.setVolume(0);
+      if (!mounted) return;
       if (widget.autoPlay) await controller.play();
-      if (mounted) setState(() {});
+      if (!mounted || _finished) return;
+      setState(() {});
+      if (widget.autoPlay) widget.onPlaybackStarted?.call();
     } catch (error) {
       if (mounted && _controller == controller) {
-        setState(() => _error = error);
+        _reportError(error);
       }
     }
   }
 
+  void _onVideoChanged() {
+    if (!mounted || _finished) return;
+    final value = _controller!.value;
+    if (value.hasError) {
+      _reportError(
+        StateError(value.errorDescription ?? 'Video playback failed'),
+      );
+    } else if (!widget.loop && value.isCompleted) {
+      _finished = true;
+      widget.onCompleted?.call();
+    }
+  }
+
+  void _reportError(Object error) {
+    if (_finished) return;
+    _finished = true;
+    setState(() => _error = error);
+    widget.onError?.call(error);
+  }
+
   @override
   void dispose() {
+    _controller?.removeListener(_onVideoChanged);
     _controller?.dispose();
     super.dispose();
   }
@@ -243,6 +322,11 @@ class _NetworkSvga extends StatefulWidget {
     required this.fit,
     required this.loop,
     required this.autoPlay,
+    required this.enableAudio,
+    required this.parser,
+    this.onPlaybackStarted,
+    this.onCompleted,
+    this.onError,
     this.placeholder,
     this.errorWidget,
   });
@@ -251,6 +335,11 @@ class _NetworkSvga extends StatefulWidget {
   final BoxFit fit;
   final bool loop;
   final bool autoPlay;
+  final bool enableAudio;
+  final SVGAParser parser;
+  final VoidCallback? onPlaybackStarted;
+  final VoidCallback? onCompleted;
+  final ValueChanged<Object>? onError;
   final Widget? placeholder;
   final Widget? errorWidget;
 
@@ -263,22 +352,34 @@ class _NetworkSvgaState extends State<_NetworkSvga>
   late final SVGAAnimationController _controller;
   Object? _error;
   bool _ready = false;
+  bool _finished = false;
 
   @override
   void initState() {
     super.initState();
     _controller = SVGAAnimationController(vsync: this);
+    _controller.addStatusListener(_onStatusChanged);
     _load();
   }
 
   Future<void> _load() async {
     try {
-      final movie = await SVGAParser.shared.decodeFromURL(widget.url);
+      final movie = await widget.parser.decodeFromURL(widget.url);
       if (!mounted) {
         movie.dispose();
         return;
       }
+      if (!widget.enableAudio) {
+        // Each decode returns a fresh movie. Strip only this thumbnail's audio
+        // before attaching it; cached file bytes and sent gifts remain intact.
+        movie.audios.clear();
+        movie.audiosData.clear();
+      }
       _controller.videoItem = movie;
+      if (_controller.duration == null ||
+          _controller.duration! <= Duration.zero) {
+        throw StateError('SVGA has no playable frames');
+      }
       setState(() => _ready = true);
       if (widget.autoPlay) {
         if (widget.loop) {
@@ -286,14 +387,33 @@ class _NetworkSvgaState extends State<_NetworkSvga>
         } else {
           _controller.forward(from: 0);
         }
+        widget.onPlaybackStarted?.call();
       }
     } catch (error) {
-      if (mounted) setState(() => _error = error);
+      if (mounted && !_finished) {
+        _finished = true;
+        setState(() => _error = error);
+        widget.onError?.call(error);
+      }
     }
+  }
+
+  void _onStatusChanged(AnimationStatus status) {
+    if (!mounted ||
+        _finished ||
+        widget.loop ||
+        status != AnimationStatus.completed) {
+      return;
+    }
+    _finished = true;
+    _controller.stop();
+    widget.onCompleted?.call();
   }
 
   @override
   void dispose() {
+    _controller.removeStatusListener(_onStatusChanged);
+    _controller.stop();
     _controller.dispose();
     super.dispose();
   }
@@ -312,5 +432,127 @@ class _NetworkSvgaState extends State<_NetworkSvga>
       clearsAfterStop: false,
       allowDrawingOverflow: false,
     );
+  }
+}
+
+Future<ui.Codec> _loadImageCodec(String url) async {
+  final data = await NetworkAssetBundle(Uri.parse(url)).load(url);
+  return ui.instantiateImageCodec(
+    data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+  );
+}
+
+/// Image widgets repeat animated GIF/WebP files internally. Decode one cycle
+/// explicitly so the entry queue can advance after the last frame's duration.
+class _SinglePlayImage extends StatefulWidget {
+  const _SinglePlayImage({
+    super.key,
+    required this.url,
+    required this.fit,
+    required this.autoPlay,
+    required this.codecLoader,
+    this.onPlaybackStarted,
+    this.onCompleted,
+    this.onError,
+    this.placeholder,
+    this.errorWidget,
+  });
+
+  final String url;
+  final BoxFit fit;
+  final bool autoPlay;
+  final Future<ui.Codec> Function(String url) codecLoader;
+  final VoidCallback? onPlaybackStarted;
+  final VoidCallback? onCompleted;
+  final ValueChanged<Object>? onError;
+  final Widget? placeholder;
+  final Widget? errorWidget;
+
+  @override
+  State<_SinglePlayImage> createState() => _SinglePlayImageState();
+}
+
+class _SinglePlayImageState extends State<_SinglePlayImage> {
+  ui.Codec? _codec;
+  ui.Image? _image;
+  Timer? _frameTimer;
+  Object? _error;
+  int _framesShown = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final codec = await widget.codecLoader(widget.url);
+      if (!mounted) {
+        codec.dispose();
+        return;
+      }
+      _codec = codec;
+      await _showNextFrame();
+    } catch (error) {
+      _reportError(error);
+    }
+  }
+
+  Future<void> _showNextFrame() async {
+    try {
+      final frame = await _codec!.getNextFrame();
+      if (!mounted) {
+        frame.image.dispose();
+        return;
+      }
+      final previousImage = _image;
+      setState(() {
+        _image = frame.image;
+        _framesShown++;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        previousImage?.dispose();
+        if (!mounted || !widget.autoPlay) return;
+        if (_framesShown == 1) widget.onPlaybackStarted?.call();
+        final duration = _codec!.frameCount == 1
+            ? const Duration(seconds: 3)
+            : frame.duration;
+        _frameTimer = Timer(duration, () {
+          if (_framesShown == _codec!.frameCount) {
+            widget.onCompleted?.call();
+          } else {
+            unawaited(_showNextFrame());
+          }
+        });
+      });
+    } catch (error) {
+      _reportError(error);
+    }
+  }
+
+  void _reportError(Object error) {
+    if (!mounted || _error != null) return;
+    setState(() => _error = error);
+    widget.onError?.call(error);
+  }
+
+  @override
+  void dispose() {
+    _frameTimer?.cancel();
+    _codec?.dispose();
+    _image?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return widget.errorWidget ?? AnimatedMediaWidget._defaultError();
+    }
+    if (_image == null) {
+      return widget.placeholder ?? AnimatedMediaWidget._defaultLoader();
+    }
+    return RawImage(image: _image, fit: widget.fit);
   }
 }

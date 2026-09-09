@@ -124,6 +124,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   AudioPlayer? _entryEffectAudioPlayer;
   final List<_RoomEntryEffect> _entryEffectQueue = <_RoomEntryEffect>[];
   _RoomEntryEffect? _activeEntryEffect;
+  bool _entryEffectFinishing = false;
 
   // Live Kit
   String? _preferredCodec;
@@ -821,15 +822,39 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
     final nextEffect = _entryEffectQueue.removeAt(0);
     setState(() => _activeEntryEffect = nextEffect);
-    unawaited(_playEntryEffectAudio(nextEffect.effect.audioUrl));
-    _entryEffectTimer = Timer(const Duration(seconds: 3), () {
-      unawaited(_finishCurrentEntryEffect());
-    });
+    final source = AnimatedMediaSource.fromUrls(
+      svga: nextEffect.effect.svgaUrl,
+      gif: nextEffect.effect.gifUrl,
+    );
+    if (source.isPlayable) {
+      // Only limit loading. Once playback starts, the media's completion event
+      // advances the queue, regardless of the animation's length.
+      _entryEffectTimer = Timer(const Duration(seconds: 30), () {
+        unawaited(_finishCurrentEntryEffect(nextEffect));
+      });
+    } else {
+      unawaited(_playEntryEffectAudio(nextEffect));
+      _entryEffectTimer = Timer(const Duration(seconds: 3), () {
+        unawaited(_finishCurrentEntryEffect(nextEffect));
+      });
+    }
   }
 
-  Future<void> _playEntryEffectAudio(String? audioUrl) async {
-    await _disposeEntryEffectAudio();
-    if (audioUrl == null || _isDisposed) {
+  bool _isCurrentEntryEffect(_RoomEntryEffect entry) =>
+      mounted && !_isDisposed && identical(_activeEntryEffect, entry);
+
+  void _onEntryEffectStarted(_RoomEntryEffect entry) {
+    if (!_isCurrentEntryEffect(entry) || _entryEffectFinishing) return;
+    _entryEffectTimer?.cancel();
+    _entryEffectTimer = null;
+    unawaited(_playEntryEffectAudio(entry));
+  }
+
+  Future<void> _playEntryEffectAudio(_RoomEntryEffect entry) async {
+    final audioUrl = entry.effect.audioUrl;
+    if (audioUrl == null ||
+        !_isCurrentEntryEffect(entry) ||
+        _entryEffectFinishing) {
       return;
     }
 
@@ -840,18 +865,25 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     try {
       await player.play(UrlSource(audioUrl), volume: .6);
     } catch (_) {
-      await _disposeEntryEffectAudio();
+      if (identical(_entryEffectAudioPlayer, player)) {
+        await _disposeEntryEffectAudio();
+      }
     }
   }
 
-  Future<void> _finishCurrentEntryEffect() async {
+  Future<void> _finishCurrentEntryEffect(_RoomEntryEffect entry) async {
+    if (!_isCurrentEntryEffect(entry) || _entryEffectFinishing) return;
+    _entryEffectFinishing = true;
     _entryEffectTimer?.cancel();
     _entryEffectTimer = null;
     await _disposeEntryEffectAudio();
-    if (_isDisposed || !mounted) {
+    if (!_isCurrentEntryEffect(entry)) {
       return;
     }
-    setState(() => _activeEntryEffect = null);
+    setState(() {
+      _activeEntryEffect = null;
+      _entryEffectFinishing = false;
+    });
     _showNextEntryEffect();
   }
 
@@ -872,6 +904,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
   Widget _buildEntryEffectOverlay(_RoomEntryEffect roomEntryEffect) {
     final effect = roomEntryEffect.effect;
+    final source = AnimatedMediaSource.fromUrls(
+      svga: effect.svgaUrl,
+      gif: effect.gifUrl,
+    );
     final effectTitle = effect.title ?? 'Special Entry';
     final userName = roomEntryEffect.userName?.trim();
 
@@ -891,13 +927,18 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (effect.svgaUrl != null || effect.gifUrl != null)
+                if (source.isPlayable)
                   Flexible(
                     child: AnimatedMediaWidget(
-                      source: AnimatedMediaSource.fromUrls(
-                        svga: effect.svgaUrl,
-                        gif: effect.gifUrl,
-                      ),
+                      key: ObjectKey(roomEntryEffect),
+                      source: source,
+                      loop: false,
+                      onPlaybackStarted: () =>
+                          _onEntryEffectStarted(roomEntryEffect),
+                      onCompleted: () =>
+                          unawaited(_finishCurrentEntryEffect(roomEntryEffect)),
+                      onError: (_) =>
+                          unawaited(_finishCurrentEntryEffect(roomEntryEffect)),
                       fit: BoxFit.contain,
                       placeholder: const SizedBox(
                         height: 180,

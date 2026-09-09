@@ -592,25 +592,17 @@ class giftItem extends StatelessWidget {
           );
         },
         child: Obx(() {
+          final selectedGift = streamingController.selectedGift;
+          final isAnimated =
+              giftData['svga'] != null || giftData['gif'] != null;
+          final isSelected =
+              selectedGift['id'] == giftData['id'] &&
+              selectedGift['gift_type'] ==
+                  (isAnimated ? 'animation' : 'normal');
           return Container(
             decoration: BoxDecoration(
               border: Border.all(
-                color:
-                    (streamingController.selectedGift.value['id'] ==
-                                giftData['id'] &&
-                            streamingController
-                                    .selectedGift
-                                    .value['gift_type'] ==
-                                'animation' &&
-                            (giftData['svga'] != null ||
-                                giftData['gif'] != null)) ||
-                        (streamingController.selectedGift.value['id'] ==
-                                giftData['id'] &&
-                            streamingController
-                                    .selectedGift
-                                    .value['gift_type'] ==
-                                'normal' &&
-                            giftData['gift_image'] != null)
+                color: isSelected
                     ? Theme.of(context).primaryColor
                     : AppColors.transparent,
               ),
@@ -624,14 +616,28 @@ class giftItem extends StatelessWidget {
               children: [
                 SizedBox.square(
                   dimension: 46,
-                  child: AnimatedMediaWidget(
-                    source: AnimatedMediaSource.fromMap(
-                      giftData is Map ? giftData as Map : const {},
-                    ),
-                    fit: BoxFit.contain,
-                    placeholder: const Center(
-                      child: CircularProgressIndicator(color: AppColors.error),
-                    ),
+                  child: AnimatedBuilder(
+                    animation:
+                        ModalRoute.of(context)?.animation ??
+                        const AlwaysStoppedAnimation<double>(1),
+                    builder: (context, _) {
+                      final route = ModalRoute.of(context);
+                      return AnimatedMediaWidget(
+                        source: AnimatedMediaSource.fromMap(
+                          giftData is Map ? giftData as Map : const {},
+                        ),
+                        enableSvgaAudio:
+                            isSelected &&
+                            (ModalRoute.isCurrentOf(context) ?? true) &&
+                            route?.animation?.status != AnimationStatus.reverse,
+                        fit: BoxFit.contain,
+                        placeholder: const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.error,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 8),
