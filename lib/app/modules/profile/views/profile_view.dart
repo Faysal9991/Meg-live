@@ -12,7 +12,6 @@ import 'package:doyel_live/app/modules/business/views/moderator/moderator_view.d
 import 'package:doyel_live/app/modules/business/views/reseller/reseller_view.dart';
 import 'package:doyel_live/app/modules/balance/views/withdraw_requests_view.dart';
 import 'package:doyel_live/app/modules/products/views/entry_effect_package_view.dart';
-import 'package:doyel_live/app/modules/products/views/king_package_view.dart';
 import 'package:doyel_live/app/modules/products/views/vip_package_view.dart';
 import 'package:doyel_live/app/modules/products/views/vvip_package_view.dart';
 import 'package:doyel_live/app/modules/profile/views/block_list_view.dart';
@@ -23,14 +22,14 @@ import 'package:doyel_live/app/modules/profile/views/info/terms_and_conditions_v
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../controllers/profile_controller.dart';
 
 class ProfileView extends GetView<ProfileController> {
-  ProfileView({Key? key}) : super(key: key);
+  ProfileView({super.key});
   final AuthController _authController = Get.find();
   @override
   Widget build(BuildContext context) {
@@ -163,84 +162,58 @@ class ProfileView extends GetView<ProfileController> {
           AppCard(
             child: Column(
               children: [
-                ListTile(
+                _ProfileActionTile(
                   onTap: () => Get.to(() => const EditProfileView()),
-                  dense: true,
-                  leading: const Icon(Icons.settings),
-                  title: const Text(
-                    'Edit Profile',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: LucideIcons.userRoundPen,
+                  label: 'Edit Profile',
                 ),
                 Obx(() {
                   if (_authController.profile.value.login_type !=
                       'password_login') {
                     return Container();
                   }
-                  return ListTile(
+                  return _ProfileActionTile(
                     onTap: () => Get.to(() => ChangePasswordView()),
-                    dense: true,
-                    leading: const Icon(Icons.password),
-                    title: const Text(
-                      'Change Password',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    icon: LucideIcons.lockKeyhole,
+                    label: 'Change Password',
                   );
                 }),
                 Obx(
-                  () => ListTile(
+                  () => _ProfileActionTile(
                     onTap: () => Get.to(() => const BlockListView()),
-                    dense: true,
-                    leading: const Icon(Icons.no_accounts_rounded),
-                    title: Text(
-                      'Block List: ${_authController.profile.value.blocks!.length}',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    icon: LucideIcons.userRoundX,
+                    label:
+                        'Block List: ${_authController.profile.value.blocks?.length ?? 0}',
                   ),
                 ),
-                ListTile(
+                _ProfileActionTile(
                   onTap: () => Get.to(
                     () => BroadcastingHistoriesView(
                       userId: _authController.profile.value.user!.uid!,
                       isAgentSearch: false,
                     ),
                   ),
-                  dense: true,
-                  leading: Icon(MdiIcons.history),
-                  title: const Text('History', style: TextStyle(fontSize: 16)),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: LucideIcons.history,
+                  label: 'History',
                 ),
                 Obx(() {
                   if (!(_authController.profile.value.is_moderator ?? false)) {
                     return Container();
                   }
-                  return ListTile(
+                  return _ProfileActionTile(
                     onTap: () => Get.to(() => ModeratorView()),
-                    dense: true,
-                    leading: const Icon(Icons.local_activity),
-                    title: const Text(
-                      'Moderator Activity',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    icon: LucideIcons.badgeCheck,
+                    label: 'Moderator Activity',
                   );
                 }),
                 Obx(() {
                   if (!(_authController.profile.value.is_reseller ?? false)) {
                     return Container();
                   }
-                  return ListTile(
+                  return _ProfileActionTile(
                     onTap: () => Get.to(() => ResellerView()),
-                    dense: true,
-                    leading: Icon(MdiIcons.diamond),
-                    title: const Text(
-                      'Reseller Recharge',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    icon: LucideIcons.diamond,
+                    label: 'Reseller Recharge',
                   );
                 }),
               ],
@@ -252,15 +225,11 @@ class ProfileView extends GetView<ProfileController> {
           AppCard(
             child: Column(
               children: [
-                ListTile(
+                _ProfileActionTile(
                   onTap: () => Get.to(() => const VVIPPackageView()),
-                  dense: true,
-                  leading: const Icon(Icons.important_devices),
-                  title: const Text(
-                    'VVIP Package',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: LucideIcons.crown,
+                  label: 'VVIP Package',
+                  iconColor: AppColors.premiumText,
                 ),
                 // ListTile(
                 //   onTap: () => Get.to(() => const KingPackageView()),
@@ -272,76 +241,48 @@ class ProfileView extends GetView<ProfileController> {
                 //   ),
                 //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 // ),
-                ListTile(
+                _ProfileActionTile(
                   onTap: () => Get.to(() => const VIPPackageView()),
-                  dense: true,
-                  leading: const Icon(Icons.important_devices_rounded),
-                  title: const Text(
-                    'VIP Package',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: LucideIcons.gem,
+                  label: 'VIP Package',
+                  iconColor: AppColors.premiumText,
                 ),
-                ListTile(
+                _ProfileActionTile(
                   onTap: () => Get.to(() => const EntryEffectPackageView()),
-                  dense: true,
-                  leading: const Icon(Icons.auto_awesome_motion),
-                  title: const Text(
-                    'Entry Effect',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: LucideIcons.wandSparkles,
+                  label: 'Entry Effect',
+                  iconColor: AppColors.premiumText,
                 ),
                 !isAgent
                     ? Container()
-                    : ListTile(
+                    : _ProfileActionTile(
                         onTap: () => Get.to(
                           () => HostsView(
                             agentUserId:
                                 _authController.profile.value.user?.uid!,
                           ),
                         ),
-                        dense: true,
-                        leading: const Icon(Icons.groups),
-                        title: const Text(
-                          'Host List',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        icon: LucideIcons.usersRound,
+                        label: 'Host List',
                       ),
                 isAgent || isModerator || isReseller || isHost
                     ? Container()
-                    : ListTile(
+                    : _ProfileActionTile(
                         onTap: () => Get.to(() => const HostRequstView()),
-                        dense: true,
-                        leading: const Icon(Icons.broadcast_on_home),
-                        title: const Text(
-                          'Host Request',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        icon: LucideIcons.radioTower,
+                        label: 'Host Request',
                       ),
                 !isHost
                     ? Container()
-                    : ListTile(
+                    : _ProfileActionTile(
                         onTap: () => Get.to(() => AgentForHostView()),
-                        dense: true,
-                        leading: const Icon(Icons.support_agent),
-                        title: const Text(
-                          'My Agent',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        icon: LucideIcons.headset,
+                        label: 'My Agent',
                       ),
-                ListTile(
+                _ProfileActionTile(
                   onTap: () => Get.to(() => const WithdrawRequestsView()),
-                  dense: true,
-                  leading: const Icon(Icons.account_balance_wallet_outlined),
-                  title: const Text(
-                    'Withdraw Requests',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: LucideIcons.walletCards,
+                  label: 'Withdraw Requests',
                 ),
               ],
             ),
@@ -352,7 +293,7 @@ class ProfileView extends GetView<ProfileController> {
           AppCard(
             child: Column(
               children: [
-                ListTile(
+                _ProfileActionTile(
                   onTap: () async {
                     String title = 'Welcome to ';
                     String playStoreAppUrl =
@@ -363,15 +304,11 @@ class ProfileView extends GetView<ProfileController> {
                       ShareParams(text: sharedText, subject: title),
                     );
                   },
-                  dense: true,
-                  leading: const Icon(Icons.share),
-                  title: const Text(
-                    'Share App',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: LucideIcons.share2,
+                  label: 'Share App',
+                  iconColor: AppColors.accent,
                 ),
-                ListTile(
+                _ProfileActionTile(
                   onTap: () {
                     final Uri emailLaunchUri = Uri(
                       scheme: 'mailto',
@@ -380,33 +317,21 @@ class ProfileView extends GetView<ProfileController> {
 
                     launchUrl(emailLaunchUri);
                   },
-                  dense: true,
-                  leading: Icon(MdiIcons.help),
-                  title: const Text(
-                    'Help & Feedback',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: LucideIcons.messageCircleQuestion,
+                  label: 'Help & Feedback',
+                  iconColor: AppColors.accent,
                 ),
-                ListTile(
+                _ProfileActionTile(
                   onTap: () => Get.to(() => const PrivacyPolicyView()),
-                  dense: true,
-                  leading: Icon(MdiIcons.fileDocument),
-                  title: const Text(
-                    'Privacy Policy',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: LucideIcons.shieldCheck,
+                  label: 'Privacy Policy',
+                  iconColor: AppColors.accent,
                 ),
-                ListTile(
+                _ProfileActionTile(
                   onTap: () => Get.to(() => const TermsAndConditionsView()),
-                  dense: true,
-                  leading: Icon(MdiIcons.fileDocument),
-                  title: const Text(
-                    'Terms & Conditions',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: LucideIcons.scrollText,
+                  label: 'Terms & Conditions',
+                  iconColor: AppColors.accent,
                 ),
               ],
             ),
@@ -415,33 +340,13 @@ class ProfileView extends GetView<ProfileController> {
           AppCard(
             child: Obx(() {
               final isSigningOut = _authController.authLoading.value;
-              return ListTile(
+              return _ProfileActionTile(
                 onTap: isSigningOut ? null : () => _confirmSignOut(context),
-                dense: true,
-                leading: isSigningOut
-                    ? const SizedBox.square(
-                        dimension: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.error,
-                        ),
-                      )
-                    : const Icon(Icons.logout_rounded, color: AppColors.error),
-                title: Text(
-                  isSigningOut ? 'Logging out…' : 'Log Out',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.error,
-                  ),
-                ),
-                trailing: isSigningOut
-                    ? null
-                    : const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: AppColors.error,
-                      ),
+                icon: LucideIcons.logOut,
+                label: isSigningOut ? 'Logging out…' : 'Log Out',
+                iconColor: AppColors.error,
+                textColor: AppColors.error,
+                isLoading: isSigningOut,
               );
             }),
           ),
@@ -478,5 +383,63 @@ class ProfileView extends GetView<ProfileController> {
     if (shouldSignOut == true) {
       _authController.tryToSignOut();
     }
+  }
+}
+
+class _ProfileActionTile extends StatelessWidget {
+  const _ProfileActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.iconColor = AppColors.primary,
+    this.textColor = AppColors.textPrimary,
+    this.isLoading = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final Color iconColor;
+  final Color textColor;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      minTileHeight: 64,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+      horizontalTitleGap: 12,
+      leading: Container(
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.11),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: isLoading
+            ? SizedBox.square(
+                dimension: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: iconColor,
+                ),
+              )
+            : Icon(icon, size: 21, color: iconColor),
+      ),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontSize: 15.5,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+      ),
+      trailing: isLoading
+          ? null
+          : Icon(LucideIcons.chevronRight, size: 19, color: iconColor),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
   }
 }

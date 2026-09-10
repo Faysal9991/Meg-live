@@ -13,6 +13,7 @@ import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/no_v
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class RoomDisplayLayout {
   static Widget displayScreenView({
@@ -403,7 +404,7 @@ class RoomDisplayLayout {
                         : null,
                   ),
                   child: Icon(
-                    Icons.close,
+                    LucideIcons.x,
                     // color: AppColors.surface,
                     color: AppColors.error,
                     size: livekitStreamingController.pkState.value

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class PrepareToLiveView extends StatefulWidget {
   const PrepareToLiveView({super.key, required this.camera});
@@ -114,7 +115,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                       child: const Row(
                         children: [
                           Icon(
-                            Icons.visibility,
+                            LucideIcons.eye,
                             color: AppColors.surface,
                             size: 16.0,
                           ),
@@ -208,8 +209,8 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                       ),
                     ),
                     CircleButton(
-                      icon: Icons.close,
-                      iconSize: 32,
+                      icon: LucideIcons.x,
+                      iconSize: 20,
                       onPressed: () => Get.back(),
                     ),
                   ],

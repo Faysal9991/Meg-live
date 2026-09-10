@@ -1,7 +1,7 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
-import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ParticipantTrack {
   ParticipantTrack({
@@ -48,7 +48,7 @@ class ParticipantInfoWidget extends StatelessWidget {
             ? const Padding(
                 padding: EdgeInsets.only(left: 5),
                 child: Icon(
-                  EvaIcons.monitor,
+                  LucideIcons.monitor,
                   color: AppColors.surface,
                   size: 16,
                 ),
@@ -56,7 +56,7 @@ class ParticipantInfoWidget extends StatelessWidget {
             : Padding(
                 padding: const EdgeInsets.only(left: 5),
                 child: Icon(
-                  audioAvailable ? EvaIcons.mic : EvaIcons.micOff,
+                  audioAvailable ? LucideIcons.mic : LucideIcons.micOff,
                   color: audioAvailable ? AppColors.surface : AppColors.error,
                   size: 16,
                 ),
@@ -66,8 +66,8 @@ class ParticipantInfoWidget extends StatelessWidget {
             padding: const EdgeInsets.only(left: 5),
             child: Icon(
               connectionQuality == ConnectionQuality.poor
-                  ? EvaIcons.wifiOffOutline
-                  : EvaIcons.wifi,
+                  ? LucideIcons.wifiOff
+                  : LucideIcons.wifi,
               color: {
                 ConnectionQuality.excellent: AppColors.success,
                 ConnectionQuality.good: AppColors.warning,

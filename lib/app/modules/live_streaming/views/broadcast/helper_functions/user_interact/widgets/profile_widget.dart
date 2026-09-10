@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/profile/controllers/profile_controller.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ProfileWidget extends StatefulWidget {
   const ProfileWidget({
@@ -47,18 +48,11 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           children: [
             Text(
               'User ID: ${widget.data['uid']}',
-              style: const TextStyle(
-                color: AppColors.surface,
-              ),
+              style: const TextStyle(color: AppColors.surface),
             ),
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
             const Center(
-              child: SpinKitHourGlass(
-                color: AppColors.surface,
-                size: 50.0,
-              ),
+              child: SpinKitHourGlass(color: AppColors.surface, size: 50.0),
             ),
           ],
         );
@@ -71,9 +65,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
         mainAxisAlignment: MainAxisAlignment.center,
         // mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(
-            height: 8,
-          ),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -89,21 +81,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(
-                    width: 4,
-                  ),
+                  const SizedBox(width: 4),
                   const Text(
                     'Fans',
-                    style: TextStyle(
-                      color: AppColors.surface,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: AppColors.surface, fontSize: 16),
                   ),
                 ],
               ),
-              const SizedBox(
-                width: 32,
-              ),
+              const SizedBox(width: 32),
               //     Row(
               //       mainAxisAlignment: MainAxisAlignment.center,
               //       crossAxisAlignment: CrossAxisAlignment.center,
@@ -147,14 +132,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.diamond,
-                    color: AppColors.info,
-                    size: 16,
-                  ),
-                  const SizedBox(
-                    width: 4,
-                  ),
+                  const Icon(LucideIcons.gem, color: AppColors.info, size: 16),
+                  const SizedBox(width: 4),
                   Text(
                     '${widget.profileController.profileForHost.value['diamonds']}',
                     // '${(data['sender_diamonds'] ?? data['diamonds']) / 1000}K',
@@ -163,9 +142,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       fontSize: 12,
                     ),
                   ),
-                  const SizedBox(
-                    width: 16,
-                  ),
+                  const SizedBox(width: 16),
                   // Image.asset(
                   //   'images/icons/coin.png',
                   //   width: 16,
@@ -183,9 +160,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   //     fontSize: 12,
                   //   ),
                   // ),
-                  const SizedBox(
-                    width: 16,
-                  ),
+                  const SizedBox(width: 16),
                   Text(
                     'User ID: ${widget.data['uid']}',
                     style: const TextStyle(
@@ -197,9 +172,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
               ),
             ],
           ),
-          const SizedBox(
-            height: 16,
-          ),
+          const SizedBox(height: 16),
           ///////////////
           // TODO: Need to uncomment and modify
           // FutureBuilder(
@@ -251,14 +224,17 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     ElevatedButton.icon(
                       onPressed: () async {
                         if (widget
-                                .profileController.loadingPerformFollow.value ==
+                                .profileController
+                                .loadingPerformFollow
+                                .value ==
                             widget.data['uid']) {
                           return;
                         }
                         List<dynamic> followers = await widget.profileController
                             .performFollow(uid: widget.data['uid']);
-                        widget.profileController
-                            .setHostAccountFollowers(followers);
+                        widget.profileController.setHostAccountFollowers(
+                          followers,
+                        );
                         widget.onUpdateAction({
                           'action': 'followers',
                           'uid': widget.data['uid'],
@@ -266,15 +242,23 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                         });
                       },
                       icon: Obx(() {
-                        return widget.profileController.loadingPerformFollow
+                        return widget
+                                    .profileController
+                                    .loadingPerformFollow
                                     .value !=
                                 widget.data['uid']
                             ? Icon(
                                 !widget.profileController.hostAccountFollowers
-                                        .contains(widget.authController.profile
-                                            .value.user!.uid!)
-                                    ? Icons.add
-                                    : Icons.remove,
+                                        .contains(
+                                          widget
+                                              .authController
+                                              .profile
+                                              .value
+                                              .user!
+                                              .uid!,
+                                        )
+                                    ? LucideIcons.plus
+                                    : LucideIcons.minus,
                                 // color: !profileController.hostAccountFollowers
                                 //         .contains(authController
                                 //             .profile.value.user!.uid!)
@@ -284,15 +268,21 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                 size: 12,
                               )
                             : Icon(
-                                Icons.refresh_rounded,
+                                LucideIcons.refreshCw,
                                 color: Theme.of(context).primaryColor,
                                 size: 12,
                               );
                       }),
                       label: Obx(() {
                         return !widget.profileController.hostAccountFollowers
-                                .contains(widget
-                                    .authController.profile.value.user!.uid!)
+                                .contains(
+                                  widget
+                                      .authController
+                                      .profile
+                                      .value
+                                      .user!
+                                      .uid!,
+                                )
                             ? const Text(
                                 'Follow',
                                 style: TextStyle(
@@ -314,15 +304,15 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                         //     MediaQuery.of(context).size.width - 90, 40),
                       ),
                     ),
-                    const SizedBox(
-                      width: 8,
-                    ),
+                    const SizedBox(width: 8),
                     widget.streamingController.channelName.value ==
                             widget.authController.profile.value.user!.uid
                                 .toString()
                         ? ElevatedButton.icon(
                             onPressed: () async {
-                              if (widget.profileController.loadingPerformBlock
+                              if (widget
+                                      .profileController
+                                      .loadingPerformBlock
                                       .value ==
                                   widget.data['uid']) {
                                 return;
@@ -337,27 +327,35 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                               });
                             },
                             icon: Obx(() {
-                              return widget.profileController
-                                          .loadingPerformBlock.value !=
+                              return widget
+                                          .profileController
+                                          .loadingPerformBlock
+                                          .value !=
                                       widget.data['uid']
                                   ? Icon(
-                                      !widget.authController.profile.value
+                                      !widget
+                                              .authController
+                                              .profile
+                                              .value
                                               .blocks!
                                               .contains(widget.data['uid'])
-                                          ? Icons.block
-                                          : Icons.flag,
+                                          ? LucideIcons.ban
+                                          : LucideIcons.flag,
                                       color: AppColors.surface,
                                       size: 12,
                                     )
                                   : Icon(
-                                      Icons.refresh_rounded,
+                                      LucideIcons.refreshCw,
                                       color: Theme.of(context).primaryColor,
                                       size: 12,
                                     );
                             }),
                             label: Obx(() {
                               return !widget
-                                      .authController.profile.value.blocks!
+                                      .authController
+                                      .profile
+                                      .value
+                                      .blocks!
                                       .contains(widget.data['uid'])
                                   ? const Text(
                                       'Block',
@@ -375,8 +373,9 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                     );
                             }),
                             style: ElevatedButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
                               // fixedSize: Size(
                               //     MediaQuery.of(context).size.width - 90, 40),
                             ),
@@ -385,9 +384,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     widget.streamingController.channelName.value ==
                             widget.authController.profile.value.user!.uid
                                 .toString()
-                        ? const SizedBox(
-                            width: 8,
-                          )
+                        ? const SizedBox(width: 8)
                         : Container(),
                     ElevatedButton(
                       onPressed: () {

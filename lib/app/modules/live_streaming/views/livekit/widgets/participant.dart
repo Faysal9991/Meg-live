@@ -1,9 +1,9 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
-import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'no_video.dart';
 import 'participant_info.dart';
@@ -333,13 +333,13 @@ class _RemoteParticipantWidgetState
         if (videoPublication != null)
           RemoteTrackPublicationMenuWidget(
             pub: videoPublication!,
-            icon: isScreenShare ? EvaIcons.monitor : EvaIcons.video,
+            icon: isScreenShare ? LucideIcons.monitor : LucideIcons.video,
           ),
         // Menu for RemoteTrackPublication<RemoteAudioTrack>
         if (firstAudioPublication != null && !isScreenShare)
           RemoteTrackPublicationMenuWidget(
             pub: firstAudioPublication!,
-            icon: EvaIcons.volumeUp,
+            icon: LucideIcons.volume2,
           ),
       ],
     ),

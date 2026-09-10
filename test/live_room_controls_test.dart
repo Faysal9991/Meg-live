@@ -13,6 +13,7 @@ import 'package:flutter_svga/flutter_svga.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'test_helpers.dart';
 
@@ -250,7 +251,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.byIcon(Icons.close));
+    await tester.tap(find.byIcon(LucideIcons.x));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('Do you wanna close?'), findsOneWidget);
@@ -258,7 +259,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(LiveStreamingView), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.visibility));
+    await tester.tap(find.byIcon(LucideIcons.eye));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('VIEWS'), findsOneWidget);
@@ -268,17 +269,7 @@ void main() {
     Navigator.of(tester.element(find.text('WAITING'))).pop();
     await tester.pumpAndSettle();
 
-    await tester.tap(
-      find
-          .byWidgetPredicate(
-            (widget) =>
-                widget is Image &&
-                widget.image is AssetImage &&
-                (widget.image as AssetImage).assetName ==
-                    'assets/others/gift.png',
-          )
-          .last,
-    );
+    await tester.tap(find.byIcon(LucideIcons.gift));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('SEND GIFTS'), findsOneWidget);
@@ -289,7 +280,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.byIcon(Icons.close));
+    await tester.tap(find.byIcon(LucideIcons.x));
     await tester.pumpAndSettle();
     final confirm = tester
         .widget<TextButton>(find.widgetWithText(TextButton, 'OK'))

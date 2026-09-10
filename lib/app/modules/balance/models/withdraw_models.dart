@@ -113,15 +113,17 @@ class PaymentMethodOption {
     required this.name,
     required this.requiresAccountType,
     required this.raw,
+    this.accountTypes = const [],
   });
 
   final int id;
   final String name;
   final bool requiresAccountType;
   final Map<String, dynamic> raw;
+  final List<String> accountTypes;
 
   factory PaymentMethodOption.fromJson(Map<String, dynamic> json) {
-    final accountTypes = json['account_types'];
+    final accountTypes = _parseAccountTypes(json['account_types']);
     return PaymentMethodOption(
       id: intFromDynamic(json['id']),
       name: firstStringFromKeys(json, const [
@@ -130,26 +132,31 @@ class PaymentMethodOption {
         'payment_method_name',
         'label',
       ], defaultValue: 'Method #${intFromDynamic(json['id'])}'),
-      requiresAccountType: _hasAccountTypes(accountTypes),
+      requiresAccountType: accountTypes.isNotEmpty,
       raw: Map<String, dynamic>.from(json),
+      accountTypes: accountTypes,
     );
   }
 
-  static bool _hasAccountTypes(dynamic accountTypes) {
+  static List<String> _parseAccountTypes(dynamic accountTypes) {
     if (accountTypes == null) {
-      return false;
+      return const [];
     }
     if (accountTypes is List) {
-      for (final dynamic accountType in accountTypes) {
-        if (nullableStringFromDynamic(accountType) != null) {
-          return true;
-        }
-      }
-      return false;
+      return accountTypes
+          .map(nullableStringFromDynamic)
+          .whereType<String>()
+          .toSet()
+          .toList();
     }
     if (accountTypes is Map) {
-      return accountTypes.isNotEmpty;
+      return accountTypes.values
+          .map(nullableStringFromDynamic)
+          .whereType<String>()
+          .toSet()
+          .toList();
     }
-    return nullableStringFromDynamic(accountTypes) != null;
+    final accountType = nullableStringFromDynamic(accountTypes);
+    return accountType == null ? const [] : [accountType];
   }
 }

@@ -3,10 +3,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../exts.dart';
 
@@ -15,11 +15,8 @@ class ControlsWidget extends StatefulWidget {
   final Room room;
   final LocalParticipant participant;
 
-  const ControlsWidget(
-    this.room,
-    this.participant, {
-    Key? key,
-  }) : super(key: key);
+  const ControlsWidget(this.room, this.participant, {Key? key})
+    : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _ControlsWidgetState();
@@ -41,8 +38,9 @@ class _ControlsWidgetState extends State<ControlsWidget> {
   void initState() {
     super.initState();
     participant.addListener(_onChange);
-    _subscription = Hardware.instance.onDeviceChange.stream
-        .listen((List<MediaDevice> devices) {
+    _subscription = Hardware.instance.onDeviceChange.stream.listen((
+      List<MediaDevice> devices,
+    ) {
       _loadDevices(devices);
     });
     Hardware.instance.enumerateDevices().then(_loadDevices);
@@ -262,10 +260,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 15,
-        horizontal: 15,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
       child: Wrap(
         alignment: WrapAlignment.center,
         spacing: 5,
@@ -273,12 +268,12 @@ class _ControlsWidgetState extends State<ControlsWidget> {
         children: [
           IconButton(
             onPressed: _unpublishAll,
-            icon: const Icon(EvaIcons.closeCircleOutline),
+            icon: const Icon(LucideIcons.circleX),
             tooltip: 'Unpublish all',
           ),
           if (participant.isMicrophoneEnabled())
             PopupMenuButton<MediaDevice>(
-              icon: const Icon(Icons.settings_voice),
+              icon: const Icon(LucideIcons.audioLines),
               itemBuilder: (BuildContext context) {
                 return [
                   PopupMenuItem<MediaDevice>(
@@ -286,7 +281,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                     onTap: isMuted ? _enableAudio : _disableAudio,
                     child: const ListTile(
                       leading: Icon(
-                        EvaIcons.micOff,
+                        LucideIcons.micOff,
                         color: AppColors.surface,
                       ),
                       title: Text('Mute Microphone'),
@@ -297,40 +292,41 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                       return PopupMenuItem<MediaDevice>(
                         value: device,
                         child: ListTile(
-                          leading: (device.deviceId ==
+                          leading:
+                              (device.deviceId ==
                                   widget.room.selectedAudioInputDeviceId)
                               ? const Icon(
-                                  EvaIcons.checkmarkSquare,
+                                  LucideIcons.squareCheckBig,
                                   color: AppColors.surface,
                                 )
                               : const Icon(
-                                  EvaIcons.square,
+                                  LucideIcons.square,
                                   color: AppColors.surface,
                                 ),
                           title: Text(device.label),
                         ),
                         onTap: () => _selectAudioInput(device),
                       );
-                    }).toList()
+                    }).toList(),
                 ];
               },
             )
           else
             IconButton(
               onPressed: _enableAudio,
-              icon: const Icon(EvaIcons.micOff),
+              icon: const Icon(LucideIcons.micOff),
               tooltip: 'un-mute audio',
             ),
           if (!Platform.isAndroid)
             PopupMenuButton<MediaDevice>(
-              icon: const Icon(Icons.volume_up),
+              icon: const Icon(LucideIcons.volume2),
               itemBuilder: (BuildContext context) {
                 return [
                   const PopupMenuItem<MediaDevice>(
                     value: null,
                     child: ListTile(
                       leading: Icon(
-                        EvaIcons.speaker,
+                        LucideIcons.speaker,
                         color: AppColors.surface,
                       ),
                       title: Text('Select Audio Output'),
@@ -341,21 +337,22 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                       return PopupMenuItem<MediaDevice>(
                         value: device,
                         child: ListTile(
-                          leading: (device.deviceId ==
+                          leading:
+                              (device.deviceId ==
                                   widget.room.selectedAudioOutputDeviceId)
                               ? const Icon(
-                                  EvaIcons.checkmarkSquare,
+                                  LucideIcons.squareCheckBig,
                                   color: AppColors.surface,
                                 )
                               : const Icon(
-                                  EvaIcons.square,
+                                  LucideIcons.square,
                                   color: AppColors.surface,
                                 ),
                           title: Text(device.label),
                         ),
                         onTap: () => _selectAudioOutput(device),
                       );
-                    }).toList()
+                    }).toList(),
                 ];
               },
             ),
@@ -367,12 +364,13 @@ class _ControlsWidgetState extends State<ControlsWidget> {
               //     : null,
               onPressed: _setSpeakerphoneOn,
               icon: Icon(
-                  _speakerphoneOn ? Icons.speaker_phone : Icons.phone_android),
+                _speakerphoneOn ? LucideIcons.speaker : LucideIcons.smartphone,
+              ),
               tooltip: 'Switch SpeakerPhone',
             ),
           if (participant.isCameraEnabled())
             PopupMenuButton<MediaDevice>(
-              icon: const Icon(EvaIcons.video),
+              icon: const Icon(LucideIcons.video),
               itemBuilder: (BuildContext context) {
                 return [
                   PopupMenuItem<MediaDevice>(
@@ -380,7 +378,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                     onTap: _disableVideo,
                     child: const ListTile(
                       leading: Icon(
-                        EvaIcons.videoOff,
+                        LucideIcons.videoOff,
                         color: AppColors.surface,
                       ),
                       title: Text('Disable Camera'),
@@ -391,34 +389,37 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                       return PopupMenuItem<MediaDevice>(
                         value: device,
                         child: ListTile(
-                          leading: (device.deviceId ==
+                          leading:
+                              (device.deviceId ==
                                   widget.room.selectedVideoInputDeviceId)
                               ? const Icon(
-                                  EvaIcons.checkmarkSquare,
+                                  LucideIcons.squareCheckBig,
                                   color: AppColors.surface,
                                 )
                               : const Icon(
-                                  EvaIcons.square,
+                                  LucideIcons.square,
                                   color: AppColors.surface,
                                 ),
                           title: Text(device.label),
                         ),
                         onTap: () => _selectVideoInput(device),
                       );
-                    }).toList()
+                    }).toList(),
                 ];
               },
             )
           else
             IconButton(
               onPressed: _enableVideo,
-              icon: const Icon(EvaIcons.videoOff),
+              icon: const Icon(LucideIcons.videoOff),
               tooltip: 'un-mute video',
             ),
           IconButton(
-            icon: Icon(position == CameraPosition.back
-                ? EvaIcons.camera
-                : EvaIcons.person),
+            icon: Icon(
+              position == CameraPosition.back
+                  ? LucideIcons.camera
+                  : LucideIcons.userRound,
+            ),
             onPressed: () => _toggleCamera(),
             tooltip: 'toggle camera',
           ),
@@ -436,17 +437,17 @@ class _ControlsWidgetState extends State<ControlsWidget> {
           //   ),
           IconButton(
             onPressed: _onTapDisconnect,
-            icon: const Icon(EvaIcons.closeCircle),
+            icon: const Icon(LucideIcons.circleX),
             tooltip: 'disconnect',
           ),
           IconButton(
             onPressed: _onTapSendData,
-            icon: const Icon(EvaIcons.paperPlane),
+            icon: const Icon(LucideIcons.send),
             tooltip: 'send demo data',
           ),
           IconButton(
             onPressed: _onTapUpdateSubscribePermission,
-            icon: const Icon(EvaIcons.settings2),
+            icon: const Icon(LucideIcons.settings2),
             tooltip: 'Subscribe permission',
           ),
           // IconButton(

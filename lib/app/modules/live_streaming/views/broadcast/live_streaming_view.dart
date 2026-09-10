@@ -19,13 +19,13 @@ import 'package:doyel_live/app/modules/live_streaming/views/broadcast/display/vi
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/call_waiting_bottom_sheet_function.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_info_bottom_sheet_function.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_interact/user_interact_bottom_sheet_funtion.dart';
+import 'package:doyel_live/app/modules/live_streaming/views/broadcast/widgets/live_room_icon_button.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/participant_info.dart';
 import 'package:doyel_live/app/modules/nav/views/nav_view.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/helper_functions.dart';
 import 'package:doyel_live/app/widgets/animated_media_widget.dart';
-import 'package:doyel_live/app/widgets/circle_button.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
 import 'package:emojis/emoji.dart';
 import 'package:flutter/foundation.dart';
@@ -35,6 +35,7 @@ import 'package:headset_connection_event/headset_event.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:marquee/marquee.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:web_socket_client/web_socket_client.dart';
@@ -949,7 +950,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         ),
                       ),
                       errorWidget: const Icon(
-                        Icons.auto_awesome,
+                        LucideIcons.sparkles,
                         color: AppColors.premium,
                         size: 100,
                       ),
@@ -957,7 +958,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                   )
                 else
                   const Icon(
-                    Icons.auto_awesome,
+                    LucideIcons.sparkles,
                     color: AppColors.premium,
                     size: 100,
                   ),
@@ -1110,10 +1111,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               ),
                               child: Row(
                                 children: [
-                                  Image.asset(
-                                    'assets/others/diamond.png',
-                                    width: 16,
-                                    height: 16,
+                                  const Icon(
+                                    LucideIcons.gem,
+                                    color: AppColors.onMedia,
+                                    size: 15,
                                   ),
                                   const SizedBox(width: 8),
                                   Obx(() {
@@ -1137,11 +1138,21 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               borderRadius: BorderRadius.circular(20.0),
                             ),
                             child: Obx(() {
-                              return Text(
-                                '⭐ ${_livekitStreamingController.broadcasterDiamonds.value < 100000 ? 0 : (_livekitStreamingController.broadcasterDiamonds.value / 100000).floor()}',
-                                style: const TextStyle(
-                                  color: AppColors.surface,
-                                ),
+                              return Row(
+                                children: [
+                                  const Icon(
+                                    LucideIcons.sparkles,
+                                    color: AppColors.premium,
+                                    size: 15,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${_livekitStreamingController.broadcasterDiamonds.value < 100000 ? 0 : (_livekitStreamingController.broadcasterDiamonds.value / 100000).floor()}',
+                                    style: const TextStyle(
+                                      color: AppColors.onMedia,
+                                    ),
+                                  ),
+                                ],
                               );
                             }),
                           ),
@@ -1169,9 +1180,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               child: Row(
                                 children: [
                                   const Icon(
-                                    Icons.visibility,
-                                    color: AppColors.surface,
-                                    size: 16.0,
+                                    LucideIcons.eye,
+                                    color: AppColors.onMedia,
+                                    size: 15,
                                   ),
                                   const SizedBox(width: 8),
                                   Obx(() {
@@ -1199,13 +1210,11 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                     return Container();
                                   }
 
-                                  return CircleButton(
-                                    depth: 0,
-                                    icon: Icons.close_outlined,
-                                    iconSize: 24.0,
-                                    minHeight: 32,
-                                    minWidth: 32,
+                                  return LiveRoomIconButton(
+                                    icon: LucideIcons.x,
+                                    label: 'End live room',
                                     backgroundColor: AppColors.premium,
+                                    iconColor: AppColors.premiumText,
                                     onPressed: () {
                                       rShowAlertDialog(
                                         context: context,
@@ -1449,10 +1458,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                                         90000
                                                     ? 'assets/logos/vvip_logo.png'
                                                     : 'assets/logos/vip_logo.png',
-                                                width: 22,
+                                                width: 25,
                                                 height: 8,
                                                 fit: BoxFit.fill,
-                                                color: AppColors.premium,
                                               ),
                                             )
                                           : Text(
@@ -1525,12 +1533,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                 Positioned(
                   top: 4,
                   right: 0,
-                  child: CircleButton(
-                    depth: 0,
-                    icon: Icons.close,
-                    iconSize: 24,
-                    minHeight: 32,
-                    minWidth: 32,
+                  child: LiveRoomIconButton(
+                    icon: LucideIcons.x,
+                    label: 'Leave live room',
                     // onPressed: () => Get.back(),
                     onPressed: () {
                       rShowAlertDialog(
@@ -1730,8 +1735,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                     }
                                   }
                                 },
+                                tooltip: 'Send comment',
                                 icon: Icon(
-                                  Icons.send,
+                                  LucideIcons.send,
+                                  size: 19,
                                   color:
                                       widget.isBroadcaster ||
                                           _livekitStreamingController
@@ -1745,42 +1752,29 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           }),
                         ),
                         // Gifts
-                        Container(
-                          padding: const EdgeInsets.all(4.5),
-                          decoration: BoxDecoration(
-                            color: AppColors.overlay,
-                            borderRadius: BorderRadius.circular(100.0),
-                          ),
-                          child: Center(
-                            child: InkWell(
-                              onTap: () {
-                                _livekitStreamingController.setSelectedGift(
-                                  giftType: '',
-                                  id: 0,
-                                );
-                                _livekitStreamingController.setUserInteractTab(
-                                  tab: 'gifts',
-                                );
+                        LiveRoomIconButton(
+                          icon: LucideIcons.gift,
+                          label: 'Send a gift',
+                          onPressed: () {
+                            _livekitStreamingController.setSelectedGift(
+                              giftType: '',
+                              id: 0,
+                            );
+                            _livekitStreamingController.setUserInteractTab(
+                              tab: 'gifts',
+                            );
 
-                                showUserInteractBottomSheet(
-                                  context: context,
-                                  data: {
-                                    'uid': int.parse(widget.channelName),
-                                    'full_name': widget.fullName,
-                                    'profile_image': widget.profileImage,
-                                    'vvip_or_vip_preference':
-                                        _hostVipPreference,
-                                  },
-                                  onUpdateAction: onUpdateAction,
-                                );
+                            showUserInteractBottomSheet(
+                              context: context,
+                              data: {
+                                'uid': int.parse(widget.channelName),
+                                'full_name': widget.fullName,
+                                'profile_image': widget.profileImage,
+                                'vvip_or_vip_preference': _hostVipPreference,
                               },
-                              child: Image.asset(
-                                'assets/others/gift.png',
-                                width: 24,
-                                height: 24,
-                              ),
-                            ),
-                          ),
+                              onUpdateAction: onUpdateAction,
+                            );
+                          },
                         ),
                         // Join
                         GestureDetector(
@@ -1802,8 +1796,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             child: Stack(
                               children: [
                                 Center(
-                                  child: CircleButton(
-                                    depth: 0,
+                                  child: LiveRoomIconButton(
                                     onPressed: () {
                                       _livekitStreamingController.setCallTab(
                                         tabName: 'waiting',
@@ -1817,10 +1810,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                         onUpdateAction: onUpdateAction,
                                       );
                                     },
-                                    icon: Icons.call,
-                                    iconSize: 24,
-                                    minHeight: 32,
-                                    minWidth: 32,
+                                    icon: LucideIcons.phone,
+                                    label: 'Join live call',
+                                    size: 40,
+                                    iconSize: 19,
                                     backgroundColor: AppColors.success,
                                     iconColor: AppColors.surface,
                                   ),
@@ -2098,12 +2091,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       // Share
-                      CircleButton(
-                        depth: 0,
-                        icon: Icons.share,
-                        iconSize: 24.0,
-                        minHeight: 32,
-                        minWidth: 32,
+                      LiveRoomIconButton(
+                        icon: LucideIcons.share2,
+                        label: 'Share live room',
                         backgroundColor: Theme.of(context).primaryColor,
                         iconColor: AppColors.onMediaMuted,
                         onPressed: () {
@@ -2132,24 +2122,11 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               if (!isExpanded || activeCallCount < 2) {
                                 return Container();
                               }
-                              return RawMaterialButton(
+                              return LiveRoomIconButton(
                                 onPressed: _onHostSwitchPosition,
-                                shape: const CircleBorder(),
-                                elevation: 0,
-                                focusElevation: 0,
-                                hoverElevation: 0,
-                                highlightElevation: 0,
-                                fillColor: AppColors.overlay,
-                                padding: const EdgeInsets.all(6.0),
-                                constraints: const BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                child: const Icon(
-                                  Icons.swap_horiz,
-                                  color: AppColors.onMediaMuted,
-                                  size: 22.0,
-                                ),
+                                icon: LucideIcons.arrowUpDown,
+                                label: 'Swap guest position',
+                                iconColor: AppColors.onMediaMuted,
                               );
                             }),
                       // Allow Comment and Emoji sends
@@ -2161,7 +2138,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                   .value) {
                                 return Container();
                               }
-                              return RawMaterialButton(
+                              return LiveRoomIconButton(
                                 onPressed: () {
                                   bool allowSend = _livekitStreamingController
                                       .allowCommentAndEmojiSend
@@ -2185,34 +2162,24 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                         }),
                                   );
                                 },
-                                shape: const CircleBorder(),
-                                elevation: 0,
-                                focusElevation: 0,
-                                hoverElevation: 0,
-                                highlightElevation: 0,
-                                // fillColor: _livekitStreamingController.muted.value
-                                //     ? AppColors.info
-                                //     : AppColors.surface,
-                                fillColor: AppColors.overlay,
-                                padding: const EdgeInsets.all(6.0),
-                                constraints: const BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                child: Icon(
-                                  _livekitStreamingController
-                                          .allowCommentAndEmojiSend
-                                          .value
-                                      ? Icons.comment
-                                      : Icons.no_accounts_outlined,
-                                  color:
-                                      _livekitStreamingController
-                                          .allowCommentAndEmojiSend
-                                          .value
-                                      ? AppColors.success
-                                      : AppColors.error,
-                                  size: 24.0,
-                                ),
+                                icon:
+                                    _livekitStreamingController
+                                        .allowCommentAndEmojiSend
+                                        .value
+                                    ? LucideIcons.messageCircle
+                                    : LucideIcons.messageCircleOff,
+                                label:
+                                    _livekitStreamingController
+                                        .allowCommentAndEmojiSend
+                                        .value
+                                    ? 'Disable comments and reactions'
+                                    : 'Enable comments and reactions',
+                                iconColor:
+                                    _livekitStreamingController
+                                        .allowCommentAndEmojiSend
+                                        .value
+                                    ? AppColors.success
+                                    : AppColors.error,
                               );
                             }),
                       // Audio Mute
@@ -2233,31 +2200,17 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                 -1) {
                           return Container();
                         }
-                        return RawMaterialButton(
+                        return LiveRoomIconButton(
                           onPressed: _onToggleMute,
-                          shape: const CircleBorder(),
-                          elevation: 0,
-                          focusElevation: 0,
-                          hoverElevation: 0,
-                          highlightElevation: 0,
-                          // fillColor: _livekitStreamingController.muted.value
-                          //     ? AppColors.info
-                          //     : AppColors.surface,
-                          fillColor: AppColors.overlay,
-                          padding: const EdgeInsets.all(6.0),
-                          constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                          child: Icon(
-                            _livekitStreamingController.muted.value
-                                ? Icons.mic_off
-                                : Icons.mic,
-                            color: _livekitStreamingController.muted.value
-                                ? AppColors.error
-                                : AppColors.onMediaMuted,
-                            size: 16.0,
-                          ),
+                          icon: _livekitStreamingController.muted.value
+                              ? LucideIcons.micOff
+                              : LucideIcons.mic,
+                          label: _livekitStreamingController.muted.value
+                              ? 'Unmute microphone'
+                              : 'Mute microphone',
+                          iconColor: _livekitStreamingController.muted.value
+                              ? AppColors.error
+                              : AppColors.onMediaMuted,
                         );
                       }),
                       // Camera On/Off
@@ -2278,29 +2231,18 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                 -1) {
                           return Container();
                         }
-                        return RawMaterialButton(
+                        return LiveRoomIconButton(
                           onPressed: _onToggleVideoEnable,
-                          shape: const CircleBorder(),
-                          elevation: 0,
-                          focusElevation: 0,
-                          hoverElevation: 0,
-                          highlightElevation: 0,
-                          fillColor: AppColors.overlay,
-                          padding: const EdgeInsets.all(6.0),
-                          constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                          child: Icon(
-                            _livekitStreamingController.videoDisabled.value
-                                ? Icons.videocam_off
-                                : Icons.videocam,
-                            color:
-                                _livekitStreamingController.videoDisabled.value
-                                ? AppColors.error
-                                : AppColors.onMediaMuted,
-                            size: 16.0,
-                          ),
+                          icon: _livekitStreamingController.videoDisabled.value
+                              ? LucideIcons.videoOff
+                              : LucideIcons.video,
+                          label: _livekitStreamingController.videoDisabled.value
+                              ? 'Turn camera on'
+                              : 'Turn camera off',
+                          iconColor:
+                              _livekitStreamingController.videoDisabled.value
+                              ? AppColors.error
+                              : AppColors.onMediaMuted,
                         );
                       }),
                       // Camera Switch
@@ -2322,24 +2264,11 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                 -1) {
                           return Container();
                         }
-                        return RawMaterialButton(
+                        return LiveRoomIconButton(
                           onPressed: _onSwitchCamera,
-                          shape: const CircleBorder(),
-                          elevation: 0,
-                          focusElevation: 0,
-                          hoverElevation: 0,
-                          highlightElevation: 0,
-                          fillColor: AppColors.overlay,
-                          padding: const EdgeInsets.all(6.0),
-                          constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                          child: const Icon(
-                            Icons.switch_camera,
-                            color: AppColors.onMediaMuted,
-                            size: 16.0,
-                          ),
+                          icon: LucideIcons.switchCamera,
+                          label: 'Switch camera',
+                          iconColor: AppColors.onMediaMuted,
                         );
                       }),
                       Obx(() {
@@ -2352,8 +2281,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             -1) {
                           return Container();
                         }
-                        return CircleButton(
-                          depth: 0,
+                        return LiveRoomIconButton(
                           onPressed: () {
                             _livekitStreamingController
                                 .expandMediaController
@@ -2365,11 +2293,14 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               !_livekitStreamingController
                                   .expandMediaController
                                   .value
-                              ? Icons.arrow_circle_up_outlined
-                              : Icons.arrow_circle_down_outlined,
-                          iconSize: 24.0,
-                          minHeight: 32,
-                          minWidth: 32,
+                              ? LucideIcons.chevronUp
+                              : LucideIcons.chevronDown,
+                          label:
+                              !_livekitStreamingController
+                                  .expandMediaController
+                                  .value
+                              ? 'Show call controls'
+                              : 'Hide call controls',
                           iconColor:
                               !_livekitStreamingController
                                   .expandMediaController
@@ -2389,8 +2320,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         child: Row(
                           children: [
                             const Icon(
-                              Icons.favorite_border_outlined,
+                              LucideIcons.heart,
                               color: AppColors.onMediaMuted,
+                              size: 18,
                             ),
                             const SizedBox(width: 8),
                             Obx(() {
@@ -4066,7 +3998,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.diamond, color: AppColors.surface),
+                            const Icon(
+                              LucideIcons.gem,
+                              color: AppColors.surface,
+                            ),
                             Text(
                               '${data['diamonds']}',
                               style: const TextStyle(color: AppColors.surface),

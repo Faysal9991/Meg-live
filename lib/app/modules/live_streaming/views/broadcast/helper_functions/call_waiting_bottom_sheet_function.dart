@@ -11,6 +11,7 @@ import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/widgets/circle_button.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 bool _hasLiveRoomControlAccess({
   required LiveStreamingController streamingController,
@@ -222,29 +223,29 @@ void showCallWaitingBottomSheet({
                           InkWell(
                             onTap: () =>
                                 streamingController.setCallTab(tabName: 'live'),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  'LIVE',
-                                  style: TextStyle(
-                                    color:
-                                        streamingController.callTabName.value ==
-                                            'live'
-                                        ? Theme.of(context).primaryColor
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                'LIVE',
+                                style: TextStyle(
+                                  color:
+                                      streamingController.callTabName.value ==
+                                          'live'
+                                      ? Theme.of(context).primaryColor
                                       : AppColors.textSecondary,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                                          ),
+                            ),
+                          ),
                         if (!streamingController.isBroadcaster.value)
                           _buildSelfCallActionButton(
-                                        context: context,
+                            context: context,
                             streamingController: streamingController,
                             authController: authController,
                             onUpdateAction: onUpdateAction,
-                                ),
-                              ],
+                          ),
+                      ],
                     ),
                   );
                 }),
@@ -343,7 +344,7 @@ class _callRequestItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     CircleButton(
-                      icon: Icons.check,
+                      icon: LucideIcons.check,
                       iconSize: 24,
                       minWidth: 32,
                       minHeight: 32,
@@ -411,7 +412,7 @@ class _callRequestItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     CircleButton(
-                      icon: Icons.close,
+                      icon: LucideIcons.x,
                       iconSize: 24,
                       minWidth: 32,
                       minHeight: 32,
@@ -512,7 +513,9 @@ class _guestLiveItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     CircleButton(
-                      icon: data['muted'] ? Icons.mic_off : Icons.mic,
+                      icon: data['muted']
+                          ? LucideIcons.micOff
+                          : LucideIcons.mic,
                       iconSize: 24,
                       minWidth: 32,
                       minHeight: 32,
@@ -552,8 +555,8 @@ class _guestLiveItem extends StatelessWidget {
                     data['call_type'] == 'video'
                         ? CircleButton(
                             icon: data['video_disabled']
-                                ? Icons.videocam_off
-                                : Icons.videocam,
+                                ? LucideIcons.videoOff
+                                : LucideIcons.video,
                             iconSize: 16,
                             minWidth: 24,
                             minHeight: 24,
@@ -595,7 +598,7 @@ class _guestLiveItem extends StatelessWidget {
                         ? const SizedBox(width: 16)
                         : Container(),
                     CircleButton(
-                      icon: Icons.close,
+                      icon: LucideIcons.x,
                       iconSize: 24,
                       minWidth: 32,
                       minHeight: 32,

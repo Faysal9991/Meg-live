@@ -310,12 +310,22 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
           if (_showAccountTypeField) ...[
             const SizedBox(height: 16),
             AppInsetSurface(
-              child: TextField(
+              child: DropdownMenu<String>(
                 controller: _accountTypeController,
-                decoration: const InputDecoration(
-                  labelText: 'Account Type',
+                enableFilter: true,
+                requestFocusOnTap: true,
+                expandedInsets: EdgeInsets.zero,
+                label: const Text('Account Type'),
+                hintText: 'Select or enter account type',
+                inputDecorationTheme: const InputDecorationTheme(
                   border: OutlineInputBorder(),
                 ),
+                dropdownMenuEntries: _selectedPaymentMethod!.accountTypes
+                    .map(
+                      (type) =>
+                          DropdownMenuEntry<String>(value: type, label: type),
+                    )
+                    .toList(),
               ),
             ),
           ],

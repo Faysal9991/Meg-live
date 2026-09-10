@@ -143,7 +143,7 @@ class _VIPPackageViewState extends State<VIPPackageView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${data['price']} BDT',
+              '${data['price']} Diamonds',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 // color: AppColors.surface,

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:doyel_live/app/utils/model_parsers.dart';
 
 class TopHost {
@@ -26,17 +28,64 @@ class TopHost {
   final bool isModerator;
 
   factory TopHost.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] is Map
+        ? Map<String, dynamic>.from(json['user'])
+        : <String, dynamic>{};
+
     return TopHost(
-      uid: intFromDynamic(json['uid']),
+      // API root uid is null.
+      // Actual UID is inside user.uid
+      uid: intFromDynamic(
+        json['uid'] ?? user['uid'] ?? json['id'],
+      ),
+
       level: json['level'],
-      vvipOrVipPreference: mapFromDynamic(json['vvip_or_vip_preference']),
+
+      vvipOrVipPreference: _parseVipPreference(
+        json['vvip_or_vip_preference'],
+      ),
+
       fullName: (json['full_name'] ?? '').toString(),
-      profileImage: nullableStringFromDynamic(json['profile_image']),
+
+      // Support both profile_image and photo_url
+      profileImage: nullableStringFromDynamic(
+        json['profile_image'] ?? json['photo_url'],
+      ),
+
+      // Backend currently does not return seconds.
+      // This will remain 0 until backend sends seconds.
       seconds: intFromDynamic(json['seconds']),
+
       isAgent: boolFromDynamic(json['is_agent']),
       isReseller: boolFromDynamic(json['is_reseller']),
       isHost: boolFromDynamic(json['is_host']),
       isModerator: boolFromDynamic(json['is_moderator']),
     );
+  }
+
+  static dynamic _parseVipPreference(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+
+    if (value is String && value.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(value);
+
+        if (decoded is Map) {
+          return Map<String, dynamic>.from(decoded);
+        }
+
+        return decoded;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    return null;
   }
 }

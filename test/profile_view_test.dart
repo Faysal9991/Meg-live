@@ -5,6 +5,7 @@ import 'package:doyel_live/app/widgets/vip_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'test_helpers.dart';
 
@@ -44,11 +45,11 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.byIcon(Icons.logout_rounded),
+      find.byIcon(LucideIcons.logOut),
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.byIcon(Icons.logout_rounded));
+    await tester.tap(find.byIcon(LucideIcons.logOut));
     await tester.pumpAndSettle();
 
     expect(find.text('Log out?'), findsOneWidget);
@@ -61,7 +62,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(authController.signOutCalls, 0);
 
-    await tester.tap(find.byIcon(Icons.logout_rounded));
+    await tester.tap(find.byIcon(LucideIcons.logOut));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Log Out'));
     await tester.pumpAndSettle();

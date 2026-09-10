@@ -124,6 +124,7 @@ void main() {
     expect(packageOption.label, contains('100 Diamonds'));
     expect(packageOption.label, contains('5000.00 BDT'));
     expect(requiredMethod.requiresAccountType, isTrue);
+    expect(requiredMethod.accountTypes, ['personal', 'agent']);
     expect(optionalMethod.requiresAccountType, isFalse);
     expect(payload['withdraw_package_id'], '3');
     expect(payload['payment_method_id'], '10');

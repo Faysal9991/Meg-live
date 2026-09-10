@@ -8,6 +8,7 @@ import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/profile/controllers/profile_controller.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 void showUserInfoBottomSheet({
   required BuildContext context,
@@ -285,8 +286,8 @@ void showUserInfoBottomSheet({
                                                               .user!
                                                               .uid!,
                                                         )
-                                                    ? Icons.add
-                                                    : Icons.remove,
+                                                    ? LucideIcons.plus
+                                                    : LucideIcons.minus,
                                                 // color: !profileController
                                                 //         .accountFollowers
                                                 //         .contains(authController
@@ -300,7 +301,7 @@ void showUserInfoBottomSheet({
                                                 size: 12,
                                               )
                                             : Icon(
-                                                Icons.refresh_rounded,
+                                                LucideIcons.refreshCw,
                                                 color: Theme.of(
                                                   context,
                                                 ).primaryColor,
@@ -367,13 +368,13 @@ void showUserInfoBottomSheet({
                                                               .contains(
                                                                 profileData['uid'],
                                                               )
-                                                          ? Icons.block
-                                                          : Icons.flag,
+                                                          ? LucideIcons.ban
+                                                          : LucideIcons.flag,
                                                       color: AppColors.surface,
                                                       size: 12,
                                                     )
                                                   : Icon(
-                                                      Icons.refresh_rounded,
+                                                      LucideIcons.refreshCw,
                                                       color: Theme.of(
                                                         context,
                                                       ).primaryColor,
