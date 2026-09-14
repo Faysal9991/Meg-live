@@ -220,6 +220,56 @@ void main() {
     },
   );
 
+  testWidgets(
+    'comment composer reports a disconnected room and keeps the draft',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        NeumorphicTheme(
+          theme: AppTheme.neumorphicTheme,
+          child: GetMaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const LiveStreamingView(
+              channelName: '100',
+              isBroadcaster: false,
+              followers: [],
+              blocks: [],
+              level: null,
+              vVipOrVipPreference: {},
+              fullName: 'Host',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final commentField = find.byType(TextField);
+      final sendButton = find.byWidgetPredicate(
+        (widget) => widget is IconButton && widget.tooltip == 'Send comment',
+      );
+      await tester.enterText(commentField, '  Hello from the live room  ');
+      await tester.tap(sendButton);
+      await tester.pump();
+
+      expect(
+        find.text('Comment connection is not ready. Please try again.'),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<TextField>(commentField).controller!.text,
+        '  Hello from the live room  ',
+      );
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    },
+  );
+
   testWidgets('live room remains usable when opening and dismissing controls', (
     tester,
   ) async {

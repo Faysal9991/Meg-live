@@ -5,6 +5,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/routes/app_pages.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:get/get.dart';
 
@@ -35,7 +36,7 @@ class NavController extends GetxController {
       'device_name': deviceName,
       'device_id': uniqueDeviceId,
     };
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.put(
         kUserDeviceInfoUpdateUrl,

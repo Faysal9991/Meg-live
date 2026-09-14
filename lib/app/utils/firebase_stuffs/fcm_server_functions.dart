@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart' hide Response, FormData;
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 
@@ -46,7 +47,7 @@ import 'package:doyel_live/app/utils/drf_api_key.dart';
 void registerFCMDevice({required String fcmDeviceToken}) async {
   final AuthController authController = Get.find();
 
-  var dio = Dio();
+  final dio = createApiDio();
   var formData = FormData.fromMap({
     'token': fcmDeviceToken,
   });
@@ -65,7 +66,6 @@ void registerFCMDevice({required String fcmDeviceToken}) async {
   }
   // print("Bego(registerDevice) ${response.data}");
 }
-
 Future<String?> getFCMDeviceToken() async {
   return await FirebaseMessaging.instance.getToken();
 }
@@ -79,7 +79,7 @@ void onFCMDeviceTokenRefresh() {
 void updateFCMDeviceToken({required String fcmDeviceToken}) async {
   final AuthController authController = Get.find();
 
-  var dio = Dio();
+  final dio = createApiDio();
   var formData = FormData.fromMap({
     'token': fcmDeviceToken,
   });
@@ -108,7 +108,7 @@ void notifyUser({
 }) async {
   final AuthController authController = Get.find();
 
-  var dio = Dio();
+  final dio = createApiDio();
   var formData = FormData.fromMap({
     'title': title,
     'message': body,

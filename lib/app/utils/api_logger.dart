@@ -41,6 +41,10 @@ class ApiLogger {
     'authorization',
     'apikey',
     'xapikey',
+    'cookie',
+    'setcookie',
+    'session',
+    'sessionid',
     'secret',
     'clientsecret',
     'otp',
@@ -49,6 +53,7 @@ class ApiLogger {
   };
 
   static void hit({
+    String? requestId,
     required String method,
     required String url,
     dynamic body,
@@ -58,6 +63,7 @@ class ApiLogger {
     if (!kDebugMode) return;
 
     _header('🚀 API REQUEST', _blue);
+    if (requestId != null) _field('REQUEST ID', requestId, _magenta);
     _field('TIME', _timestamp(), _dim);
     _field('METHOD', method.toUpperCase(), _cyan);
     _field('URL', url, _white);
@@ -78,6 +84,7 @@ class ApiLogger {
   }
 
   static void response({
+    String? requestId,
     required String method,
     required String url,
     required int? statusCode,
@@ -88,7 +95,10 @@ class ApiLogger {
     if (!kDebugMode) return;
 
     final statusColor = _statusColor(statusCode);
-    _header('✅ API RESPONSE', _green);
+    final isSuccessful =
+        statusCode != null && statusCode >= 200 && statusCode < 400;
+    _header(isSuccessful ? '✅ API RESPONSE' : '⚠️ API RESPONSE', statusColor);
+    if (requestId != null) _field('REQUEST ID', requestId, _magenta);
     _field('TIME', _timestamp(), _dim);
     _field('METHOD', method.toUpperCase(), _cyan);
     _field('URL', url, _white);
@@ -106,20 +116,24 @@ class ApiLogger {
       _payload('DATA', data, _magenta);
     }
 
-    _footer(_green);
+    _footer(statusColor);
   }
 
   static void error({
+    String? requestId,
     required String method,
     required String url,
     required Object error,
     StackTrace? stackTrace,
     int? statusCode,
     dynamic data,
+    Map<String, dynamic>? headers,
+    Duration? duration,
   }) {
     if (!kDebugMode) return;
 
     _header('❌ API ERROR', _red);
+    if (requestId != null) _field('REQUEST ID', requestId, _magenta);
     _field('TIME', _timestamp(), _dim);
     _field('METHOD', method.toUpperCase(), _cyan);
     _field('URL', url, _white);
@@ -128,7 +142,15 @@ class ApiLogger {
       _field('STATUS', statusCode.toString(), _statusColor(statusCode));
     }
 
+    if (duration != null) {
+      _field('DURATION', '${duration.inMilliseconds} ms', _magenta);
+    }
+
     _payload('ERROR', error.toString(), _red);
+
+    if (headers != null && headers.isNotEmpty) {
+      _payload('HEADERS', headers, _cyan);
+    }
 
     if (data != null) {
       _payload('DATA', data, _yellow);
@@ -231,9 +253,7 @@ class ApiLogger {
   }
 
   static bool _isSensitiveKey(String key) {
-    final normalized = key
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final normalized = key.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
 
     return _sensitiveKeys.contains(normalized) ||
         normalized.endsWith('password') ||

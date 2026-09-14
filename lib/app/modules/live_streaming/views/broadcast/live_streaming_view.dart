@@ -27,6 +27,7 @@ import 'package:doyel_live/app/utils/constants.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/helper_functions.dart';
 import 'package:doyel_live/app/widgets/animated_media_widget.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
+import 'package:doyel_live/app/widgets/vip_profile_avatar.dart';
 import 'package:emojis/emoji.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -284,6 +285,67 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     //       duration: const Duration(milliseconds: 200),
     //       curve: Curves.easeInOut);
     // }
+  }
+
+  void _sendComment() {
+    final commentsAllowed =
+        widget.isBroadcaster ||
+        _livekitStreamingController.allowCommentAndEmojiSend.value;
+    if (!commentsAllowed) {
+      rShowSnackBar(
+        context: context,
+        title: 'Comments are currently disabled by the host.',
+        color: AppColors.warning,
+        durationInSeconds: 2,
+      );
+      return;
+    }
+
+    final enteredText = _editingControllerComment.text.trim();
+    if (enteredText.isEmpty) {
+      return;
+    }
+
+    final wasTruncated = enteredText.length > 1000;
+    final commentText = wasTruncated
+        ? enteredText.substring(0, 1000)
+        : enteredText;
+    final profile = _authController.profile.value;
+    final sent = onUpdateAction({
+      'action': 'activity',
+      'type': 'comment',
+      'uid': profile.user!.uid!,
+      'text': commentText,
+      'full_name': profile.full_name,
+      'level': profile.level,
+      'profile_image': profile.profile_image ?? profile.photo_url,
+      'diamonds': profile.diamonds,
+      'is_moderator': profile.is_moderator,
+      'is_reseller': profile.is_reseller,
+      'vvip_or_vip_preference': profile.vvip_or_vip_preference,
+    });
+
+    if (!sent) {
+      unawaited(initWebSocketClientForActions());
+      rShowSnackBar(
+        context: context,
+        title: 'Comment connection is not ready. Please try again.',
+        color: AppColors.warning,
+        durationInSeconds: 2,
+      );
+      return;
+    }
+
+    _editingControllerComment.clear();
+    _focusNode.unfocus();
+    if (wasTruncated) {
+      rShowSnackBar(
+        context: context,
+        title: 'Your comment was shortened to 1000 characters.',
+        color: AppColors.warning,
+        durationInSeconds: 2,
+      );
+    }
   }
 
   Future<void> initWebSocketClientForActions({
@@ -1429,7 +1491,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               itemCount:
                                   _livekitStreamingController.viewers.length,
                               itemBuilder: (context, index) {
-                                dynamic data =
+                                final dynamic data =
                                     _livekitStreamingController.viewers[index];
 
                                 return GestureDetector(
@@ -1440,83 +1502,16 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                       onUpdateAction: onUpdateAction,
                                     );
                                   },
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      data['vvip_or_vip_preference'] != null &&
-                                              data['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
-                                                  null
-                                          ? Container(
-                                              margin: const EdgeInsets.only(
-                                                bottom: 3,
-                                              ),
-                                              child: Image.asset(
-                                                data['vvip_or_vip_preference']['rank'] >=
-                                                        90000
-                                                    ? 'assets/logos/vvip_logo.png'
-                                                    : 'assets/logos/vip_logo.png',
-                                                width: 25,
-                                                height: 8,
-                                                fit: BoxFit.fill,
-                                              ),
-                                            )
-                                          : Text(
-                                              '${data['diamonds'] != null ? (data['diamonds'] < 100000 ? 0 : (data['diamonds'] / 100000).floor()) : 0} ⭐',
-                                              style: const TextStyle(
-                                                fontSize: 8,
-                                                color: AppColors.surface,
-                                              ),
-                                            ),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).primaryColor,
-                                          // borderRadius: BorderRadius.only(
-                                          //   bottomLeft: Radius.circular(20.0),
-                                          //   bottomRight: Radius.circular(20.0),
-                                          // ),
-                                          border: Border.all(
-                                            color: AppColors.warning,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            100.0,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.all(2.0),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            100,
-                                          ),
-                                          child:
-                                              data['profile_image'] == null &&
-                                                  data['photo_url'] == null
-                                              ? Image.asset(
-                                                  'assets/others/person.jpg',
-                                                  width: 22,
-                                                  height: 22,
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : CachedNetworkImage(
-                                                  imageUrl:
-                                                      data['profile_image'] ??
-                                                      data['photo_url'],
-                                                  width: 22,
-                                                  height: 22,
-                                                  fit: BoxFit.cover,
-                                                  placeholder: (context, url) =>
-                                                      const Center(
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                              color: AppColors
-                                                                  .error,
-                                                            ),
-                                                      ),
-                                                ),
-                                        ),
-                                      ),
-                                    ],
+                                  child: Center(
+                                    child: VipProfileAvatar(
+                                      profileImage:
+                                          data['profile_image'] ??
+                                          data['photo_url'],
+                                      vipPreference:
+                                          data['vvip_or_vip_preference'],
+                                      frameSize: 42,
+                                      unframedSize: 30,
+                                    ),
                                   ),
                                 );
                               },
@@ -1630,123 +1625,46 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                       children: [
                         // Comments
                         Container(
-                          width: 200,
-                          height: 36,
+                          width: 220,
+                          constraints: const BoxConstraints(
+                            minHeight: 40,
+                            maxHeight: 64,
+                          ),
                           margin: const EdgeInsets.only(right: 4.0),
                           child: Obx(() {
+                            // Read the Rx value before applying the broadcaster
+                            // override so Obx always registers a dependency.
+                            final roomAllowsComments =
+                                _livekitStreamingController
+                                    .allowCommentAndEmojiSend
+                                    .value;
+                            final commentsAllowed =
+                                widget.isBroadcaster || roomAllowsComments;
                             return rPrimaryTextField(
                               controller: _editingControllerComment,
-                              readOnly:
-                                  _livekitStreamingController
-                                      .isBroadcaster
-                                      .value
-                                  ? false
-                                  : !_livekitStreamingController
-                                        .allowCommentAndEmojiSend
-                                        .value,
-                              keyboardType: TextInputType.text,
+                              focusNode: _focusNode,
+                              readOnly: !commentsAllowed,
+                              keyboardType: TextInputType.multiline,
+                              maxLines: 2,
                               borderColor: AppColors.transparent,
-                              borderRadius: 100.0,
+                              borderRadius: 22,
                               fillColor: AppColors.overlay,
                               textColor: AppColors.onMediaMuted,
-                              hintText: 'Write your comment',
+                              hintText: commentsAllowed
+                                  ? 'Write your comment'
+                                  : 'Comments are disabled',
                               helpTextColor: AppColors.onMediaMuted,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
                               suffixIcon: IconButton(
                                 padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  String comment = _editingControllerComment
-                                      .text
-                                      .trim();
-                                  if (comment.isNotEmpty) {
-                                    // Post comment
-                                    _focusNode.unfocus();
-                                    String commentText =
-                                        _editingControllerComment.text.trim();
-                                    if (commentText.isNotEmpty) {
-                                      if (commentText.length > 1000) {
-                                        commentText =
-                                            '${commentText.substring(0, 1000)}...';
-
-                                        rShowSnackBar(
-                                          context: context,
-                                          title:
-                                              "You can't write more than 1000 characters.",
-                                          color: AppColors.warning,
-                                          durationInSeconds: 2,
-                                        );
-                                      }
-
-                                      final sent = onUpdateAction({
-                                        'action': 'activity',
-                                        'type': 'comment',
-                                        'uid': _authController
-                                            .profile
-                                            .value
-                                            .user!
-                                            .uid!,
-                                        'text': commentText,
-                                        'full_name': _authController
-                                            .profile
-                                            .value
-                                            .full_name,
-                                        'level':
-                                            _authController.profile.value.level,
-                                        'profile_image':
-                                            _authController
-                                                .profile
-                                                .value
-                                                .profile_image ??
-                                            _authController
-                                                .profile
-                                                .value
-                                                .photo_url,
-                                        'diamonds': _authController
-                                            .profile
-                                            .value
-                                            .diamonds,
-                                        'is_moderator': _authController
-                                            .profile
-                                            .value
-                                            .is_moderator,
-                                        'is_reseller': _authController
-                                            .profile
-                                            .value
-                                            .is_reseller,
-                                        'vvip_or_vip_preference':
-                                            _authController
-                                                .profile
-                                                .value
-                                                .vvip_or_vip_preference,
-                                      });
-                                      if (sent) {
-                                        _editingControllerComment.clear();
-                                      } else {
-                                        unawaited(
-                                          initWebSocketClientForActions(),
-                                        );
-                                        rShowSnackBar(
-                                          context: context,
-                                          title:
-                                              'Comment connection is not ready. Please try again.',
-                                          color: AppColors.warning,
-                                          durationInSeconds: 2,
-                                        );
-                                      }
-                                    }
-                                  }
-                                },
+                                onPressed: commentsAllowed
+                                    ? _sendComment
+                                    : null,
                                 tooltip: 'Send comment',
-                                icon: Icon(
-                                  LucideIcons.send,
-                                  size: 19,
-                                  color:
-                                      widget.isBroadcaster ||
-                                          _livekitStreamingController
-                                              .allowCommentAndEmojiSend
-                                              .value
-                                      ? AppColors.textSecondary
-                                      : AppColors.textPrimary,
-                                ),
+                                icon: const Icon(LucideIcons.send, size: 19),
                               ),
                             );
                           }),
@@ -2091,24 +2009,24 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       // Share
-                      LiveRoomIconButton(
-                        icon: LucideIcons.share2,
-                        label: 'Share live room',
-                        backgroundColor: Theme.of(context).primaryColor,
-                        iconColor: AppColors.onMediaMuted,
-                        onPressed: () {
-                          HelperFunctions().buildDynamicLinksForLiveStreaming(
-                            title: _livekitStreamingController
-                                .broadcasterFullname
-                                .value,
-                            description: 'Is Live Now',
-                            image: _livekitStreamingController
-                                .broadcasterProfileImage
-                                .value,
-                            channelId: widget.channelName,
-                          );
-                        },
-                      ),
+                      // LiveRoomIconButton(
+                      //   icon: LucideIcons.share2,
+                      //   label: 'Share live room',
+                      //   backgroundColor: Theme.of(context).primaryColor,
+                      //   iconColor: AppColors.onMediaMuted,
+                      //   onPressed: () {
+                      //     HelperFunctions().buildDynamicLinksForLiveStreaming(
+                      //       title: _livekitStreamingController
+                      //           .broadcasterFullname
+                      //           .value,
+                      //       description: 'Is Live Now',
+                      //       image: _livekitStreamingController
+                      //           .broadcasterProfileImage
+                      //           .value,
+                      //       channelId: widget.channelName,
+                      //     );
+                      //   },
+                      // ),
                       !widget.isBroadcaster
                           ? Container()
                           : Obx(() {

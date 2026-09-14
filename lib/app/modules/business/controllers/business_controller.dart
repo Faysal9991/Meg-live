@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/profile/controllers/profile_controller.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 
@@ -48,7 +49,7 @@ class BusinessController extends GetxController {
 
   void loadModeratorRequest() async {
     loadingModeratorRequest.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kModeratorRequestRetrieveUrl,
@@ -70,7 +71,7 @@ class BusinessController extends GetxController {
 
   void tryToSendModeratorRequest() async {
     loadingModeratorRequest.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.post(
         kModeratorRequestCreateUrl,
@@ -123,7 +124,7 @@ class BusinessController extends GetxController {
 
   void tryToRemoveModeratorRequest() async {
     loadingModeratorRequest.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.delete(
         kModeratorRequestDeleteUrl,
@@ -160,7 +161,7 @@ class BusinessController extends GetxController {
 
   void loadResellerRequest() async {
     loadingResellerRequest.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kResellerRequestRetrieveUrl,
@@ -182,7 +183,7 @@ class BusinessController extends GetxController {
 
   void tryToSendResellerRequest() async {
     loadingResellerRequest.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.post(
         kResellerRequestCreateUrl,
@@ -235,7 +236,7 @@ class BusinessController extends GetxController {
 
   void tryToRemoveResellerRequest() async {
     loadingResellerRequest.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.delete(
         kResellerRequestDeleteUrl,
@@ -272,7 +273,7 @@ class BusinessController extends GetxController {
 
   void loadResellerRechargeHistoryList() async {
     loadingResellerRechargeHistoryList.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kResellerRechargeHistoryListUrl,
@@ -311,7 +312,7 @@ class BusinessController extends GetxController {
       'customer_id': customerId,
       'diamonds': diamonds,
     };
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.post(
         kResellerRechargeCreateUrl,
@@ -356,7 +357,7 @@ class BusinessController extends GetxController {
     dynamic data = {'history_id': historyId};
 
     loadingResellerRechargeHistoryList.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.delete(
         kResellerRechargeHistoryDeletetUrl,
@@ -401,7 +402,7 @@ class BusinessController extends GetxController {
       'live_type': liveType,
     };
     loadingHostRequest.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.post(
         kHostRequestCreateUrl,
@@ -463,7 +464,7 @@ class BusinessController extends GetxController {
 
   void loadHostRequest() async {
     loadingHostRequest.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kHostRequestRetrieveUrl,
@@ -489,7 +490,7 @@ class BusinessController extends GetxController {
   }) async {
     loadingHostRequestSearch.value = true;
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kSearchHostRequestRetrieveUrl(userId),
@@ -514,7 +515,7 @@ class BusinessController extends GetxController {
     int? agentUserId,
   }) async {
     loadingHostRequestList.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kHostRequestListUrl,
@@ -547,7 +548,7 @@ class BusinessController extends GetxController {
     hostsCount.value = 0;
 
     loadingHostList.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kHostListeUrl,
@@ -585,7 +586,7 @@ class BusinessController extends GetxController {
     };
 
     loadingHostRequestConfirmation.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.post(
         kConfirmHostRequestCreateUrl,
@@ -648,7 +649,7 @@ class BusinessController extends GetxController {
     };
 
     loadingHostList.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.delete(
         kHostRemoveUrl,
@@ -695,7 +696,7 @@ class BusinessController extends GetxController {
 
   void tryToRemoveHostRequest() async {
     loadingHostRequest.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.delete(
         kHostRequestDeleteUrl,
@@ -731,7 +732,7 @@ class BusinessController extends GetxController {
   }
 
   Future<dynamic> fetchAgentForHost() async {
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kAgentForHostRetrieveUrl,
@@ -752,7 +753,7 @@ class BusinessController extends GetxController {
 
   void loadAgentList() async {
     loadingAgentList.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kManualAgentListUrl,
@@ -776,7 +777,7 @@ class BusinessController extends GetxController {
   void loadAgentListForHostRequest() async {
     loadingAgentList.value = true;
     hostRequestedData.value = {};
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kAgentListUrl,
@@ -801,7 +802,7 @@ class BusinessController extends GetxController {
   void tryToSearchAgent({required int userId}) async {
     loadingAgentSearch.value = true;
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kSearchAgentRetrieveUrl(userId),

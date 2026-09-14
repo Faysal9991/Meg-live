@@ -258,12 +258,23 @@ class StreamingListView extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                 ],
-                Expanded(
-                  child: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelLarge,
+                SizedBox(
+                  width: 80,
+                  height: 20,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelLarge?.copyWith(fontSize: 14),
+                      ),
+                    ),
                   ),
                 ),
               ],

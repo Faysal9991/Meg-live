@@ -20,8 +20,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:livekit_client/livekit_client.dart';
 import 'package:doyel_live/app/routes/app_pages.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
-import 'package:doyel_live/app/utils/api_logger.dart';
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/widgets/reusable_widgets.dart';
@@ -41,7 +41,8 @@ enum HomeTabEnum {
 }
 
 class LiveStreamingController extends GetxController {
-  LiveStreamingController({Dio? dio}) : _dio = dio ?? Dio();
+  LiveStreamingController({Dio? dio})
+    : _dio = dio == null ? createApiDio() : configureApiDio(dio);
 
   final AuthController _authController = Get.find();
   final Dio _dio;
@@ -975,12 +976,6 @@ class LiveStreamingController extends GetxController {
     // };
 
     try {
-      ApiLogger.hit(
-        method: 'post======>',
-        url: kLiveKitEngineCheckAndTokenCreateUrl,
-        body: data,
-      );
-
       Response response = await _dio.post(
         kLiveKitEngineCheckAndTokenCreateUrl,
         options: Options(headers: _publicHeaders()),
@@ -990,12 +985,6 @@ class LiveStreamingController extends GetxController {
 
       // print('Data 1');
       // print(response.data);
-      ApiLogger.response(
-        method: 'post=====response=>',
-        url: kLiveKitEngineCheckAndTokenCreateUrl,
-        data: response.data,
-        statusCode: response.statusCode,
-      );
       return response.data;
 
       // String engine = response.data['engine'];
@@ -1134,17 +1123,10 @@ class LiveStreamingController extends GetxController {
       return;
     }
     loadingBannerList.value = true;
-    ApiLogger.hit(method: 'GET', url: kBannerListUrl);
     try {
       final response = await _dio.get(
         kBannerListUrl,
         options: Options(headers: _publicHeaders()),
-      );
-      ApiLogger.response(
-        method: 'GET',
-        url: kBannerListUrl,
-        statusCode: response.statusCode,
-        data: response.data,
       );
       if (response.statusCode == 200) {
         final data = response.data['banner_list'] as List? ?? const [];
@@ -1157,13 +1139,8 @@ class LiveStreamingController extends GetxController {
               .toList(),
         );
       }
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'GET',
-        url: kBannerListUrl,
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } catch (_) {
+      // The centralized Dio interceptor logs the failed request.
     } finally {
       loadingBannerList.value = false;
     }
@@ -1174,38 +1151,18 @@ class LiveStreamingController extends GetxController {
       return;
     }
     loadingTopHostList.value = true;
-    ApiLogger.hit(method: 'GET', url: kTopHostListUrl);
     try {
       final response = await _dio.get(
         kTopHostListUrl,
         options: Options(headers: _publicHeaders()),
       );
-      ApiLogger.response(
-        method: 'GET',
-        url: kTopHostListUrl,
-        statusCode: response.statusCode,
-        data: response.data,
-      );
       if (response.statusCode == 200) {
         topHostList.assignAll(
           _rankedProfilesFromResponse(response.data, const ['top_hosts']),
         );
-      } else {
-        ApiLogger.error(
-          method: 'GET',
-          url: kTopHostListUrl,
-          error:
-              'Unexpected status code: ${response.statusCode}--{${response.data}}',
-          stackTrace: StackTrace.current,
-        );
       }
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'GET',
-        url: kTopHostListUrl,
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } catch (_) {
+      // The centralized Dio interceptor logs the failed request.
     } finally {
       loadingTopHostList.value = false;
     }
@@ -1216,42 +1173,26 @@ class LiveStreamingController extends GetxController {
       return;
     }
     loadingTopContributorList.value = true;
-    ApiLogger.hit(method: 'GET', url: kTopContributorListUrl);
     try {
       final response = await _dio.get(
         kTopContributorListUrl,
         options: Options(headers: _publicHeaders()),
       );
-      ApiLogger.response(
-        method: 'GET',
-        url: kTopContributorListUrl,
-        statusCode: response.statusCode,
-        data: response.data,
-      );
       if (response.statusCode == 200) {
-        topContributorList.assignAll(
-          _rankedProfilesFromResponse(response.data, const [
-            'top_contributors',
-            'top_contributor_list',
-            'top_hosts',
-          ]),
+        final contributors = _rankedProfilesFromResponse(response.data, const [
+          'top_contributors',
+          'top_contributor_list',
+          'top_hosts',
+        ]);
+
+        contributors.sort(
+          (a, b) => b.diamondsContributed.compareTo(a.diamondsContributed),
         );
-      } else {
-        ApiLogger.error(
-          method: 'GET',
-          url: kTopContributorListUrl,
-          error:
-              'Unexpected status code: ${response.statusCode}--{${response.data}}',
-          stackTrace: StackTrace.current,
-        );
+
+        topContributorList.assignAll(contributors);
       }
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'GET',
-        url: kTopContributorListUrl,
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } catch (_) {
+      // The centralized Dio interceptor logs the failed request.
     } finally {
       loadingTopContributorList.value = false;
     }
@@ -1557,11 +1498,6 @@ class LiveStreamingController extends GetxController {
     // };
 
     try {
-      ApiLogger.hit(
-        method: 'POST',
-        url: kLiveStreamingGiftCreateUrl,
-        body: request.toJson(),
-      );
       final response = await _dio.post(
         kLiveStreamingGiftCreateUrl,
         data: request.toJson(),
@@ -1569,12 +1505,6 @@ class LiveStreamingController extends GetxController {
           headers: _authHeaders(),
           validateStatus: (status) => status != null && status < 500,
         ),
-      );
-      ApiLogger.response(
-        method: 'POST',
-        url: kLiveStreamingGiftCreateUrl,
-        statusCode: response.statusCode,
-        data: response.data,
       );
       int? statusCode = response.statusCode;
       loadingGiftSend.value = -1;
@@ -1632,13 +1562,7 @@ class LiveStreamingController extends GetxController {
           durationInSeconds: 2,
         );
       }
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'POST',
-        url: kLiveStreamingGiftCreateUrl,
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } catch (_) {
       loadingGiftSend.value = -1;
       // Get.snackbar(
       //   'Failed',
@@ -1911,7 +1835,7 @@ void loadLiveRoomList(List<dynamic> args) {
 
 void _fetchTopRatedAgentList(List<dynamic> args) async {
   SendPort sendPort = args[0];
-  var dio = Dio();
+  final dio = createApiDio();
   try {
     final response = await dio.get(
       kManualAgentListUrl,

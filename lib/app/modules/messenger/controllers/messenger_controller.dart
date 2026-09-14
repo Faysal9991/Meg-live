@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:get/get.dart';
@@ -58,7 +59,7 @@ class MessengerController extends GetxController {
 
     loadingLastMessageList.value = true;
 
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         url,
@@ -108,7 +109,7 @@ class MessengerController extends GetxController {
     dynamic data = {
       'user_id': _authController.profile.value.user!.uid!,
     };
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         url,
@@ -154,7 +155,7 @@ class MessengerController extends GetxController {
   void tryToSendChatMessage({
     required dynamic data,
   }) async {
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.post(
         kChatMessageCreateUrl,
@@ -177,7 +178,7 @@ class MessengerController extends GetxController {
   Future<bool> tryToDeleteChatMessage({
     required dynamic data,
   }) async {
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.post(
         kChatMessageDeleteUrl,
@@ -216,7 +217,7 @@ class MessengerController extends GetxController {
       'chat_id': chatId,
       'user_id': myUid,
     };
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.put(
         kChatBlockUpdateUrl,
@@ -258,7 +259,7 @@ class MessengerController extends GetxController {
     }
     loadingChatBlock.value = true;
 
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kChatBlockListUrl(userId: _authController.profile.value.user!.uid!),

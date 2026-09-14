@@ -4,13 +4,14 @@ import 'package:dio/dio.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/balance/models/withdraw_models.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
-import 'package:doyel_live/app/utils/api_logger.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:get/get.dart';
 
 class BalanceController extends GetxController {
-  BalanceController({Dio? dio}) : _dio = dio ?? Dio();
+  BalanceController({Dio? dio})
+    : _dio = dio == null ? createApiDio() : configureApiDio(dio);
 
   final Dio _dio;
   final AuthController _authController = Get.find();
@@ -39,17 +40,10 @@ class BalanceController extends GetxController {
       return;
     }
     loadingWithdrawRequests.value = true;
-    ApiLogger.hit(method: 'GET', url: kWithdrawRequestListUrl);
     try {
       final response = await _dio.get(
         kWithdrawRequestListUrl,
         options: Options(headers: _authHeaders()),
-      );
-      ApiLogger.response(
-        method: 'GET',
-        url: kWithdrawRequestListUrl,
-        statusCode: response.statusCode,
-        data: response.data,
       );
       loadingWithdrawRequests.value = false;
       if (response.statusCode == 200) {
@@ -65,13 +59,7 @@ class BalanceController extends GetxController {
               .toList(),
         );
       }
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'GET',
-        url: kWithdrawRequestListUrl,
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } catch (_) {
       loadingWithdrawRequests.value = false;
     }
   }
@@ -81,8 +69,6 @@ class BalanceController extends GetxController {
       return;
     }
     loadingWithdrawOptions.value = true;
-    ApiLogger.hit(method: 'GET', url: kWithdrawPackageListUrl);
-    ApiLogger.hit(method: 'GET', url: kPaymentMethodListUrl);
     try {
       final responses = await Future.wait([
         _dio.get(
@@ -97,18 +83,6 @@ class BalanceController extends GetxController {
 
       final packageResponse = responses[0];
       final paymentMethodResponse = responses[1];
-      ApiLogger.response(
-        method: 'GET',
-        url: kWithdrawPackageListUrl,
-        statusCode: packageResponse.statusCode,
-        data: packageResponse.data,
-      );
-      ApiLogger.response(
-        method: 'GET',
-        url: kPaymentMethodListUrl,
-        statusCode: paymentMethodResponse.statusCode,
-        data: paymentMethodResponse.data,
-      );
 
       if (packageResponse.statusCode == 200) {
         final data =
@@ -137,13 +111,8 @@ class BalanceController extends GetxController {
               .toList(),
         );
       }
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'GET',
-        url: '$kWithdrawPackageListUrl | $kPaymentMethodListUrl',
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } catch (_) {
+      // The centralized Dio interceptor logs the failed request.
     } finally {
       loadingWithdrawOptions.value = false;
     }
@@ -157,11 +126,6 @@ class BalanceController extends GetxController {
     }
     creatingWithdrawRequest.value = true;
     final payload = request.toJson();
-    ApiLogger.hit(
-      method: 'POST',
-      url: kWithdrawRequestCreateUrl,
-      body: payload,
-    );
     try {
       final response = await _dio.post(
         kWithdrawRequestCreateUrl,
@@ -171,13 +135,6 @@ class BalanceController extends GetxController {
           validateStatus: (status) => status != null && status < 500,
         ),
       );
-      ApiLogger.response(
-        method: 'POST',
-        url: kWithdrawRequestCreateUrl,
-        statusCode: response.statusCode,
-        data: response.data,
-      );
-
       final statusCode = response.statusCode ?? 500;
       if (statusCode == 200 || statusCode == 201) {
         final profileData = response.data['profile'];
@@ -192,13 +149,7 @@ class BalanceController extends GetxController {
         await loadWithdrawRequests();
       }
       return statusCode;
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'POST',
-        url: kWithdrawRequestCreateUrl,
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } catch (_) {
       return 500;
     } finally {
       creatingWithdrawRequest.value = false;

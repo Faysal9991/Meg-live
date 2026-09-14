@@ -23,12 +23,11 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../controllers/profile_controller.dart';
 
-class ProfileView extends GetView<ProfileController> {
+class ProfileView extends GetView<ProfileController>{
   ProfileView({super.key});
   final AuthController _authController = Get.find();
   @override
@@ -293,26 +292,26 @@ class ProfileView extends GetView<ProfileController> {
           AppCard(
             child: Column(
               children: [
-                _ProfileActionTile(
-                  onTap: () async {
-                    String title = 'Welcome to ';
-                    String playStoreAppUrl =
-                        'https://play.google.com/store/apps/details?id=com.taksoft.doyel_live';
-                    String sharedText =
-                        'You Can Join With Us for Fun.......\n\n$playStoreAppUrl';
-                    await SharePlus.instance.share(
-                      ShareParams(text: sharedText, subject: title),
-                    );
-                  },
-                  icon: LucideIcons.share2,
-                  label: 'Share App',
-                  iconColor: AppColors.accent,
-                ),
+                // _ProfileActionTile(
+                //   onTap: () async {
+                //     String title = 'Welcome to ';
+                //     String playStoreAppUrl =
+                //         'https://play.google.com/store/apps/details?id=com.taksoft.doyel_live';
+                //     String sharedText =
+                //         'You Can Join With Us for Fun.......\n\n$playStoreAppUrl';
+                //     await SharePlus.instance.share(
+                //       ShareParams(text: sharedText, subject: title),
+                //     );
+                //   },
+                //   icon: LucideIcons.share2,
+                //   label: 'Share App',
+                //   iconColor: AppColors.accent,
+                // ),
                 _ProfileActionTile(
                   onTap: () {
                     final Uri emailLaunchUri = Uri(
                       scheme: 'mailto',
-                      path: 'toplive46@gmail.com',
+                      path: 'biholive88@gmail.com',
                     );
 
                     launchUrl(emailLaunchUri);

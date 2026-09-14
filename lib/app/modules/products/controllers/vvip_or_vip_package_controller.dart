@@ -4,13 +4,14 @@ import 'package:dio/dio.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/products/models/king_package_catalog_state.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
-import 'package:doyel_live/app/utils/api_logger.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:get/get.dart';
 
 class VVIPorVipPackageController extends GetxController {
-  VVIPorVipPackageController({Dio? dio}) : _dio = dio ?? Dio();
+  VVIPorVipPackageController({Dio? dio})
+    : _dio = dio == null ? createApiDio() : configureApiDio(dio);
 
   final AuthController _authController = Get.find();
   final Dio _dio;
@@ -231,8 +232,6 @@ class VVIPorVipPackageController extends GetxController {
     required String url,
     required Map<String, dynamic> payload,
   }) async {
-    ApiLogger.hit(method: 'POST', url: url, body: payload);
-
     try {
       final response = await _dio.post(
         url,
@@ -242,13 +241,6 @@ class VVIPorVipPackageController extends GetxController {
           validateStatus: (status) => status != null && status < 500,
         ),
       );
-      ApiLogger.response(
-        method: 'POST',
-        url: url,
-        statusCode: response.statusCode,
-        data: response.data,
-      );
-
       final statusCode = response.statusCode ?? 500;
       if (statusCode == 200 || statusCode == 201) {
         final responseData = response.data;
@@ -259,15 +251,7 @@ class VVIPorVipPackageController extends GetxController {
         }
       }
       return statusCode;
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'POST',
-        url: url,
-        error: error,
-        stackTrace: stackTrace,
-        statusCode: error is DioException ? error.response?.statusCode : null,
-        data: error is DioException ? error.response?.data : null,
-      );
+    } catch (_) {
       return 500;
     }
   }
@@ -278,19 +262,11 @@ class VVIPorVipPackageController extends GetxController {
     }
 
     loadingEntryEffectPackageList.value = true;
-    ApiLogger.hit(method: 'GET', url: kPurchasedEntryEffectPackageListUrl);
     try {
       final response = await _dio.get(
         kPurchasedEntryEffectPackageListUrl,
         options: Options(headers: _authHeaders()),
       );
-      ApiLogger.response(
-        method: 'GET',
-        url: kPurchasedEntryEffectPackageListUrl,
-        statusCode: response.statusCode,
-        data: response.data,
-      );
-
       if (response.statusCode != 200 || response.data is! Map) {
         return;
       }
@@ -310,15 +286,8 @@ class VVIPorVipPackageController extends GetxController {
             ? Map<String, dynamic>.from(purchased)
             : const <String, dynamic>{},
       );
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'GET',
-        url: kPurchasedEntryEffectPackageListUrl,
-        error: error,
-        stackTrace: stackTrace,
-        statusCode: error is DioException ? error.response?.statusCode : null,
-        data: error is DioException ? error.response?.data : null,
-      );
+    } catch (_) {
+      // The centralized Dio interceptor logs the failed request.
     } finally {
       loadingEntryEffectPackageList.value = false;
     }
@@ -358,18 +327,11 @@ class VVIPorVipPackageController extends GetxController {
       return;
     }
     loadingAllKingPackageList.value = true;
-    ApiLogger.hit(method: 'GET', url: kPurchasedKingPackageListUrl);
 
     try {
       final response = await _dio.get(
         kPurchasedKingPackageListUrl,
         options: Options(headers: _authHeaders()),
-      );
-      ApiLogger.response(
-        method: 'GET',
-        url: kPurchasedKingPackageListUrl,
-        statusCode: response.statusCode,
-        data: response.data,
       );
       loadingAllKingPackageList.value = false;
       if (response.statusCode == 200) {
@@ -379,13 +341,7 @@ class VVIPorVipPackageController extends GetxController {
         kingPackageOrderingInfo.value = state.kingPackageOrderingInfo;
         _kingPackageCatalogLoadedOnce = true;
       }
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'GET',
-        url: kPurchasedKingPackageListUrl,
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } catch (_) {
       loadingAllKingPackageList.value = false;
     }
   }
@@ -400,7 +356,6 @@ class VVIPorVipPackageController extends GetxController {
     purchasingKingPackage.value = true;
     purchasingKingPackageId.value = packageItem.id;
     final payload = {'product_type': 'king', 'product_id': packageItem.id};
-    ApiLogger.hit(method: 'POST', url: kPurchasedKingPackageUrl, body: payload);
 
     try {
       final response = await _dio.post(
@@ -411,13 +366,6 @@ class VVIPorVipPackageController extends GetxController {
           validateStatus: (status) => status != null && status < 500,
         ),
       );
-      ApiLogger.response(
-        method: 'POST',
-        url: kPurchasedKingPackageUrl,
-        statusCode: response.statusCode,
-        data: response.data,
-      );
-
       final statusCode = response.statusCode ?? 500;
       if (statusCode == 200 || statusCode == 201) {
         final profileData = response.data['profile'];
@@ -429,13 +377,7 @@ class VVIPorVipPackageController extends GetxController {
         await loadAllKingPackageList();
       }
       return statusCode;
-    } catch (error, stackTrace) {
-      ApiLogger.error(
-        method: 'POST',
-        url: kPurchasedKingPackageUrl,
-        error: error,
-        stackTrace: stackTrace,
-      );
+    } catch (_) {
       return 500;
     } finally {
       purchasingKingPackage.value = false;

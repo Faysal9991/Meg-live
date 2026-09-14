@@ -184,7 +184,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                       keyboardType: TextInputType.name,
                       borderColor: AppColors.overlayStrong,
                       hintText: 'Your full name',
-                      maxLength: 25,
+                      maxLength: 50,
                     ),
                     const SizedBox(height: 16),
                     rPrimaryElevatedButton(

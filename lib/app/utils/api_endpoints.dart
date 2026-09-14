@@ -6,9 +6,9 @@ import 'package:doyel_live/app/utils/constants.dart';
 // const host = '10.0.2.2:8000';
 
 // Recent
-const host = '169.58.127.58:8085';
+const host = 'biholive.com';
 // const kDomain = 'http://$host';
-const kDomain = 'http://$host';
+const kDomain = 'https://$host';
 const _baseUrl = '$kDomain/api/v1';
 
 const baseUrlAppLink = 'https://applink.doyellivekit.skyapp.name';

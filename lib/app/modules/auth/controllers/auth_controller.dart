@@ -11,6 +11,7 @@ import 'package:dio/dio.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/auth/services/google_auth_service.dart';
 import 'package:doyel_live/app/routes/app_pages.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:doyel_live/app/utils/api_logger.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
@@ -23,14 +24,14 @@ import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 class AuthController extends GetxController {
   AuthController({GoogleAuthService? googleAuth, Dio? googleLoginDio})
     : _googleAuth = googleAuth ?? GoogleAuthService.instance,
-      _googleLoginDio =
-          googleLoginDio ??
-          Dio(
-            BaseOptions(
-              connectTimeout: const Duration(seconds: 20),
-              receiveTimeout: const Duration(seconds: 30),
-            ),
-          );
+      _googleLoginDio = googleLoginDio == null
+          ? createApiDio(
+              BaseOptions(
+                connectTimeout: const Duration(seconds: 20),
+                receiveTimeout: const Duration(seconds: 30),
+              ),
+            )
+          : configureApiDio(googleLoginDio);
 
   final GoogleAuthService _googleAuth;
   final Dio _googleLoginDio;
@@ -83,7 +84,7 @@ class AuthController extends GetxController {
   }
 
   Future<int> tryToGetAppLockedBuildNumber() async {
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kAppLockRetrieveUrl,
@@ -131,13 +132,6 @@ class AuthController extends GetxController {
       };
       final query = <String, dynamic>{'device_id': deviceId};
       stage = 'backend';
-      ApiLogger.hit(
-        method: 'POST',
-        url: kLoginUsingFirebaseUrl,
-        body: data,
-        query: query,
-        headers: headers,
-      );
       final response = await _googleLoginDio.post(
         kLoginUsingFirebaseUrl,
         data: data,
@@ -146,12 +140,6 @@ class AuthController extends GetxController {
           validateStatus: (status) => status != null && status < 600,
         ),
         queryParameters: query,
-      );
-      ApiLogger.response(
-        method: 'POST',
-        url: kLoginUsingFirebaseUrl,
-        statusCode: response.statusCode,
-        data: response.data,
       );
       if (response.statusCode == 201) {
         stage = 'session';
@@ -200,14 +188,8 @@ class AuthController extends GetxController {
               : 'Google sign-in was interrupted. Please try again.',
         );
       }
-    } catch (error, stackTrace) {
+    } catch (error) {
       debugPrint('[GOOGLE-AUTH] Login failed at $stage (${error.runtimeType})');
-      ApiLogger.error(
-        method: 'POST',
-        url: kLoginUsingFirebaseUrl,
-        error: error,
-        stackTrace: stackTrace,
-      );
       _showGoogleLoginError(
         error is DioException
             ? 'Unable to connect. Check your internet connection and try again.'
@@ -257,7 +239,7 @@ class AuthController extends GetxController {
       'password': password,
     };
 
-    var dio = Dio();
+    final dio = createApiDio();
     final headers = <String, dynamic>{
       'accept': '*/*',
       'X-Api-Key': DRF_API_KEY,
@@ -266,26 +248,11 @@ class AuthController extends GetxController {
       final deviceId = await getUniqueDeviceId();
       final query = <String, dynamic>{'device_id': deviceId};
 
-      ApiLogger.hit(
-        method: 'POST',
-        url: kLoginUsingFirebaseUrl,
-        body: data,
-        query: query,
-        headers: headers,
-      );
-
       final response = await dio.post(
         kLoginUsingFirebaseUrl,
         data: data,
         options: Options(headers: headers),
         queryParameters: query,
-      );
-
-      ApiLogger.response(
-        method: 'POST',
-        url: kLoginUsingFirebaseUrl,
-        statusCode: response.statusCode,
-        data: response.data,
       );
 
       int? statusCode = response.statusCode;
@@ -329,17 +296,7 @@ class AuthController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
         );
       }
-    } catch (e, stackTrace) {
-      final dioException = e is DioException ? e : null;
-      ApiLogger.error(
-        method: 'POST',
-        url: kLoginUsingFirebaseUrl,
-        error: e,
-        statusCode: dioException?.response?.statusCode,
-        data: dioException?.response?.data,
-        stackTrace: stackTrace,
-      );
-
+    } catch (_) {
       authLoading.value = false;
       Get.snackbar(
         'Failed',
@@ -354,7 +311,7 @@ class AuthController extends GetxController {
   void tryToSignOut() async {
     authLoading.value = true;
 
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.post(
         kLogoutUrl,
@@ -405,7 +362,7 @@ class AuthController extends GetxController {
   }) async {
     loadingChangePassword.value = true;
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     var data = {'old_password': oldPassword, 'new_password': newPassword};
     try {
       final response = await dio.put(

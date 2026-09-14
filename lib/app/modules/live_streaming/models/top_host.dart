@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:doyel_live/app/utils/model_parsers.dart';
 
 class TopHost {
@@ -10,6 +8,9 @@ class TopHost {
     required this.fullName,
     required this.profileImage,
     required this.seconds,
+    required this.liveDurationSeconds,
+    required this.giftDiamonds,
+    required this.diamondsContributed,
     required this.isAgent,
     required this.isReseller,
     required this.isHost,
@@ -21,7 +22,13 @@ class TopHost {
   final dynamic vvipOrVipPreference;
   final String fullName;
   final String? profileImage;
+
   final int seconds;
+  final int liveDurationSeconds;
+
+  final int giftDiamonds;
+  final int diamondsContributed;
+
   final bool isAgent;
   final bool isReseller;
   final bool isHost;
@@ -33,59 +40,36 @@ class TopHost {
         : <String, dynamic>{};
 
     return TopHost(
-      // API root uid is null.
-      // Actual UID is inside user.uid
       uid: intFromDynamic(
         json['uid'] ?? user['uid'] ?? json['id'],
       ),
-
       level: json['level'],
-
-      vvipOrVipPreference: _parseVipPreference(
+      vvipOrVipPreference: mapFromDynamic(
         json['vvip_or_vip_preference'],
       ),
-
       fullName: (json['full_name'] ?? '').toString(),
-
-      // Support both profile_image and photo_url
       profileImage: nullableStringFromDynamic(
         json['profile_image'] ?? json['photo_url'],
       ),
 
-      // Backend currently does not return seconds.
-      // This will remain 0 until backend sends seconds.
       seconds: intFromDynamic(json['seconds']),
+
+      liveDurationSeconds: intFromDynamic(
+        json['live_duration_seconds'],
+      ),
+
+      giftDiamonds: intFromDynamic(
+        json['gift_diamonds'],
+      ),
+
+      diamondsContributed: intFromDynamic(
+        json['diamonds_contributed'],
+      ),
 
       isAgent: boolFromDynamic(json['is_agent']),
       isReseller: boolFromDynamic(json['is_reseller']),
       isHost: boolFromDynamic(json['is_host']),
       isModerator: boolFromDynamic(json['is_moderator']),
     );
-  }
-
-  static dynamic _parseVipPreference(dynamic value) {
-    if (value == null) {
-      return null;
-    }
-
-    if (value is Map) {
-      return Map<String, dynamic>.from(value);
-    }
-
-    if (value is String && value.trim().isNotEmpty) {
-      try {
-        final decoded = jsonDecode(value);
-
-        if (decoded is Map) {
-          return Map<String, dynamic>.from(decoded);
-        }
-
-        return decoded;
-      } catch (_) {
-        return null;
-      }
-    }
-
-    return null;
   }
 }

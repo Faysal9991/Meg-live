@@ -1,5 +1,6 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:dio/dio.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
@@ -14,7 +15,7 @@ class DevicesController extends GetxController {
 
   void tryToSearchUserDevicesInfoForUserId({required int userId}) async {
     loadingUserDeviceInfo.value = true;
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kSearchUserDeviceInfoListUrl(userId: userId),
@@ -38,7 +39,7 @@ class DevicesController extends GetxController {
   void loadModeratorBlockedUserDevices() async {
     loadingBlockedDevicesHistories.value = true;
 
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kUserDeviceBlockedHistoryListUrl,
@@ -65,7 +66,7 @@ class DevicesController extends GetxController {
   }) async {
     loadingUserDeviceInfo.value = true;
 
-    var dio = Dio();
+    final dio = createApiDio();
     dynamic data = {
       'user_id': userId,
       'device_id': deviceId,

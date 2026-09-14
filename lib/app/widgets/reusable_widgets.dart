@@ -34,73 +34,146 @@ Widget rPrimaryTextButton({
 
 Widget rPrimaryTextField({
   required TextEditingController controller,
-  obscureText = false,
-  readOnly = false,
+  bool obscureText = false,
+  bool readOnly = false,
   required TextInputType keyboardType,
-  required borderColor,
-  fillColor = AppColors.surfaceInset,
-  textColor = AppColors.textPrimary,
-  helpTextColor = AppColors.textSecondary,
-  prefixIcon,
-  suffixIcon,
-  hintText,
-  labelText,
-  maxLength,
-  maxLines,
-  prefixText,
-  focusNode,
+  required Color borderColor,
+  Color fillColor = AppColors.surfaceInset,
+  Color textColor = AppColors.textPrimary,
+  Color helpTextColor = AppColors.textSecondary,
+  Widget? prefixIcon,
+  Widget? suffixIcon,
+  String? hintText,
+  String? labelText,
+  int? maxLength,
+  int? minLines,
+  int? maxLines,
+  String? prefixText,
+  FocusNode? focusNode,
   double borderRadius = AppRadius.control,
   Function(String)? onChanged,
   bool useNeumorphic = true,
   EdgeInsetsGeometry contentPadding = const EdgeInsets.symmetric(
     horizontal: 16,
-    vertical: 16,
+    vertical: 12,
   ),
 }) {
+  final bool isMultiline =
+      keyboardType == TextInputType.multiline && !obscureText;
+
+  // Safe maxLines
+  final int effectiveMaxLines = obscureText
+      ? 1
+      : (maxLines ?? (isMultiline ? 5 : 1));
+
+  // Safe minLines
+  final int requestedMinLines = obscureText
+      ? 1
+      : (minLines ?? 1);
+
+  // Prevent:
+  // minLines can't be greater than maxLines
+  final int effectiveMinLines = requestedMinLines > effectiveMaxLines
+      ? effectiveMaxLines
+      : requestedMinLines;
+
   final field = TextField(
     controller: controller,
     focusNode: focusNode,
+
     obscureText: obscureText,
     autocorrect: !obscureText,
     enableSuggestions: !obscureText,
+
     readOnly: readOnly,
     keyboardType: keyboardType,
+
     maxLength: maxLength,
-    maxLines: obscureText
-        ? 1
-        : (keyboardType == TextInputType.multiline && maxLines == null)
-        ? null
-        : maxLines ?? 1,
-    style: TextStyle(color: textColor),
+
+    minLines: effectiveMinLines,
+    maxLines: effectiveMaxLines,
+
+    textAlignVertical: isMultiline
+        ? TextAlignVertical.top
+        : TextAlignVertical.center,
+
+    style: TextStyle(
+      color: textColor,
+      fontSize: 14,
+      height: 1.3,
+    ),
+
     decoration: InputDecoration(
+      isDense: true,
+
       contentPadding: contentPadding,
+
       filled: true,
-      fillColor: useNeumorphic ? AppColors.transparent : fillColor,
+      fillColor: useNeumorphic
+          ? AppColors.transparent
+          : fillColor,
+
       enabledBorder: OutlineInputBorder(
         borderSide: BorderSide(
-          color: useNeumorphic ? AppColors.transparent : borderColor,
+          color: useNeumorphic
+              ? AppColors.transparent
+              : borderColor,
         ),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
+
       focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        borderSide: const BorderSide(
+          color: AppColors.primary,
+          width: 2,
+        ),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
+
+      disabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(
+          color: useNeumorphic
+              ? AppColors.transparent
+              : borderColor,
+        ),
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+
       prefixIcon: prefixIcon,
       prefixText: prefixText,
       suffixIcon: suffixIcon,
+
       labelText: labelText,
       hintText: hintText,
-      helperStyle: TextStyle(color: helpTextColor),
-      hintStyle: TextStyle(color: helpTextColor),
+
+      alignLabelWithHint: isMultiline,
+
+      helperStyle: TextStyle(
+        color: helpTextColor,
+      ),
+
+      hintStyle: TextStyle(
+        color: helpTextColor,
+        fontSize: 14,
+      ),
+
+      counterStyle: TextStyle(
+        color: helpTextColor,
+        fontSize: 11,
+      ),
     ),
+
     onChanged: onChanged,
   );
+
   return useNeumorphic
-      ? AppInsetSurface(color: fillColor, radius: borderRadius, child: field)
+      ? AppInsetSurface(
+          color: fillColor,
+          radius: borderRadius,
+          child: field,
+        )
       : field;
 }
-
 Widget rPrimaryElevatedButton({
   required VoidCallback onPressed,
   required Color primaryColor,

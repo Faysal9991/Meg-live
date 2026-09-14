@@ -2,6 +2,7 @@ import 'dart:isolate';
 
 import 'package:dio/dio.dart';
 import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/modules/live_streaming/utlls/live_room_update_api.dart';
@@ -50,7 +51,7 @@ void _tryToDeleteContributionHistory(List<dynamic> args) async {
   SendPort resultPort = args[0];
   dynamic token = args[1];
 
-  var dio = Dio();
+  final dio = createApiDio();
   try {
     await dio.delete(
       kContributionHistoryDeleteUrl,
@@ -71,7 +72,7 @@ void _tryToDeleteContributionHistory(List<dynamic> args) async {
 void _tryToUpdatingLiveRoom(List<dynamic> args) async {
   SendPort resultPort = args[0];
   dynamic submissionData = args[1];
-  var dio = Dio();
+  final dio = createApiDio();
 
   try {
     await sendLiveRoomUpdateRequest(
@@ -90,7 +91,7 @@ void _tryToNotifyFollowerAboutLiveStreaming(List<dynamic> args) async {
   SendPort resultPort = args[0];
   dynamic token = args[1];
 
-  var dio = Dio();
+  final dio = createApiDio();
   try {
     await dio.post(
       kLiveStreamingNotifyFollowersCreateUrl,

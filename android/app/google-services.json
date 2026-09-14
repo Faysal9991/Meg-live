@@ -12,7 +12,20 @@
           "package_name": "com.biholive.net"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "976789308527-tim9cljlmf9nleee5l0ombejg7t1db3d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.biholive.net",
+            "certificate_hash": "594629220a2d1e95cd477a695dcd6b855ae99616"
+          }
+        },
+        {
+          "client_id": "976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDU7uA9rG8ILQpFs4Ih2u_kVMPGTfqboc8"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "976789308527-o05g8bo8mcsi56ri8pllbdl2bfkillrm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.biholive.net"
+              }
+            }
+          ]
         }
       }
     }

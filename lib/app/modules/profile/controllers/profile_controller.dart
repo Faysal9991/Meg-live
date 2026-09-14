@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
+import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:get/get.dart' hide FormData, MultipartFile;
@@ -71,7 +72,7 @@ class ProfileController extends GetxController {
   void tryToSearchProfile({required int userId}) async {
     loadingProfileSearch.value = true;
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kProfileRetrieveUrl(userId),
@@ -93,7 +94,7 @@ class ProfileController extends GetxController {
 
   Future<dynamic> fetchProfile({required int userId}) async {
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kProfileRetrieveUrl(userId),
@@ -120,7 +121,7 @@ class ProfileController extends GetxController {
     loadingProfileForUserInfo.value = true;
     profileForUserInfo = null;
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kProfileForUserInfoRetrieveUrl(userId),
@@ -148,7 +149,7 @@ class ProfileController extends GetxController {
     }
     loadingProfileForHost.value = true;
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kProfileForUserInfoRetrieveUrl(userId),
@@ -175,7 +176,7 @@ class ProfileController extends GetxController {
   }) async {
     loadingProfile.value = true;
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     FormData formData = FormData.fromMap({
       'full_name': fullName,
       'profile_image': selectedProfileImageFile.value.path != ''
@@ -235,7 +236,7 @@ class ProfileController extends GetxController {
     loadingPerformFollow.value = uid;
     final AuthController authController = Get.find();
 
-    var dio = Dio();
+    final dio = createApiDio();
     final response = await dio.post(
       kFollowerCreateUrl(uid),
       options: Options(headers: {
@@ -263,7 +264,7 @@ class ProfileController extends GetxController {
     loadingPerformBlock.value = uid;
     final AuthController authController = Get.find();
 
-    var dio = Dio();
+    final dio = createApiDio();
     final response = await dio.post(
       kBlockCreateUrl(uid),
       options: Options(headers: {
@@ -289,7 +290,7 @@ class ProfileController extends GetxController {
 
   Future<List<dynamic>> fecthFollowerList() async {
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kFollowerListUrl,
@@ -312,7 +313,7 @@ class ProfileController extends GetxController {
   void fecthBlockList() async {
     listLoading.value = true;
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kBlockListUrl,
@@ -346,7 +347,7 @@ class ProfileController extends GetxController {
 
   Future<List<dynamic>> fecthBroadcastingHistories() async {
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       final response = await dio.get(
         kBroadcastingHistoryListUrl,
@@ -371,7 +372,7 @@ class ProfileController extends GetxController {
     int? agentUserId,
   }) async {
     final AuthController authController = Get.find();
-    var dio = Dio();
+    final dio = createApiDio();
     try {
       loadingHostBroadcastingHistories.value = true;
       listHostBroadcastingHistory.clear();
