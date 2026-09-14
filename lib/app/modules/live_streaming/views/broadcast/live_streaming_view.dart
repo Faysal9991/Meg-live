@@ -12,6 +12,7 @@ import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/data/vip_preference.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
+import 'package:doyel_live/app/modules/live_streaming/utlls/live_room_audio_routing.dart';
 import 'package:doyel_live/app/modules/live_streaming/utlls/livekit_stuffs.dart';
 import 'package:doyel_live/app/modules/live_streaming/utlls/liveroom_isolation_actions.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/display/initial_renderer_room_display_layout.dart';
@@ -31,7 +32,6 @@ import 'package:doyel_live/app/widgets/vip_profile_avatar.dart';
 import 'package:emojis/emoji.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:headset_connection_event/headset_event.dart';
 
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
@@ -40,7 +40,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:marquee/marquee.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:web_socket_client/web_socket_client.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart' as rtc;
 
 class LiveStreamingView extends StatefulWidget {
   const LiveStreamingView({
@@ -99,8 +98,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
   final _focusNode = FocusNode();
 
-  final _headsetPlugin = HeadsetEvent();
-  HeadsetState? _headsetState;
+  final _audioRouting = LiveRoomAudioRouting();
   // IOWebSocketChannel? webSocketChannelForActions;
   WebSocket? webSocketClientForActions;
   StreamSubscription<dynamic>? _actionSocketConnectionSubscription;
@@ -512,9 +510,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
             // Owner
             if (data['uid'] == _myUid) {
               try {
-                await _room!.localParticipant?.setMicrophoneEnabled(
-                  !data['muted'],
-                );
+                await _setMicrophoneEnabled(!data['muted']);
               } catch (e) {
                 //
               }
@@ -562,7 +558,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                 //
               }
               try {
-                await _room!.localParticipant?.setMicrophoneEnabled(true);
+                await _setMicrophoneEnabled(true);
               } catch (e) {
                 //
               }
@@ -601,9 +597,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                 }
               }
               try {
-                await _room!.localParticipant?.setMicrophoneEnabled(
-                  !data['muted'],
-                );
+                await _setMicrophoneEnabled(!data['muted']);
               } catch (e) {
                 //
               }
@@ -2308,6 +2302,11 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         _livekitStreamingController.liveRoomSocketBaseUrl = socketBaseUrl;
         await initWebSocketClientForActions(forceReconnect: true);
 
+        await _audioRouting.start(
+          speakerPreferred: _livekitStreamingController.loudSpeaker.value,
+        );
+        if (_isDisposed || !mounted) return;
+
         //create new room
         _room = Room(
           roomOptions: await LivekitStuffs().getRoomOptions(
@@ -2435,10 +2434,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
               // // Notify followers about Live Streaming
               // _livekitStreamingController.tryToNotifyFollowerAboutLiveStreaming();
             }
-            // await Hardware.instance.setSpeakerphoneOn(true);
-            await rtc.Helper.setSpeakerphoneOn(
-              _livekitStreamingController.loudSpeaker.value,
-            );
+            await _audioRouting.refresh();
 
             _livekitStreamingController.busyConnectingEngine.value = false;
             if (widget.isBroadcaster) {
@@ -2768,6 +2764,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     // })
     // Should me Mendatory for all apps
     ..on<RoomReconnectedEvent>((event) {
+      unawaited(_audioRouting.refresh());
       // if (_livekitStreamingController.listActiveCall.indexWhere(
       //       (element) => element['uid'] == _myUid,
       //     ) >
@@ -3342,6 +3339,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     _room = null;
     _listener = null;
     room?.removeListener(_onRoomDidUpdate);
+    await _audioRouting.dispose();
     try {
       await listener?.dispose();
     } catch (_) {
@@ -3449,7 +3447,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   Future<void> _onToggleMute() async {
     try {
       final muted = !_livekitStreamingController.muted.value;
-      await _room!.localParticipant?.setMicrophoneEnabled(!muted);
+      await _setMicrophoneEnabled(!muted);
       _livekitStreamingController.muted.value = muted;
       _updateLocalActiveCallMediaState(muted: muted);
 
@@ -3496,31 +3494,20 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     }
   }
 
+  Future<void> _setMicrophoneEnabled(bool enabled) async {
+    if (_isDisposed) return;
+    final participant = _room?.localParticipant;
+    if (participant == null) return;
+    await participant.setMicrophoneEnabled(enabled);
+    // Starting capture can switch Bluetooth from media to its call profile.
+    await _audioRouting.refresh();
+  }
+
   void _setSpeakerphoneOn() async {
-    if (_headsetState == HeadsetState.CONNECT) {
-      rShowSnackBar(
-        context: context,
-        title: 'Your headset is already connected.',
-        color: AppColors.success,
-        durationInSeconds: 1,
-      );
-      return;
-    }
-    bool speakerOn = true;
-    // switch (Hardware.instance.speakerOn) {
-    switch (_livekitStreamingController.loudSpeaker.value) {
-      case true:
-        speakerOn = false;
-        _livekitStreamingController.setLoudSpeaker(false);
-        break;
-      case false:
-        speakerOn = true;
-        _livekitStreamingController.setLoudSpeaker(true);
-        break;
-      default:
-    }
-    // await Hardware.instance.setSpeakerphoneOn(speakerOn);
-    await rtc.Helper.setSpeakerphoneOn(speakerOn);
+    final speakerPreferred = !_livekitStreamingController.loudSpeaker.value;
+    await _audioRouting.setSpeakerPreferred(speakerPreferred);
+    if (_isDisposed) return;
+    _livekitStreamingController.setLoudSpeaker(speakerPreferred);
   }
 
   Future<void> _onToggleVideoEnable() async {

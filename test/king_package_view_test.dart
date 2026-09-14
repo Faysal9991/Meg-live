@@ -43,6 +43,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Purchase King Package:'), findsOneWidget);
-    expect(find.text('999 BDT'), findsOneWidget);
+    expect(find.text('999 Diamonds'), findsOneWidget);
   });
 }

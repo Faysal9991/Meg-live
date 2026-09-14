@@ -1,7 +1,7 @@
 name: doyel_live
 description: "Live Streaming App."
 publish_to: 'none'
-version: 1.5.2+26
+version: 1.5.3+27
 
 environment:
   sdk: ^3.8.0
@@ -32,6 +32,8 @@ dependencies:
   # livekit_client: 2.3.6
   # livekit_client: ^2.5.0+hotfix.3
   livekit_client: ^2.5.1
+  # Used directly for Android headset-priority audio routing.
+  flutter_webrtc: ^1.2.1
 
 
   get: ^4.7.2

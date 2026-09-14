@@ -253,7 +253,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
               child: LinearProgressIndicator(),
             ),
           DropdownButtonFormField<int>(
-            initialValue: _selectedWithdrawPackageId,
+            value: _selectedWithdrawPackageId,
             items: _balanceController.withdrawPackages
                 .map(
                   (option) => DropdownMenuItem<int>(
@@ -274,7 +274,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<int>(
-            initialValue: _selectedPaymentMethodId,
+            value: _selectedPaymentMethodId,
             items: _balanceController.paymentMethods
                 .map(
                   (option) => DropdownMenuItem<int>(

@@ -182,27 +182,33 @@ class NeumorphicIconButton extends StatelessWidget {
       radius: AppRadius.pill,
       circle: true,
       showShadow: depth != 0,
-      builder: (states) => IconButton(
-        statesController: states,
-        tooltip: tooltip,
-        onPressed: onPressed,
-        icon: Icon(icon, size: iconSize),
-        style:
-            IconButton.styleFrom(
-              backgroundColor: backgroundColor,
-              foregroundColor: iconColor,
-              disabledForegroundColor: AppColors.disabled,
-              disabledBackgroundColor: AppColors.disabledBackground,
-              shape: const CircleBorder(),
-              padding: EdgeInsets.zero,
-            ).copyWith(
-              side: WidgetStateProperty.resolveWith(
-                (states) => states.contains(WidgetState.focused)
-                    ? const BorderSide(color: AppColors.primary, width: 2)
-                    : BorderSide.none,
+      builder: (states) {
+        // TextButton exposes its state controller on Flutter 3.32 as well,
+        // keeping the outer surface in sync with pointer and keyboard presses.
+        final button = TextButton(
+          statesController: states,
+          onPressed: onPressed,
+          style:
+              TextButton.styleFrom(
+                backgroundColor: backgroundColor,
+                foregroundColor: iconColor,
+                disabledForegroundColor: AppColors.disabled,
+                disabledBackgroundColor: AppColors.disabledBackground,
+                shape: const CircleBorder(),
+                padding: EdgeInsets.zero,
+              ).copyWith(
+                side: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.focused)
+                      ? const BorderSide(color: AppColors.primary, width: 2)
+                      : BorderSide.none,
+                ),
               ),
-            ),
-      ),
+          child: Icon(icon, size: iconSize),
+        );
+        return tooltip == null
+            ? button
+            : Tooltip(message: tooltip!, child: button);
+      },
     ),
   );
 }

@@ -3,6 +3,7 @@ import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming
 import 'package:doyel_live/app/modules/messenger/controllers/messenger_controller.dart';
 import 'package:doyel_live/app/modules/messenger/views/widgets/modified/message_compose_widget.dart';
 import 'package:doyel_live/app/theme/app_theme.dart';
+import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -59,17 +60,18 @@ void main() {
       );
       await tester.pumpAndSettle();
       final send = find.byWidgetPredicate(
-        (widget) => widget is IconButton && widget.tooltip == 'Send message',
+        (widget) =>
+            widget is NeumorphicIconButton && widget.tooltip == 'Send message',
       );
       expect(tester.takeException(), isNull);
-      expect(tester.widget<IconButton>(send).onPressed, isNull);
+      expect(tester.widget<NeumorphicIconButton>(send).onPressed, isNull);
       await tester.enterText(find.byType(TextField), '  Hello\nfriend  ');
       await tester.pumpAndSettle();
-      expect(tester.widget<IconButton>(send).onPressed, isNotNull);
+      expect(tester.widget<NeumorphicIconButton>(send).onPressed, isNotNull);
       messenger.loadingMessageList.value = true;
       await tester.pump();
       await tester.pumpAndSettle();
-      expect(tester.widget<IconButton>(send).onPressed, isNull);
+      expect(tester.widget<NeumorphicIconButton>(send).onPressed, isNull);
       messenger.loadingMessageList.value = false;
       await tester.pump();
       await tester.pumpAndSettle();
@@ -82,7 +84,7 @@ void main() {
         tester.widget<TextField>(find.byType(TextField)).controller!.text,
         isEmpty,
       );
-      expect(tester.widget<IconButton>(send).onPressed, isNull);
+      expect(tester.widget<NeumorphicIconButton>(send).onPressed, isNull);
       expect(tester.takeException(), isNull);
     },
   );

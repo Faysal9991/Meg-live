@@ -165,6 +165,61 @@ void main() {
   });
 
   testWidgets(
+    'icon actions preserve tooltips, press feedback, keyboard and disabled state',
+    (tester) async {
+      var calls = 0;
+      await tester.pumpWidget(
+        themed(
+          Column(
+            children: [
+              NeumorphicIconButton(
+                icon: Icons.add,
+                tooltip: 'Add item',
+                onPressed: () => calls++,
+              ),
+              const NeumorphicIconButton(
+                icon: Icons.remove,
+                tooltip: 'Remove item',
+                onPressed: null,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final enabled = find.byTooltip('Add item');
+      final surface = find.ancestor(
+        of: enabled,
+        matching: find.byType(AnimatedContainer),
+      );
+      final raised = tester.widget<AnimatedContainer>(surface).decoration;
+      expect(tester.getSize(enabled), const Size(48, 48));
+
+      final gesture = await tester.startGesture(tester.getCenter(enabled));
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(
+        tester.widget<AnimatedContainer>(surface).decoration,
+        isNot(raised),
+      );
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(calls, 1);
+      expect(tester.widget<AnimatedContainer>(surface).decoration, raised);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(calls, 2);
+
+      await tester.tap(find.byTooltip('Remove item'));
+      await tester.pumpAndSettle();
+      expect(calls, 2);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'navigation follows app state and works without a tab controller',
     (tester) async {
       var selected = 0;

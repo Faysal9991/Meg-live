@@ -70,7 +70,8 @@ class LiveStreamingController extends GetxController {
   final showCommentField = false.obs;
   final muted = false.obs,
       videoDisabled = false.obs,
-      loudSpeaker = false.obs,
+      // Speaker is a fallback; connected headsets always take priority.
+      loudSpeaker = true.obs,
       needsScroll = true.obs;
   final isBroadcaster = false.obs,
       allowVideoCall = false.obs,

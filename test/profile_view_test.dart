@@ -17,7 +17,7 @@ void main() {
 
   tearDown(Get.reset);
 
-  testWidgets('profile view shows king package and withdraw entries', (
+  testWidgets('profile view shows membership and withdraw entries', (
     tester,
   ) async {
     final authController = TestAuthController();
@@ -28,7 +28,8 @@ void main() {
     await tester.pumpWidget(GetMaterialApp(home: ProfileView()));
     await tester.pumpAndSettle();
 
-    expect(find.text('King Package'), findsOneWidget);
+    expect(find.text('VIP Package'), findsOneWidget);
+    expect(find.text('VVIP Package'), findsOneWidget);
     expect(find.text('Entry Effect'), findsOneWidget);
     expect(find.text('Withdraw Requests'), findsOneWidget);
   });

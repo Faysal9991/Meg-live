@@ -181,12 +181,16 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                                     size: 12,
                                   ),
                                   SizedBox(width: 4),
-                                  Text(
-                                    'Owner',
-                                    style: TextStyle(
-                                      color: AppColors.primaryDark,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
+                                  Flexible(
+                                    child: Text(
+                                      'Owner',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: AppColors.primaryDark,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
                                 ],
