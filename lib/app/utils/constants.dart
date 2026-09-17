@@ -1,9 +1,10 @@
 //Nav
 const STREAMING_LIST = 0;
-const SEARCH = 1;
-const LIVE_STREAM = 2;
-const CHATS = 3;
-const PROFILE = 4;
+// Search is under construction and hidden from the production navigation.
+// const SEARCH = 1;
+const LIVE_STREAM = 1;
+const CHATS = 2;
+const PROFILE = 3;
 
 // Notification
 const NOTIFY_STREAM_FOLLOWER = 'STREAM_LIVE';
