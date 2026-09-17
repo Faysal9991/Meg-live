@@ -67,6 +67,8 @@ class HelperFunctions {
     required String? image,
   }) async {
     AuthController authController = Get.find();
+    final LiveStreamingController streamingController = Get.find();
+    if (streamingController.liveSession.restoreIfActive()) return;
     if (channelId == authController.profile.value.user!.uid!.toString()) {
       Get.snackbar(
         'Not allowed',
@@ -79,11 +81,10 @@ class HelperFunctions {
       return;
     }
 
-    LiveStreamingController streamingController = Get.find();
-
     dynamic streamingData = await streamingController.getLiveData(
       channelId: channelId,
     );
+    if (streamingController.liveSession.restoreIfActive()) return;
     if (streamingData != null) {
       // Live Lock
       if (streamingData['is_locked'] != null && streamingData['is_locked']) {
@@ -116,8 +117,9 @@ class HelperFunctions {
         brdLevel: null,
         fromLink: true,
       );
-      Get.to(
-        () => LiveStreamingView(
+      streamingController.liveSession.open(
+        Get.context!,
+        (_) => LiveStreamingView(
           channelName: channelId,
           isBroadcaster: false,
           fullName: title,
@@ -149,8 +151,9 @@ class HelperFunctions {
         brdLevel: null,
         fromLink: true,
       );
-      Get.to(
-        () => LiveStreamingView(
+      streamingController.liveSession.open(
+        Get.context!,
+        (_) => LiveStreamingView(
           channelName: channelId,
           isBroadcaster: false,
           fullName: title,

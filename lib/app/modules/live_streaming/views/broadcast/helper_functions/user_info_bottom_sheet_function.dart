@@ -1,4 +1,5 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
+import 'room_admin_button.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/messenger/utils/utils.dart';
@@ -153,6 +154,9 @@ void showUserInfoBottomSheet({
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const SizedBox(height: 50),
+                          RoomAdminButton(
+                            uid: int.parse(data['uid'].toString()),
+                          ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

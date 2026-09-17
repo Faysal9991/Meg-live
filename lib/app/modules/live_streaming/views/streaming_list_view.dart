@@ -323,6 +323,7 @@ class StreamingListView extends StatelessWidget {
   }
 
   void _onClickingLiveRoom({required dynamic data}) {
+    if (_livekitStreamingController.liveSession.restoreIfActive()) return;
     if (_livekitStreamingController.loadingRoom.value != 0) return;
     if (data['channel_id'] == _authController.profile.value.user!.uid!) {
       Get.snackbar(
@@ -356,8 +357,9 @@ class StreamingListView extends StatelessWidget {
       allowSend: liveRoomData['allow_send'] ?? true,
     );
 
-    Get.to(
-      () => LiveStreamingView(
+    _livekitStreamingController.liveSession.open(
+      Get.context!,
+      (_) => LiveStreamingView(
         channelName: liveRoomData['channel_id'].toString(),
         isBroadcaster: false,
         fullName: liveRoomData['owner_profile']['full_name'],

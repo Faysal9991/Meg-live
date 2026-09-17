@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:doyel_live/app/modules/live_streaming/services/live_room_session.dart';
 
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
@@ -85,6 +86,10 @@ void main() async {
       themeMode: ThemeMode.light,
       child: GetMaterialApp(
         title: "Biho Live",
+        builder: (context, child) => MinimizedLiveOverlay(
+          session: Get.find<LiveStreamingController>().liveSession,
+          child: child ?? const SizedBox.shrink(),
+        ),
         initialRoute: AppPages.INITIAL,
         getPages: AppPages.routes,
         debugShowCheckedModeBanner: false,

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:doyel_live/app/modules/live_streaming/services/live_room_session.dart';
 
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
@@ -269,6 +270,58 @@ void main() {
       await tester.pumpAndSettle();
     },
   );
+
+  testWidgets('live room minimizes and returns without resetting call state', (
+    tester,
+  ) async {
+    final controller = Get.find<LiveStreamingController>();
+    final session = controller.liveSession;
+    await tester.pumpWidget(
+      NeumorphicTheme(
+        theme: AppTheme.neumorphicTheme,
+        child: GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          builder: (_, child) =>
+              MinimizedLiveOverlay(session: session, child: child!),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => session.open(
+                  context,
+                  (_) => const LiveStreamingView(
+                    channelName: '100',
+                    isBroadcaster: false,
+                    followers: [],
+                    blocks: [],
+                    level: null,
+                    vVipOrVipPreference: {},
+                    fullName: 'Host',
+                  ),
+                ),
+                child: const Text('Open room'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open room'));
+    await tester.pumpAndSettle();
+    final state = tester.state(find.byType(LiveStreamingView));
+    controller.listRequestedCall.add({'uid': 999, 'video_disabled': true});
+    await tester.tap(find.byTooltip('Minimize live room'));
+    await tester.pumpAndSettle();
+    expect(find.text('Return to live'), findsOneWidget);
+    expect(controller.listRequestedCall, hasLength(1));
+    await tester.tap(find.text('Return to live'));
+    await tester.pumpAndSettle();
+    expect(tester.state(find.byType(LiveStreamingView)), same(state));
+    expect(controller.listRequestedCall.single['video_disabled'], isTrue);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    expect(session.isActive, isFalse);
+  });
 
   testWidgets('live room remains usable when opening and dismissing controls', (
     tester,
