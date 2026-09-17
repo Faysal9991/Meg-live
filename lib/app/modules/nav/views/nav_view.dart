@@ -787,6 +787,10 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                         //   );
                         //   return;
                         // }
+                        if (_livekitStreamingController.liveSession
+                            .restoreIfActive()) {
+                          return;
+                        }
                         await availableCameras().then(
                           (value) => Get.to(
                             () => PrepareToLiveView(

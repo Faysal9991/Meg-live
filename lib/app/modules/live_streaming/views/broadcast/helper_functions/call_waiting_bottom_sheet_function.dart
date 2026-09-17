@@ -1,4 +1,7 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
+import 'join_call_mode_bottom_sheet.dart';
+import 'room_admin_button.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
@@ -23,6 +26,14 @@ bool _hasLiveRoomControlAccess({
   final hasKingPackage = packageController.hasActiveKingPackage;
   return isBroadcaster || isModerator || hasKingPackage;
 }
+
+bool _canManageRequests(LiveStreamingController streamingController) =>
+    streamingController.isRoomAdmin ||
+    _hasLiveRoomControlAccess(
+      streamingController: streamingController,
+      authController: Get.find<AuthController>(),
+      packageController: Get.find<VVIPorVipPackageController>(),
+    );
 
 Widget _buildSelfCallActionButton({
   required BuildContext context,
@@ -88,7 +99,7 @@ Widget _buildSelfCallActionButton({
   }
 
   return ElevatedButton(
-    onPressed: () {
+    onPressed: () async {
       if (streamingController.listActiveCall.isEmpty) {
         rShowAlertDialog(
           context: context,
@@ -102,6 +113,33 @@ Widget _buildSelfCallActionButton({
         return;
       }
 
+      final mode = await showJoinCallModeBottomSheet(context);
+      if (mode == null || !context.mounted) return;
+      final microphoneGranted = await Permission.microphone.request().isGranted;
+      final cameraGranted =
+          mode == JoinCallMode.audio ||
+          await Permission.camera.request().isGranted;
+      if (!context.mounted) return;
+      if (!microphoneGranted || !cameraGranted) {
+        rShowSnackBar(
+          context: context,
+          title: 'Please allow access to join the call.',
+          color: AppColors.warning,
+          durationInSeconds: 3,
+        );
+        return;
+      }
+      // The host may have ended a call while the mode sheet was open.
+      if (streamingController.listActiveCall.isEmpty ||
+          streamingController.listRequestedCall.any(
+            (e) => e['uid'] == authController.profile.value.user!.uid!,
+          ) ||
+          streamingController.listActiveCall.any(
+            (e) => e['uid'] == authController.profile.value.user!.uid!,
+          )) {
+        return;
+      }
+      final cameraOff = mode == JoinCallMode.audio;
       dynamic myData = {
         'action': 'call_request',
         'uid': authController.profile.value.user!.uid!,
@@ -110,8 +148,8 @@ Widget _buildSelfCallActionButton({
             authController.profile.value.profile_image ??
             authController.profile.value.photo_url,
         'call_type': 'video',
-        'muted': streamingController.muted.value,
-        'video_disabled': streamingController.videoDisabled.value,
+        'muted': false,
+        'video_disabled': cameraOff,
         'diamonds': authController.profile.value.diamonds,
         'is_moderator': authController.profile.value.is_moderator,
         'is_reseller': authController.profile.value.is_reseller,
@@ -120,7 +158,17 @@ Widget _buildSelfCallActionButton({
         'vvip_or_vip_preference':
             authController.profile.value.vvip_or_vip_preference,
       };
-      onUpdateAction(myData);
+      if (onUpdateAction(myData) == false) {
+        rShowSnackBar(
+          context: context,
+          title: 'Call connection is not ready. Please try again.',
+          color: AppColors.warning,
+          durationInSeconds: 3,
+        );
+        return;
+      }
+      streamingController.muted.value = false;
+      streamingController.videoDisabled.value = cameraOff;
     },
     style: ElevatedButton.styleFrom(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
@@ -258,6 +306,10 @@ void showCallWaitingBottomSheet({
                     packageController: packageController,
                   );
 
+                  final canManageRequests =
+                      hasLiveRoomControlAccess ||
+                      streamingController.isRoomAdmin;
+
                   return streamingController.callTabName.value == 'views'
                       ? ViewerWidget(
                           onUpdateAction: onUpdateAction,
@@ -269,8 +321,7 @@ void showCallWaitingBottomSheet({
                               streamingController.listRequestedCall.length,
                           itemBuilder: ((context, index) {
                             return _callRequestItem(
-                              hasLiveRoomControlAccess:
-                                  hasLiveRoomControlAccess,
+                              hasLiveRoomControlAccess: canManageRequests,
                               streamingController: streamingController,
                               data:
                                   streamingController.listRequestedCall[index],
@@ -350,6 +401,12 @@ class _callRequestItem extends StatelessWidget {
                       minHeight: 32,
                       iconColor: AppColors.success,
                       onPressed: () {
+                        if (!_canManageRequests(streamingController)) return;
+                        if (!streamingController.listRequestedCall.any(
+                          (e) => e['uid'] == data['uid'],
+                        )) {
+                          return;
+                        }
                         if (streamingController.allowVideoCall.value) {
                           // Video Call
                           if (streamingController.listActiveCall.length >= 9) {
@@ -391,13 +448,16 @@ class _callRequestItem extends StatelessWidget {
                           "followers": data["followers"],
                           "is_moderator": data["is_moderator"],
                           "is_reseller": data["is_reseller"],
-                          "muted": data["muted"],
-                          "video_disabled": data["video_disabled"],
+                          "call_type": "video",
+                          "muted": data["muted"] ?? false,
+                          "video_disabled":
+                              data["video_disabled"] ??
+                              data["call_type"] == "audio",
                           "level": data["level"],
                           "vvip_or_vip_preference":
                               data["vvip_or_vip_preference"],
                         };
-                        onUpdateAction(callerData);
+                        if (onUpdateAction(callerData) == false) return;
 
                         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
                           submissionData:
@@ -418,6 +478,7 @@ class _callRequestItem extends StatelessWidget {
                       minHeight: 32,
                       iconColor: AppColors.error,
                       onPressed: () {
+                        if (!_canManageRequests(streamingController)) return;
                         String action = 'cancel_request';
                         dynamic cancelData = {
                           // 'room_name':
@@ -702,6 +763,10 @@ class _viewerItem extends StatelessWidget {
       ),
       horizontalTitleGap: 0,
       leading: _profileImageWithVVIPWidget(data: data),
+      trailing: RoomAdminButton(
+        uid: int.parse(data['uid'].toString()),
+        compact: true,
+      ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

@@ -1,4 +1,5 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
+import 'package:doyel_live/app/modules/live_streaming/utlls/guest_call_media.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -108,6 +109,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   int _actionSocketGeneration = 0;
 
   final ScrollController _scrollController = ScrollController();
+  bool _commentsVisible = true;
+  double _commentSwipeDistance = 0;
   double? _scrollPosition;
   double get _screenGlobalWidth => MediaQuery.sizeOf(context).width;
   double get _screenGlobalHeight => MediaQuery.sizeOf(context).height;
@@ -136,6 +139,11 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
   final bool _fastConnect = false;
   bool _isDisposed = false;
+  int _localCallRevision = 0;
+  Future<void> _localCallMediaTask = Future<void>.value();
+  bool _updatingRoomAdmin = false;
+  static const _roomAdminTopic = 'doyel.room-admins';
+  Route<dynamic>? _liveRoute;
 
   CameraPosition _cameraPosition = CameraPosition.front;
   // /////////////////////////////////
@@ -514,7 +522,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
               } catch (e) {
                 //
               }
-              if (activeCallData['call_type'] == 'video') {
+              if (data['video_disabled'] is bool) {
                 try {
                   await _room!.localParticipant?.setCameraEnabled(
                     !data['video_disabled'],
@@ -531,6 +539,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
             activeCallData['muted'] = data['muted'];
             activeCallData['video_disabled'] = data['video_disabled'];
+            activeCallData['call_type'] = 'video';
             _livekitStreamingController.listActiveCall.removeAt(index);
             _livekitStreamingController.listActiveCall.insert(
               index,
@@ -539,39 +548,6 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
           }
           break;
         case "accept_general_callers":
-
-          // active_user
-          if (_livekitStreamingController.listActiveCall.indexWhere(
-                (element) => element['uid'] == data['uid'],
-              ) ==
-              -1) {
-            _livekitStreamingController.listRequestedCall.removeWhere(
-              (element) => element['uid'] == data['uid'],
-            );
-
-            _livekitStreamingController.listActiveCall.add(data);
-
-            if (data['uid'] == _myUid) {
-              try {
-                await _room!.localParticipant?.setCameraEnabled(true);
-              } catch (e) {
-                //
-              }
-              try {
-                await _setMicrophoneEnabled(true);
-              } catch (e) {
-                //
-              }
-              if (data['call_type'] == 'audio') {
-                try {
-                  await _room!.localParticipant?.setCameraEnabled(false);
-                } catch (e) {
-                  //
-                }
-              }
-            }
-          }
-          break;
         case "active_users":
           if (_livekitStreamingController.listActiveCall.indexWhere(
                 (element) => element['uid'] == data['uid'],
@@ -580,31 +556,15 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
             _livekitStreamingController.listRequestedCall.removeWhere(
               (element) => element['uid'] == data['uid'],
             );
-
-            _livekitStreamingController.listActiveCall.add(data);
-
-            if (data['uid'] == _myUid) {
-              try {
-                await _room!.localParticipant?.setCameraEnabled(true);
-              } catch (e) {
-                //
-              }
-              if (data['call_type'] == 'audio') {
-                try {
-                  await _room!.localParticipant?.setCameraEnabled(false);
-                } catch (e) {
-                  //
-                }
-              }
-              try {
-                await _setMicrophoneEnabled(!data['muted']);
-              } catch (e) {
-                //
-              }
-            }
-            // _groupCallingDatetime = DateTime.now();
+            final caller = Map<String, dynamic>.from(data as Map);
+            caller['video_disabled'] =
+                data['video_disabled'] ?? data['call_type'] == 'audio';
+            caller['muted'] = data['muted'] ?? false;
+            // Audio is an initial camera preference; every guest can enable it later.
+            caller['call_type'] = 'video';
+            _livekitStreamingController.listActiveCall.add(caller);
+            if (data['uid'] == _myUid) await _applyJoinedCallMedia(caller);
           }
-
           break;
 
         case "loaded_group_callers":
@@ -1045,6 +1005,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     super.initState();
 
     _myUid = _authController.profile.value.user!.uid!;
+    _livekitStreamingController.roomAdminIds.clear();
+    _livekitStreamingController.updateRoomAdmin = _updateRoomAdmin;
     _liveGroupRoomCount = 1;
     _packageController.ensureKingPackageCatalogLoaded();
 
@@ -1076,8 +1038,16 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _liveRoute = ModalRoute.of(context);
+  }
+
+  @override
   void dispose() {
-    // _closeEverything();
+    _livekitStreamingController.liveSession.detach(_liveRoute);
+    _livekitStreamingController.updateRoomAdmin = null;
+    _livekitStreamingController.roomAdminIds.clear();
 
     _isDisposed = true;
     _cancelRoomTimers();
@@ -1103,16 +1073,35 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     super.dispose();
   }
 
+  void _onCommentSwipeEnd(DragEndDetails details) {
+    // Require deliberate horizontal movement, including for slow swipes.
+    final distance = _commentSwipeDistance;
+    _commentSwipeDistance = 0;
+    if (distance.abs() < 48) return;
+
+    final visible = distance < 0;
+    if (_commentsVisible == visible) return;
+    setState(() => _commentsVisible = visible);
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
+        _livekitStreamingController.liveSession.restoreIfActive();
         return false;
       },
       child: SafeArea(
         child: Scaffold(
-          body: Container(
-            color: AppColors.textPrimary,
+          backgroundColor: AppColors.textPrimary,
+          body: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragStart: (_) => _commentSwipeDistance = 0,
+            onHorizontalDragUpdate: (details) {
+              _commentSwipeDistance += details.primaryDelta ?? 0;
+            },
+            onHorizontalDragEnd: _onCommentSwipeEnd,
+            onHorizontalDragCancel: () => _commentSwipeDistance = 0,
             child: Stack(
               children: [
                 // Body
@@ -1311,7 +1300,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                 Positioned(
                   top: 8,
                   left: 4,
-                  right: 40,
+                  right: 88,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1518,6 +1507,18 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                     ],
                   ),
                 ),
+                Positioned(
+                  top: 4,
+                  right: 44,
+                  child: LiveRoomIconButton(
+                    icon: LucideIcons.minimize2,
+                    label: 'Minimize live room',
+                    onPressed: () {
+                      _focusNode.unfocus();
+                      _livekitStreamingController.liveSession.minimize();
+                    },
+                  ),
+                ),
                 // Top Close
                 Positioned(
                   top: 4,
@@ -1544,7 +1545,16 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                   right: 86,
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height * .27,
-                    child: _commentView(),
+                    child: IgnorePointer(
+                      ignoring: !_commentsVisible,
+                      child: AnimatedOpacity(
+                        opacity: _commentsVisible ? 1 : 0,
+                        duration: const Duration(milliseconds: 180),
+                        // Keep the list mounted so incoming comments and the
+                        // scroll position are preserved while it is hidden.
+                        child: _commentView(),
+                      ),
+                    ),
                   ),
                 ),
 
@@ -2267,8 +2277,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     // _room = _livekitStreamingController.livekitRoom!;
     // _listener = _livekitStreamingController.roomEventListener!;
 
-    if (await Permission.camera.request().isGranted &&
-        await Permission.microphone.request().isGranted) {
+    if (!widget.isBroadcaster ||
+        (await Permission.camera.request().isGranted &&
+            await Permission.microphone.request().isGranted)) {
       // Either the permission was already granted before or the user just granted it.
       if (defaultTargetPlatform == TargetPlatform.android) {
         await [
@@ -2318,9 +2329,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         );
         // Create a Listener before connecting
         _listener = _room!.createListener();
-        await _connectingRoom(token: _roomToken);
-        _room!.addListener(_onRoomDidUpdate);
         _setUpEventListeners();
+        _room!.addListener(_onRoomDidUpdate);
+        await _connectingRoom(token: _roomToken);
+        if (!_isDisposed) unawaited(_syncRoomAdmins());
       } catch (e) {
         _livekitStreamingController.busyConnectingEngine.value = false;
       }
@@ -2691,6 +2703,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     ..on<TrackPublishedEvent>((_) => _renderParticipants())
     ..on<TrackUnpublishedEvent>((_) => _renderParticipants())
     ..on<DataReceivedEvent>((event) {
+      if (event.topic == _roomAdminTopic) {
+        _receiveRoomAdmins(event);
+        return;
+      }
       // String decoded = 'Failed to decode';
       dynamic data;
       try {
@@ -2764,6 +2780,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     // })
     // Should me Mendatory for all apps
     ..on<RoomReconnectedEvent>((event) {
+      unawaited(_syncRoomAdmins());
       unawaited(_audioRouting.refresh());
       // if (_livekitStreamingController.listActiveCall.indexWhere(
       //       (element) => element['uid'] == _myUid,
@@ -2787,6 +2804,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     ..on<TrackSubscribedEvent>((_) => _renderParticipants())
     ..on<TrackUnsubscribedEvent>((_) => _renderParticipants())
     ..on<ParticipantConnectedEvent>((p0) {
+      if (widget.isBroadcaster) unawaited(_syncRoomAdmins());
       _livekitStreamingController.viewersCount.value =
           _room!.remoteParticipants.length;
 
@@ -3380,7 +3398,13 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     // to pop the page underneath; keep navigation tied to this room's route.
     final route = ModalRoute.of(context);
     if (route == null) return;
+    final wasMinimized = _livekitStreamingController.liveSession.isMinimized;
+    _livekitStreamingController.liveSession.detach(route);
     final navigator = Navigator.of(context);
+    if (wasMinimized) {
+      navigator.removeRoute(route);
+      return;
+    }
     navigator.popUntil((candidate) => candidate == route || candidate.isFirst);
     if (!route.isCurrent) return;
     if (route.isFirst) {
@@ -3436,12 +3460,160 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     }
   }
 
-  void _onUnpublishAllTracks() async {
+  Future<void> _applyJoinedCallMedia(Map<String, dynamic> caller) {
+    final revision = ++_localCallRevision;
+    // Serialize with previous joins/ends so an old cleanup cannot stop a new call.
+    return _localCallMediaTask = _localCallMediaTask.then(
+      (_) => _publishJoinedCallMedia(caller, revision),
+    );
+  }
+
+  Future<void> _publishJoinedCallMedia(
+    Map<String, dynamic> caller,
+    int revision,
+  ) async {
+    if (_isDisposed || revision != _localCallRevision) return;
+    final participant = _room?.localParticipant;
+    if (participant == null || _isDisposed) return;
+    final cameraOff = caller['video_disabled'] == true;
+    final muted = caller['muted'] == true;
+    _livekitStreamingController.videoDisabled.value = cameraOff;
+    _livekitStreamingController.muted.value = muted;
     try {
-      await _room!.localParticipant?.unpublishAllTracks();
-    } catch (e) {
-      //
+      await applyGuestCallMedia(
+        cameraOff: cameraOff,
+        muted: muted,
+        isCurrentCall: () => !_isDisposed && revision == _localCallRevision,
+        requestCameraPermission: () => Permission.camera.request().isGranted,
+        requestMicrophonePermission: () =>
+            Permission.microphone.request().isGranted,
+        setCameraEnabled: (enabled) async {
+          await participant.setCameraEnabled(enabled);
+        },
+        setMicrophoneEnabled: _setMicrophoneEnabled,
+      );
+    } catch (_) {
+      if (mounted && !_isDisposed) {
+        rShowSnackBar(
+          context: context,
+          title: 'Could not start call media. Please check your permissions.',
+          color: AppColors.warning,
+          durationInSeconds: 3,
+        );
+      }
+    } finally {
+      if (_isDisposed || revision != _localCallRevision) {
+        try {
+          await participant.unpublishAllTracks();
+        } catch (_) {
+          // The room may already have disconnected.
+        }
+      } else {
+        final disabled = !participant.isCameraEnabled();
+        final micMuted = !participant.isMicrophoneEnabled();
+        _livekitStreamingController.videoDisabled.value = disabled;
+        _livekitStreamingController.muted.value = micMuted;
+        _updateLocalActiveCallMediaState(
+          videoDisabled: disabled,
+          muted: micMuted,
+        );
+        onUpdateAction({
+          'action': 'controller',
+          'uid': _myUid,
+          'call_type': 'video',
+          'video_disabled': disabled,
+          'muted': micMuted,
+        });
+      }
     }
+  }
+
+  Future<bool> _updateRoomAdmin(int uid, bool enabled) async {
+    if (!widget.isBroadcaster ||
+        _isDisposed ||
+        _updatingRoomAdmin ||
+        uid == _myUid) {
+      return false;
+    }
+    final participant = _room?.localParticipant;
+    if (participant == null) return false;
+    _updatingRoomAdmin = true;
+    final ids = _livekitStreamingController.roomAdminIds.toSet();
+    enabled ? ids.add(uid) : ids.remove(uid);
+    try {
+      await participant.publishData(
+        utf8.encode(jsonEncode({'admin_ids': ids.toList()})),
+        reliable: true,
+        topic: _roomAdminTopic,
+      );
+      if (_isDisposed) return false;
+      _livekitStreamingController.roomAdminIds.assignAll(ids);
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _updatingRoomAdmin = false;
+    }
+  }
+
+  Future<void> _syncRoomAdmins() async {
+    if (_isDisposed || _updatingRoomAdmin) return;
+    try {
+      await _room?.localParticipant?.publishData(
+        utf8.encode(
+          jsonEncode(
+            widget.isBroadcaster
+                ? {
+                    'admin_ids': _livekitStreamingController.roomAdminIds
+                        .toList(),
+                  }
+                : {'request_admins': true},
+          ),
+        ),
+        reliable: true,
+        topic: _roomAdminTopic,
+        destinationIdentities: widget.isBroadcaster
+            ? null
+            : [widget.channelName],
+      );
+    } catch (_) {
+      // Synchronize again when the participant or transport reconnects.
+    }
+  }
+
+  void _receiveRoomAdmins(DataReceivedEvent event) {
+    if (_isDisposed) return;
+    try {
+      final data = jsonDecode(utf8.decode(event.data));
+      if (data is! Map) return;
+      if (widget.isBroadcaster &&
+          data['request_admins'] == true &&
+          event.participant != null) {
+        unawaited(_syncRoomAdmins());
+      } else if (!widget.isBroadcaster) {
+        // Trust the LiveKit sender identity, never a uid supplied in the payload.
+        _livekitStreamingController.applyRoomAdmins(
+          senderIdentity: event.participant?.identity,
+          ids: data['admin_ids'],
+        );
+      }
+    } catch (_) {
+      // Malformed packets must not affect room permissions.
+    }
+  }
+
+  void _onUnpublishAllTracks() {
+    _localCallRevision++;
+    _livekitStreamingController.videoDisabled.value = true;
+    _livekitStreamingController.muted.value = false;
+    final participant = _room?.localParticipant;
+    _localCallMediaTask = _localCallMediaTask.then((_) async {
+      try {
+        await participant?.unpublishAllTracks();
+      } catch (_) {
+        // The room may already have disconnected.
+      }
+    });
   }
 
   Future<void> _onToggleMute() async {
@@ -3512,7 +3684,12 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
   Future<void> _onToggleVideoEnable() async {
     try {
+      final revision = _localCallRevision;
       final videoDisabled = !_livekitStreamingController.videoDisabled.value;
+      if (!videoDisabled && !await Permission.camera.request().isGranted) {
+        return;
+      }
+      if (_isDisposed || revision != _localCallRevision) return;
       await _room!.localParticipant?.setCameraEnabled(!videoDisabled);
       _livekitStreamingController.videoDisabled.value = videoDisabled;
       _updateLocalActiveCallMediaState(videoDisabled: videoDisabled);
@@ -3574,6 +3751,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     }
     if (videoDisabled != null) {
       updatedData['video_disabled'] = videoDisabled;
+      updatedData['call_type'] = 'video';
     }
     activeCalls[index] = updatedData;
     activeCalls.refresh();

@@ -1,4 +1,5 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
+import 'package:doyel_live/app/modules/live_streaming/services/live_room_session.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -46,6 +47,24 @@ class LiveStreamingController extends GetxController {
 
   final AuthController _authController = Get.find();
   final Dio _dio;
+  final liveSession = LiveRoomSession();
+  final roomAdminIds = <int>{}.obs;
+  Future<bool> Function(int uid, bool enabled)? updateRoomAdmin;
+
+  bool get isRoomAdmin =>
+      roomAdminIds.contains(_authController.profile.value.user?.uid);
+
+  bool applyRoomAdmins({
+    required String? senderIdentity,
+    required dynamic ids,
+  }) {
+    if (senderIdentity != channelName.value || ids is! List) return false;
+    final parsed = ids.map((id) => int.tryParse(id.toString())).toList();
+    if (parsed.any((id) => id == null || id <= 0)) return false;
+    roomAdminIds.assignAll(parsed.cast<int>());
+    return true;
+  }
+
   // final loadingCommentSend = false.obs;
   final loadingLiveRoomList = false.obs;
   final loadingGfitList = false.obs;
@@ -68,11 +87,9 @@ class LiveStreamingController extends GetxController {
   final showViewersTab = false.obs;
   final callTabName = 'views'.obs;
   final showCommentField = false.obs;
-  final muted = false.obs,
-      videoDisabled = false.obs,
-      // Speaker is a fallback; connected headsets always take priority.
-      loudSpeaker = true.obs,
-      needsScroll = true.obs;
+  final muted = false.obs, videoDisabled = false.obs, needsScroll = true.obs;
+  // Speaker is a fallback; connected headsets always take priority.
+  final loudSpeaker = true.obs;
   final isBroadcaster = false.obs,
       allowVideoCall = false.obs,
       allowCommentAndEmojiSend = true.obs,
@@ -842,6 +859,8 @@ class LiveStreamingController extends GetxController {
   }
 
   void setClearStreamingRelatedFields() {
+    roomAdminIds.clear();
+    updateRoomAdmin = null;
     liveStreamData.value = {};
     channelName.value = '';
     broadcasterFullname.value = '';

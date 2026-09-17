@@ -195,10 +195,10 @@ class _EditProfileViewState extends State<EditProfileView> {
 
                         // if (fullName.isNotEmpty && emailAddress.isNotEmpty) {
                         if (fullName.isNotEmpty) {
-                          if (fullName.length > 25) {
+                          if (fullName.characters.length > 50) {
                             Get.snackbar(
                               'Failed',
-                              "Your name must be in 25 characters long.",
+                              "Your name must be 50 characters or fewer.",
                               backgroundColor: AppColors.error,
                               colorText: AppColors.surface,
                               snackPosition: SnackPosition.TOP,

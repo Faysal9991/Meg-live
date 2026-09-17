@@ -226,6 +226,10 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                   child: Center(
                     child: InkWell(
                       onTap: () async {
+                        if (_livekitStreamingController.liveSession
+                            .restoreIfActive()) {
+                          return;
+                        }
                         // Go to Live
                         _livekitStreamingController.setBroadcastStreamingStuffs(
                           brdchannelName:
@@ -247,8 +251,9 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                           brdLevel: _authController.profile.value.level,
                           allowSend: true,
                         );
-                        Get.off(
-                          () => LiveStreamingView(
+                        _livekitStreamingController.liveSession.open(
+                          context,
+                          (_) => LiveStreamingView(
                             channelName: _authController
                                 .profile
                                 .value
@@ -273,6 +278,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                                   .vvip_or_vip_preference,
                             },
                           ),
+                          replace: true,
                         );
                       },
                       child: Image.asset(
