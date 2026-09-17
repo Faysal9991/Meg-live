@@ -109,6 +109,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   int _actionSocketGeneration = 0;
 
   final ScrollController _scrollController = ScrollController();
+  bool _commentsVisible = true;
+  double _commentSwipeDistance = 0;
   double? _scrollPosition;
   double get _screenGlobalWidth => MediaQuery.sizeOf(context).width;
   double get _screenGlobalHeight => MediaQuery.sizeOf(context).height;
@@ -1071,6 +1073,17 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     super.dispose();
   }
 
+  void _onCommentSwipeEnd(DragEndDetails details) {
+    // Require deliberate horizontal movement, including for slow swipes.
+    final distance = _commentSwipeDistance;
+    _commentSwipeDistance = 0;
+    if (distance.abs() < 48) return;
+
+    final visible = distance < 0;
+    if (_commentsVisible == visible) return;
+    setState(() => _commentsVisible = visible);
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -1080,8 +1093,15 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       },
       child: SafeArea(
         child: Scaffold(
-          body: Container(
-            color: AppColors.textPrimary,
+          backgroundColor: AppColors.textPrimary,
+          body: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragStart: (_) => _commentSwipeDistance = 0,
+            onHorizontalDragUpdate: (details) {
+              _commentSwipeDistance += details.primaryDelta ?? 0;
+            },
+            onHorizontalDragEnd: _onCommentSwipeEnd,
+            onHorizontalDragCancel: () => _commentSwipeDistance = 0,
             child: Stack(
               children: [
                 // Body
@@ -1525,7 +1545,16 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                   right: 86,
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height * .27,
-                    child: _commentView(),
+                    child: IgnorePointer(
+                      ignoring: !_commentsVisible,
+                      child: AnimatedOpacity(
+                        opacity: _commentsVisible ? 1 : 0,
+                        duration: const Duration(milliseconds: 180),
+                        // Keep the list mounted so incoming comments and the
+                        // scroll position are preserved while it is hidden.
+                        child: _commentView(),
+                      ),
+                    ),
                   ),
                 ),
 

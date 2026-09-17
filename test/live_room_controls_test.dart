@@ -46,6 +46,31 @@ class _Participant extends Fake implements RemoteParticipant {
   void removeListener(VoidCallback listener) {}
 }
 
+Future<void> _pumpCommentSwipeRoom(WidgetTester tester) async {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(
+    NeumorphicTheme(
+      theme: AppTheme.neumorphicTheme,
+      child: GetMaterialApp(
+        theme: AppTheme.lightTheme,
+        home: const LiveStreamingView(
+          channelName: '100',
+          isBroadcaster: false,
+          followers: [],
+          blocks: [],
+          level: null,
+          vVipOrVipPreference: {},
+          fullName: 'Host',
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -72,6 +97,119 @@ void main() {
           const MethodChannel('flutter.baseflow.com/permissions/methods'),
           null,
         );
+  });
+
+  testWidgets('swiping right hides comments and swiping left restores them', (
+    tester,
+  ) async {
+    await _pumpCommentSwipeRoom(tester);
+    final controller = Get.find<LiveStreamingController>();
+    controller.listCommentLiveStream.add({
+      'uid': 2,
+      'full_name': 'Viewer',
+      'type': 'comment',
+      'text': 'First live comment',
+    });
+    await tester.pumpAndSettle();
+    final firstComment = find.text('First live comment');
+    expect(firstComment.hitTestable(), findsOneWidget);
+
+    // A swipe on the video area controls the comment overlay.
+    await tester.dragFrom(const Offset(80, 360), const Offset(160, 0));
+    await tester.pumpAndSettle();
+    expect(firstComment.hitTestable(), findsNothing);
+    expect(find.byType(TextField).hitTestable(), findsOneWidget);
+    expect(find.byTooltip('Send a gift').hitTestable(), findsOneWidget);
+
+    controller.listCommentLiveStream.add({
+      'uid': 3,
+      'full_name': 'Another viewer',
+      'type': 'comment',
+      'text': 'Arrived while hidden',
+    });
+    await tester.pumpAndSettle();
+    await tester.dragFrom(const Offset(80, 360), const Offset(160, 0));
+    await tester.pumpAndSettle();
+    expect(firstComment.hitTestable(), findsNothing);
+    expect(find.text('Arrived while hidden').hitTestable(), findsNothing);
+    expect(controller.listCommentLiveStream, hasLength(2));
+
+    await tester.dragFrom(const Offset(280, 360), const Offset(-180, 0));
+    await tester.pumpAndSettle();
+    expect(firstComment.hitTestable(), findsOneWidget);
+    expect(find.text('Arrived while hidden').hitTestable(), findsOneWidget);
+
+    // Swiping directly over a comment also works, even at a slow speed.
+    final commentPosition = tester.getCenter(firstComment);
+    await tester.timedDragFrom(
+      commentPosition,
+      const Offset(120, 0),
+      const Duration(seconds: 1),
+    );
+    await tester.pumpAndSettle();
+    expect(firstComment.hitTestable(), findsNothing);
+    await tester.dragFrom(
+      commentPosition + const Offset(120, 0),
+      const Offset(-120, 0),
+    );
+    await tester.pumpAndSettle();
+    expect(firstComment.hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('comment swipes preserve scrolling and ignore accidental drags', (
+    tester,
+  ) async {
+    await _pumpCommentSwipeRoom(tester);
+    final controller = Get.find<LiveStreamingController>();
+    controller.listCommentLiveStream.addAll([
+      for (var index = 0; index < 20; index++)
+        {
+          'uid': 2,
+          'full_name': 'Viewer',
+          'type': 'comment',
+          'text': 'Live comment $index',
+        },
+    ]);
+    await tester.pumpAndSettle();
+    final comments = find.ancestor(
+      of: find.text('Live comment 0'),
+      matching: find.byType(ListView),
+    );
+    final commentList = tester.widget<ListView>(comments);
+    await tester.drag(comments, const Offset(0, -100));
+    await tester.pumpAndSettle();
+    final scrollOffset = commentList.controller!.offset;
+    expect(scrollOffset, greaterThan(0));
+    final visibleComment = find.textContaining('Live comment').hitTestable();
+    expect(visibleComment, findsWidgets);
+
+    await tester.tapAt(const Offset(80, 360));
+    await tester.dragFrom(const Offset(80, 360), const Offset(30, 0));
+    await tester.pumpAndSettle();
+    expect(visibleComment, findsWidgets);
+
+    // The bottom toolbar retains its own horizontal scrolling gesture.
+    await tester.dragFrom(const Offset(270, 820), const Offset(-180, 0));
+    await tester.pumpAndSettle();
+    await tester.dragFrom(const Offset(80, 820), const Offset(180, 0));
+    await tester.pumpAndSettle();
+    expect(visibleComment, findsWidgets);
+
+    await tester.dragFrom(const Offset(80, 360), const Offset(160, 0));
+    await tester.pumpAndSettle();
+    expect(visibleComment, findsNothing);
+    await tester.dragFrom(const Offset(280, 360), const Offset(-180, 0));
+    await tester.pumpAndSettle();
+    expect(visibleComment, findsWidgets);
+    expect(commentList.controller!.offset, scrollOffset);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
 
   testWidgets('sent SVGA gifts finish fully and replay while headlines update', (
