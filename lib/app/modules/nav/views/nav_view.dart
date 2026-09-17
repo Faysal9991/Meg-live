@@ -15,7 +15,7 @@ import 'package:doyel_live/app/modules/live_streaming/views/streaming_list_view.
 import 'package:doyel_live/app/modules/messenger/views/messenger_view.dart';
 import 'package:doyel_live/app/modules/profile/controllers/profile_controller.dart';
 import 'package:doyel_live/app/modules/profile/views/profile_view.dart';
-import 'package:doyel_live/app/modules/profile/views/search_view.dart';
+// import 'package:doyel_live/app/modules/profile/views/search_view.dart';
 import 'package:doyel_live/app/utils/NetworkConnectivity.dart';
 import 'package:doyel_live/app/utils/api_client.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
@@ -51,18 +51,19 @@ String _formatDiamonds(int value) {
 
 Widget _loadView({required int index}) {
   switch (index) {
-    case 0:
+    case STREAMING_LIST:
       return StreamingListView();
-    case 1:
-      return SearchView();
-    // case 2:
+    // Search is under construction and hidden from the production navigation.
+    // case SEARCH:
+    //   return SearchView();
+    // case LIVE_STREAM:
     //   // No need any view
     //   return const StreamingView(
     //     camera: null,
     //   );
-    case 3:
+    case CHATS:
       return MessengerView();
-    case 4:
+    case PROFILE:
       return ProfileView();
 
     default:
@@ -76,11 +77,12 @@ const List<CustomTabItem> _navItems = [
     activeIcon: EvaIcons.home,
     inactiveIcon: EvaIcons.homeOutline,
   ),
-  CustomTabItem(
-    label: 'Search',
-    activeIcon: EvaIcons.search,
-    inactiveIcon: EvaIcons.searchOutline,
-  ),
+  // Search is under construction and hidden from the production navigation.
+  // CustomTabItem(
+  //   label: 'Search',
+  //   activeIcon: EvaIcons.search,
+  //   inactiveIcon: EvaIcons.searchOutline,
+  // ),
   CustomTabItem(
     label: 'Live',
     activeIcon: EvaIcons.video,

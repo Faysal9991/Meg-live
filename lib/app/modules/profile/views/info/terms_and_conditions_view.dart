@@ -1,11 +1,11 @@
 import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-
 import 'package:get/get.dart';
 
 class TermsAndConditionsView extends GetView {
   const TermsAndConditionsView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -30,108 +30,280 @@ class TermsAndConditionsView extends GetView {
 }
 
 const htmlData = r"""
-<div id="tandc_content" style="">
-    <strong>Terms &amp; Conditions</strong> <p>
-                  By downloading or using the app, these terms will
-                  automatically apply to you – you should make sure therefore
-                  that you read them carefully before using the app. You’re not
-                  allowed to copy or modify the app, any part of the app, or
-                  our trademarks in any way. You’re not allowed to attempt to
-                  extract the source code of the app, and you also shouldn’t try
-                  to translate the app into other languages or make derivative
-                  versions. The app itself, and all the trademarks, copyright,
-                  database rights, and other intellectual property rights related
-                  to it, still belong to Biho Live.
-                </p> <p>
-                  Biho Live is committed to ensuring that the app is
-                  as useful and efficient as possible. For that reason, we
-                  reserve the right to make changes to the app or to charge for
-                  its services, at any time and for any reason. We will never
-                  charge you for the app or its services without making it very
-                  clear to you exactly what you’re paying for.
-                </p> <p>
-                  The Biho Live app stores and processes personal data that
-                  you have provided to us, to provide our
-                  Service. It’s your responsibility to keep your phone and
-                  access to the app secure. We therefore recommend that you do
-                  not jailbreak or root your phone, which is the process of
-                  removing software restrictions and limitations imposed by the
-                  official operating system of your device. It could make your
-                  phone vulnerable to malware/viruses/malicious programs,
-                  compromise your phone’s security features and it could mean
-                  that the Biho Live app won’t work properly or at all.
-                </p> <div><p>
-                    The app does use third-party services that declare their
-                    Terms and Conditions.
-                  </p> <p>
-                    Link to Terms and Conditions of third-party service
-                    providers used by the app
-                  </p> <ul><li><a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">Google Play Services</a></li><li><a href="https://firebase.google.com/terms/analytics" target="_blank" rel="noopener noreferrer">Google Analytics for Firebase</a></li><li><a href="https://firebase.google.com/terms/crashlytics" target="_blank" rel="noopener noreferrer">Firebase Crashlytics</a></li><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----></ul></div> <p>
-                  You should be aware that there are certain things that
-                  Biho Live will not take responsibility for. Certain
-                  functions of the app will require the app to have an active
-                  internet connection. The connection can be Wi-Fi or provided
-                  by your mobile network provider, but Biho Live
-                  cannot take responsibility for the app not working at full
-                  functionality if you don’t have access to Wi-Fi, and you don’t
-                  have any of your data allowance left.
-                </p> <p></p> <p>
-                  If you’re using the app outside of an area with Wi-Fi, you
-                  should remember that the terms of the agreement with your
-                  mobile network provider will still apply. As a result, you may
-                  be charged by your mobile provider for the cost of data for
-                  the duration of the connection while accessing the app, or
-                  other third-party charges. In using the app, you’re accepting
-                  responsibility for any such charges, including roaming data
-                  charges if you use the app outside of your home territory
-                  (i.e. region or country) without turning off data roaming. If
-                  you are not the bill payer for the device on which you’re
-                  using the app, please be aware that we assume that you have
-                  received permission from the bill payer for using the app.
-                </p> <p>
-                  Along the same lines, Biho Live cannot always take
-                  responsibility for the way you use the app i.e. You need to
-                  make sure that your device stays charged – if it runs out of
-                  battery and you can’t turn it on to avail the Service,
-                  Biho Live cannot accept responsibility.
-                </p> <p>
-                  With respect to Biho Live’s responsibility for your
-                  use of the app, when you’re using the app, it’s important to
-                  bear in mind that although we endeavor to ensure that it is
-                  updated and correct at all times, we do rely on third parties
-                  to provide information to us so that we can make it available
-                  to you. Biho Live accepts no liability for any
-                  loss, direct or indirect, you experience as a result of
-                  relying wholly on this functionality of the app.
-                </p> <p>
-                  At some point, we may wish to update the app. The app is
-                  currently available on Android – the requirements for the 
-                  system(and for any additional systems we
-                  decide to extend the availability of the app to) may change,
-                  and you’ll need to download the updates if you want to keep
-                  using the app. Biho Live does not promise that it
-                  will always update the app so that it is relevant to you
-                  and/or works with the Android version that you have
-                  installed on your device. However, you promise to always
-                  accept updates to the application when offered to you, We may
-                  also wish to stop providing the app, and may terminate use of
-                  it at any time without giving notice of termination to you.
-                  Unless we tell you otherwise, upon any termination, (a) the
-                  rights and licenses granted to you in these terms will end;
-                  (b) you must stop using the app, and (if needed) delete it
-                  from your device.
-                </p> <p><strong>Changes to This Terms and Conditions</strong></p> <p>
-                  We may update our Terms and Conditions
-                  from time to time. Thus, you are advised to review this page
-                  periodically for any changes. We will
-                  notify you of any changes by posting the new Terms and
-                  Conditions on this page.
-                </p> <p>
-                  These terms and conditions are effective as of 2023-11-16
-                </p> <p><strong>Contact Us</strong></p> <p>
-                  If you have any questions or suggestions about our
-                  Terms and Conditions, do not hesitate to contact us
-                  at toplive46@gmail.com.
-                </p> 
-                </div>
+<div id="tandc_content">
+
+  <strong>Terms &amp; Conditions</strong>
+
+  <p>
+    By downloading or using the Biho Live app, these Terms and Conditions
+    automatically apply to you. You should therefore read them carefully
+    before using the app.
+  </p>
+
+  <p>
+    You are not allowed to copy or modify the app, any part of the app,
+    or our trademarks in any way. You are not allowed to attempt to
+    extract the source code of the app, translate the app into other
+    languages, or create derivative versions without authorization.
+  </p>
+
+  <p>
+    The app itself, including all trademarks, copyrights, database rights,
+    and other intellectual property rights related to it, belongs to
+    Biho Live or its respective licensors.
+  </p>
+
+  <p>
+    Biho Live is committed to ensuring that the app is as useful,
+    reliable, and efficient as possible.
+  </p>
+
+  <p>
+    For that reason, we reserve the right to make changes to the app,
+    add or remove features, or charge for certain services where applicable.
+    We will make it clear when a feature or service requires payment.
+  </p>
+
+  <p>
+    The Biho Live app may store and process personal data that you provide
+    to us in order to provide and improve the Service.
+  </p>
+
+  <p>
+    It is your responsibility to keep your device and access to the app
+    secure. We recommend that you do not jailbreak or root your device.
+  </p>
+
+  <p>
+    Jailbreaking or rooting may remove software restrictions imposed by
+    the official operating system and could make your device vulnerable
+    to malware, viruses, malicious programs, or other security risks.
+    It may also cause Biho Live to stop working properly.
+  </p>
+
+  <div>
+    <p>
+      The app may use third-party services that have their own
+      Terms and Conditions.
+    </p>
+
+    <p>
+      Links to the Terms and Conditions of third-party service providers
+      used by the app:
+    </p>
+
+    <ul>
+      <li>
+        <a
+          href="https://policies.google.com/terms"
+          target="_blank"
+          rel="noopener noreferrer">
+          Google Play Services
+        </a>
+      </li>
+
+      <li>
+        <a
+          href="https://firebase.google.com/terms/analytics"
+          target="_blank"
+          rel="noopener noreferrer">
+          Google Analytics for Firebase
+        </a>
+      </li>
+
+      <li>
+        <a
+          href="https://firebase.google.com/terms/crashlytics"
+          target="_blank"
+          rel="noopener noreferrer">
+          Firebase Crashlytics
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <p><strong>Internet Connection</strong></p>
+
+  <p>
+    Certain functions of Biho Live require an active internet connection.
+    The connection may be provided through Wi-Fi or your mobile network.
+  </p>
+
+  <p>
+    Biho Live cannot be held responsible if some or all features of the app
+    are unavailable because you do not have an internet connection,
+    sufficient mobile data, or reliable network coverage.
+  </p>
+
+  <p>
+    If you use the app outside an area with Wi-Fi, the terms and charges
+    of your mobile network provider will apply.
+  </p>
+
+  <p>
+    You may be charged by your mobile provider for mobile data,
+    roaming, or other network-related charges while using the app.
+    You are responsible for any such charges.
+  </p>
+
+  <p>
+    If you are not the bill payer for the device on which you are
+    using the app, we assume that you have obtained permission from
+    the bill payer to use the app.
+  </p>
+
+  <p><strong>Device Responsibility</strong></p>
+
+  <p>
+    Biho Live cannot accept responsibility for problems caused by
+    your device being unavailable, unsupported, damaged, out of battery,
+    or unable to connect to the Service.
+  </p>
+
+  <p>
+    You are responsible for ensuring that your device remains functional,
+    secure, and compatible with the app.
+  </p>
+
+  <p><strong>Service Information</strong></p>
+
+  <p>
+    While we endeavor to keep the Service accurate and up to date,
+    some information or functionality may depend on third-party services.
+  </p>
+
+  <p>
+    Biho Live cannot guarantee that all third-party information,
+    services, or content will always be available, complete, accurate,
+    or error-free.
+  </p>
+
+  <p>
+    To the extent permitted by applicable law, Biho Live shall not be
+    responsible for losses resulting from your reliance on third-party
+    information or services available through the app.
+  </p>
+
+  <p><strong>App Updates</strong></p>
+
+  <p>
+    We may update Biho Live from time to time to improve performance,
+    security, compatibility, features, and user experience.
+  </p>
+
+  <p>
+    The requirements for Android or any other platforms that we may
+    support in the future can change over time.
+  </p>
+
+  <p>
+    You may need to install updates in order to continue using some
+    or all features of the Service.
+  </p>
+
+  <p>
+    We do not guarantee that Biho Live will always support every
+    operating system version or device.
+  </p>
+
+  <p><strong>Termination</strong></p>
+
+  <p>
+    We may suspend or stop providing all or part of the Service where
+    reasonably necessary, including for security, legal, maintenance,
+    policy, or operational reasons.
+  </p>
+
+  <p>
+    Upon termination of your right to use the Service:
+  </p>
+
+  <ul>
+    <li>
+      The rights and licenses granted to you under these Terms will end.
+    </li>
+    <li>
+      You must stop using the app where required.
+    </li>
+    <li>
+      You may need to remove the app from your device.
+    </li>
+  </ul>
+
+  <p><strong>User Conduct</strong></p>
+
+  <p>
+    You agree to use Biho Live responsibly and in accordance with
+    applicable laws and these Terms and Conditions.
+  </p>
+
+  <p>
+    You must not use the Service to distribute illegal, abusive,
+    harmful, fraudulent, threatening, or otherwise prohibited content.
+  </p>
+
+  <p>
+    You must not attempt to interfere with the Service, gain unauthorized
+    access to another user's account, misuse another person's identity,
+    or use the Service for unlawful activities.
+  </p>
+
+  <p><strong>Account Security</strong></p>
+
+  <p>
+    You are responsible for maintaining the confidentiality and security
+    of your account credentials and for activities carried out through
+    your account.
+  </p>
+
+  <p>
+    If you believe that your account has been accessed without
+    authorization, you should contact us as soon as possible.
+  </p>
+
+  <p><strong>Virtual Items and Features</strong></p>
+
+  <p>
+    Biho Live may provide virtual items, gifts, coins, diamonds,
+    subscriptions, VIP features, or other digital features.
+  </p>
+
+  <p>
+    These virtual items are intended for use only within the Service
+    and do not represent legal currency, stored monetary value,
+    or ownership of physical property unless explicitly stated otherwise.
+  </p>
+
+  <p>
+    Availability, pricing, usage rules, and eligibility for virtual
+    features may change from time to time in accordance with applicable
+    platform policies and laws.
+  </p>
+
+  <p><strong>Changes to These Terms and Conditions</strong></p>
+
+  <p>
+    We may update our Terms and Conditions from time to time.
+    Therefore, you are advised to review this page periodically
+    for any changes.
+  </p>
+
+  <p>
+    We will notify users of changes by posting the updated
+    Terms and Conditions on this page.
+  </p>
+
+  <p>
+    These Terms and Conditions are effective as of 2026-09-16.
+  </p>
+
+  <p><strong>Contact Us</strong></p>
+
+  <p>
+    If you have any questions or suggestions about our Terms and Conditions,
+    do not hesitate to contact us at
+    <a href="mailto:biholive88@gmail.com">biholive88@gmail.com</a>.
+  </p>
+
+</div>
 """;
