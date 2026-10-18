@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:convert';
@@ -110,6 +111,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
   bool _showingForceUpdateDialog = false;
 
   late NetworkConnectivity _networkConnectivity;
+  StreamSubscription<dynamic>? _networkSubscription;
 
   void _useIsolateToFetchProfile() async {
     var recievePort = ReceivePort(); //creating new port to listen data
@@ -193,6 +195,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _networkSubscription?.cancel();
     _isDisposed = true;
     _livekitStreamingController.stopLiveRoomListAutoRefresh();
     _navController.dispose();
@@ -238,6 +241,8 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
       case AppLifecycleState.resumed:
         _isDisposed = false;
         _livekitStreamingController.startLiveRoomListAutoRefresh();
+        // Socket events missed while paused: replace stale dashboard cards.
+        _livekitStreamingController.tryToLoadLiveRoomList();
         _initializeNetworkConnectivity();
         _checkAndForceUpdate();
 
@@ -266,7 +271,8 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
 
   void _initializeNetworkConnectivity() {
     _networkConnectivity.initialise();
-    _networkConnectivity.myStream.listen((source) {
+    // Resume calls this again; keep a single listener.
+    _networkSubscription ??= _networkConnectivity.myStream.listen((source) {
       // _newtworkSource = source;
       // print(
       //     'source $source............................................................');

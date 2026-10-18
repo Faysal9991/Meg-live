@@ -20,7 +20,7 @@ class _RoomAdminButtonState extends State<RoomAdminButton> {
     return Obx(() {
       final isAdmin = controller.roomAdminIds.contains(widget.uid);
       if (!controller.isBroadcaster.value ||
-          widget.uid.toString() == controller.channelName.value) {
+          widget.uid == controller.currentHostId.value) {
         return isAdmin ? const Text('Room admin') : const SizedBox.shrink();
       }
       final label = isAdmin ? 'Remove room admin' : 'Make room admin';

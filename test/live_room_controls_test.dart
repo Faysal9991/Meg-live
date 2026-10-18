@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:doyel_live/app/modules/live_streaming/services/live_room_session.dart';
 
@@ -19,9 +20,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'test_helpers.dart';
 
 class _LiveController extends LiveStreamingController {
+  // Keep the room "connecting": a null credential now shows the join-failure
+  // dialog, which these control tests do not exercise.
   @override
-  Future<dynamic> createLiveKitToken({required String channelName}) async =>
-      null;
+  Future<dynamic> createLiveKitToken({required String channelName}) =>
+      Completer<dynamic>().future;
 
   @override
   void fetchGiftList() {}

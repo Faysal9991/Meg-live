@@ -114,8 +114,19 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   double? _scrollPosition;
   double get _screenGlobalWidth => MediaQuery.sizeOf(context).width;
   double get _screenGlobalHeight => MediaQuery.sizeOf(context).height;
-  Map<String, dynamic> get _hostVipPreference =>
-      normalizeVipPreference(widget.vVipOrVipPreference);
+  // Current host's display details. They start as the room creator's and
+  // follow the host after a handover; channel ID stays the room identity.
+  String? _hostFullName, _hostProfileImage;
+  Map<String, dynamic> _hostVipPreference = const {};
+  int _hostDisplayUid = 0;
+  // Whether this device currently acts as host (heartbeat, end-live, admins).
+  bool _hostRoleActive = false;
+  bool _verifyingHost = false, _hostVerifyQueued = false;
+  final List<Worker> _hostWorkers = <Worker>[];
+
+  int get _channelId => int.parse(widget.channelName);
+  int get _currentHostId => _livekitStreamingController.currentHostId.value;
+  bool get _isHost => _livekitStreamingController.isCurrentHost;
   // Keep track of whether a scroll is needed.
   bool _isFirstTimeLoad = true;
 
@@ -128,6 +139,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   final List<_RoomEntryEffect> _entryEffectQueue = <_RoomEntryEffect>[];
   _RoomEntryEffect? _activeEntryEffect;
   bool _entryEffectFinishing = false;
+  // The room socket can deliver the same join more than once; show it once.
+  final Map<String, DateTime> _recentJoins = {};
+  static const _joinDedupeWindow = Duration(seconds: 15);
 
   // Live Kit
   String? _preferredCodec;
@@ -138,6 +152,18 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   String? _engineName = 'engine_1';
 
   final bool _fastConnect = false;
+  // LiveKit's 10s defaults are too tight for congested mobile data.
+  static const _connectOptions = ConnectOptions(
+    timeouts: Timeouts(
+      connection: Duration(seconds: 20),
+      debounce: Duration(milliseconds: 100),
+      publish: Duration(seconds: 20),
+      subscribe: Duration(seconds: 20),
+      peerConnection: Duration(seconds: 20),
+      iceRestart: Duration(seconds: 20),
+    ),
+  );
+  bool _joiningRoom = false, _showingJoinFailure = false;
   bool _isDisposed = false;
   int _localCallRevision = 0;
   Future<void> _localCallMediaTask = Future<void>.value();
@@ -161,7 +187,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   bool get _hasLiveRoomControlAccess {
     final isModerator = _authController.profile.value.is_moderator ?? false;
     final hasKingPackage = _packageController.hasActiveKingPackage;
-    return widget.isBroadcaster || isModerator || hasKingPackage;
+    return _isHost || isModerator || hasKingPackage;
   }
 
   _scrollToBottom() {
@@ -219,15 +245,15 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         );
       }
       // Update Broadcaster diamonds on Live Streaming
-      if (data['sender_uid'] == int.parse(widget.channelName)) {
+      if (data['sender_uid'] == _currentHostId) {
         _livekitStreamingController.broadcasterDiamonds.value -= int.parse(
           data['gift_diamonds'].toString(),
         );
       }
       // Update Broadcaster diamonds on Live Streaming
       // if (int.parse(data['receiver_uid'].toString()) ==
-      //     int.parse(widget.channelName)) {
-      if (data['receiver_uids'].contains(int.parse(widget.channelName))) {
+      //     _channelId) {
+      if (data['receiver_uids'].contains(_currentHostId)) {
         _livekitStreamingController.broadcasterDiamonds.value +=
             int.parse(data['diamonds'].toString()) -
             int.parse(data['vat'].toString());
@@ -295,8 +321,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
   void _sendComment() {
     final commentsAllowed =
-        widget.isBroadcaster ||
-        _livekitStreamingController.allowCommentAndEmojiSend.value;
+        _isHost || _livekitStreamingController.allowCommentAndEmojiSend.value;
     if (!commentsAllowed) {
       rShowSnackBar(
         context: context,
@@ -424,6 +449,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
           data = {...data, ...gzipData};
         }
 
+        if (data is Map && data['action'] == 'host_changed') {
+          _onHostChangedMessage(data);
+          return;
+        }
         _takeActionOnReceivedData(data);
       } catch (_) {
         // Ignore malformed room messages without stopping the socket listener.
@@ -522,19 +551,20 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
               } catch (e) {
                 //
               }
-              if (data['video_disabled'] is bool) {
-                try {
-                  await _room!.localParticipant?.setCameraEnabled(
-                    !data['video_disabled'],
-                  );
-                } catch (e) {
-                  //
-                }
-              }
-
               _livekitStreamingController.muted.value = data['muted'];
-              _livekitStreamingController.videoDisabled.value =
-                  data['video_disabled'];
+              // Only this device toggles its own camera; ignore remote requests.
+              final localVideoDisabled =
+                  _livekitStreamingController.videoDisabled.value;
+              if (data['video_disabled'] != localVideoDisabled) {
+                onUpdateAction({
+                  'action': 'controller',
+                  'uid': _myUid,
+                  'call_type': 'video',
+                  'muted': data['muted'],
+                  'video_disabled': localVideoDisabled,
+                });
+              }
+              data['video_disabled'] = localVideoDisabled;
             }
 
             activeCallData['muted'] = data['muted'];
@@ -560,9 +590,18 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
             caller['video_disabled'] =
                 data['video_disabled'] ?? data['call_type'] == 'audio';
             caller['muted'] = data['muted'] ?? false;
+            // The guest's own join choice decides their camera, not the host.
+            if (data['uid'] == _myUid) {
+              caller['video_disabled'] =
+                  _livekitStreamingController.videoDisabled.value;
+            }
             // Audio is an initial camera preference; every guest can enable it later.
             caller['call_type'] = 'video';
-            _livekitStreamingController.listActiveCall.add(caller);
+            if (_toInt(caller['uid']) == _currentHostId) {
+              _livekitStreamingController.listActiveCall.insert(0, caller);
+            } else {
+              _livekitStreamingController.listActiveCall.add(caller);
+            }
             if (data['uid'] == _myUid) await _applyJoinedCallMedia(caller);
           }
           break;
@@ -581,7 +620,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         case "participant_joined":
           dynamic userJoinedData = data;
           if (userJoinedData != null) {
-            if (widget.isBroadcaster &&
+            if (_isHost &&
                 _authController.profile.value.blocks!.contains(
                   userJoinedData['uid'],
                 )) {
@@ -591,7 +630,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                 "uid": userJoinedData['uid'],
               };
               onUpdateAction(actionData);
-            } else {
+            } else if (_isFirstJoinNotice(userJoinedData['uid'])) {
               _queueEntryEffectForParticipant(userJoinedData);
               userJoinedData['datetime'] = DateTime.now().toIso8601String();
               dynamic activityData = {
@@ -645,6 +684,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
           break;
         // User joined or Leave to Streaming
         case "user_joined":
+          if (!_isFirstJoinNotice(data['uid'])) break;
           data['datetime'] = DateTime.now().toIso8601String();
           _livekitStreamingController.listUserJoinedAnimation.insert(0, data);
           break;
@@ -669,7 +709,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
             );
           }
           // Update on Live Streaming
-          if (data['uid'] == int.parse(widget.channelName)) {
+          if (data['uid'] == _currentHostId) {
             // jump
             _livekitStreamingController.setFollowerList(data['followers']);
           }
@@ -686,7 +726,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                 index,
                 activeCall,
               );
-              // if (widget.isBroadcaster) {
+              // if (_isHost) {
 
               // }
             }
@@ -695,7 +735,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
           break;
         case 'blocks':
           // Update on Owner side
-          if (_myUid == int.parse(widget.channelName)) {
+          if (_isHost) {
             _livekitStreamingController.setBlockList(data['blocks']);
 
             Profile profile = _authController.profile.value;
@@ -717,7 +757,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
               LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
                 submissionData:
                     LiveRoomUpdateRequest.removeUserFromCallingGroup(
-                      channelId: int.parse(widget.channelName),
+                      channelId: _channelId,
                       uid: int.parse(data['uid'].toString()),
                     ),
               );
@@ -735,7 +775,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         //   break;
         case 'end_streaming':
           try {
-            if (_myUid != int.parse(widget.channelName)) {
+            if (!_isHost) {
               // _onCallEnd(context);
               _closeEverything();
 
@@ -756,7 +796,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
           break;
         case 'close_everything':
           _closeEverything();
-          if (widget.isBroadcaster) {
+          if (_isHost) {
             // Device is blocked
             _authController.preferences.setString('token', '');
             _authController.preferences.setString('profile', '');
@@ -792,6 +832,17 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
   void _performOnRunningTimeClock({required String durationFormat}) {
     _livekitStreamingController.setLiveRunningDurationFormat(durationFormat);
+  }
+
+  bool _isFirstJoinNotice(dynamic uid) {
+    final now = DateTime.now();
+    _recentJoins.removeWhere(
+      (_, seenAt) => now.difference(seenAt) > _joinDedupeWindow,
+    );
+    final key = uid.toString();
+    if (_recentJoins.containsKey(key)) return false;
+    _recentJoins[key] = now;
+    return true;
   }
 
   void _queueEntryEffectForParticipant(dynamic participantData) {
@@ -1005,8 +1056,33 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     super.initState();
 
     _myUid = _authController.profile.value.user!.uid!;
+    _hostFullName = widget.fullName;
+    _hostProfileImage = widget.profileImage;
+    _hostVipPreference = normalizeVipPreference(widget.vVipOrVipPreference);
+    if (_livekitStreamingController.currentHostId.value <= 0) {
+      _livekitStreamingController.setCurrentHost(
+        widget.isBroadcaster ? _myUid : _channelId,
+      );
+    }
+    _hostRoleActive = widget.isBroadcaster;
+    _hostDisplayUid = widget.isBroadcaster ? _myUid : _channelId;
+    _hostWorkers.addAll([
+      ever<int>(
+        _livekitStreamingController.currentHostId,
+        (_) => _onCurrentHostChanged(),
+      ),
+      ever<Map>(
+        _livekitStreamingController.liveStreamData,
+        (room) => _syncHostDisplay(room: room),
+      ),
+    ]);
+    // Opened from a room already handed over to someone else.
+    if (_currentHostId != _hostDisplayUid) {
+      _syncHostDisplay(room: _livekitStreamingController.liveStreamData);
+    }
     _livekitStreamingController.roomAdminIds.clear();
     _livekitStreamingController.updateRoomAdmin = _updateRoomAdmin;
+    _livekitStreamingController.requestHostTransfer = _requestHostTransfer;
     _liveGroupRoomCount = 1;
     _packageController.ensureKingPackageCatalogLoaded();
 
@@ -1046,7 +1122,14 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   @override
   void dispose() {
     _livekitStreamingController.liveSession.detach(_liveRoute);
+    for (final worker in _hostWorkers) {
+      worker.dispose();
+    }
     _livekitStreamingController.updateRoomAdmin = null;
+    if (_livekitStreamingController.requestHostTransfer ==
+        _requestHostTransfer) {
+      _livekitStreamingController.requestHostTransfer = null;
+    }
     _livekitStreamingController.roomAdminIds.clear();
 
     _isDisposed = true;
@@ -1062,11 +1145,14 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     (() {
       _livekitStreamingController.stopLiveRoomHeartbeat();
       _closeLiveRoom();
-      if (widget.isBroadcaster) {
+      // Viewers and former hosts only disconnect; the backend rejects (403)
+      // an end-live request from anyone but the current host.
+      if (_hostRoleActive) {
         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
           submissionData: LiveRoomUpdateRequest.deleteLiveRoom(
-            channelId: int.parse(widget.channelName),
+            channelId: _channelId,
           ),
+          authToken: _authController.token.value,
         );
       }
     })();
@@ -1140,9 +1226,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               showUserInteractBottomSheet(
                                 context: context,
                                 data: {
-                                  'uid': int.parse(widget.channelName),
-                                  'full_name': widget.fullName,
-                                  'profile_image': widget.profileImage,
+                                  'uid': _currentHostId,
+                                  'full_name': _hostFullName,
+                                  'profile_image': _hostProfileImage,
                                   'vvip_or_vip_preference': _hostVipPreference,
                                 },
                                 onUpdateAction: onUpdateAction,
@@ -1250,8 +1336,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                 Obx(() {
                                   final hasLiveRoomControlAccess =
                                       _hasLiveRoomControlAccess;
-                                  if (widget.isBroadcaster ||
-                                      !hasLiveRoomControlAccess) {
+                                  if (_isHost || !hasLiveRoomControlAccess) {
                                     return Container();
                                   }
 
@@ -1266,15 +1351,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                         title: 'Room control',
                                         content: 'Do you wanna close Live?',
                                         onConfirm: () {
-                                          LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
-                                            submissionData:
-                                                LiveRoomUpdateRequest.deleteLiveRoom(
-                                                  channelId: int.parse(
-                                                    widget.channelName,
-                                                  ),
-                                                ),
-                                          );
-
+                                          // The host's app ends the live on
+                                          // this signal; only the current
+                                          // host may call delete_live_room.
                                           dynamic userData = {
                                             'action': 'moderator_end_streaming',
                                           };
@@ -1309,9 +1388,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                           showUserInfoBottomSheet(
                             context: context,
                             data: {
-                              'uid': int.parse(widget.channelName),
-                              'full_name': widget.fullName,
-                              'profile_image': widget.profileImage,
+                              'uid': _currentHostId,
+                              'full_name': _hostFullName,
+                              'profile_image': _hostProfileImage,
                               'vvip_or_vip_preference': _hostVipPreference,
                             },
                             onUpdateAction: onUpdateAction,
@@ -1344,7 +1423,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                         borderRadius: BorderRadius.circular(
                                           100.0,
                                         ),
-                                        child: widget.profileImage == null
+                                        child: _hostProfileImage == null
                                             ? Image.asset(
                                                 'assets/others/person.jpg',
                                                 width:
@@ -1360,8 +1439,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                                 fit: BoxFit.cover,
                                               )
                                             : CachedNetworkImage(
-                                                imageUrl:
-                                                    '${widget.profileImage}',
+                                                imageUrl: '$_hostProfileImage',
                                                 width:
                                                     _hostVipPreference['vvip_or_vip_gif'] !=
                                                         null
@@ -1434,7 +1512,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                     ),
                                     child: Text(
                                       // data['full_name'],
-                                      '${widget.fullName}',
+                                      '$_hostFullName',
                                       overflow: TextOverflow.ellipsis,
                                       // textAlign: TextAlign.center,
                                       style: const TextStyle(
@@ -1643,7 +1721,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                                     .allowCommentAndEmojiSend
                                     .value;
                             final commentsAllowed =
-                                widget.isBroadcaster || roomAllowsComments;
+                                _isHost || roomAllowsComments;
                             return rPrimaryTextField(
                               controller: _editingControllerComment,
                               focusNode: _focusNode,
@@ -1689,9 +1767,9 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                             showUserInteractBottomSheet(
                               context: context,
                               data: {
-                                'uid': int.parse(widget.channelName),
-                                'full_name': widget.fullName,
-                                'profile_image': widget.profileImage,
+                                'uid': _currentHostId,
+                                'full_name': _hostFullName,
+                                'profile_image': _hostProfileImage,
                                 'vvip_or_vip_preference': _hostVipPreference,
                               },
                               onUpdateAction: onUpdateAction,
@@ -1775,7 +1853,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         // 👍 thumbsup
                         GestureDetector(
                           onTap: () {
-                            if (!widget.isBroadcaster &
+                            if (!_isHost &
                                 !_livekitStreamingController
                                     .allowCommentAndEmojiSend
                                     .value) {
@@ -1839,7 +1917,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         //  💖 sparkling_heart
                         GestureDetector(
                           onTap: () {
-                            if (!widget.isBroadcaster &
+                            if (!_isHost &
                                 !_livekitStreamingController
                                     .allowCommentAndEmojiSend
                                     .value) {
@@ -1893,7 +1971,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         // 🥰 smiling_face_with_3_hearts
                         GestureDetector(
                           onTap: () {
-                            if (!widget.isBroadcaster &
+                            if (!_isHost &
                                 !_livekitStreamingController
                                     .allowCommentAndEmojiSend
                                     .value) {
@@ -1949,7 +2027,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                         // 🤣 rofl
                         GestureDetector(
                           onTap: () {
-                            if (!widget.isBroadcaster &
+                            if (!_isHost &
                                 !_livekitStreamingController
                                     .allowCommentAndEmojiSend
                                     .value) {
@@ -2031,7 +2109,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                       //     );
                       //   },
                       // ),
-                      !widget.isBroadcaster
+                      !_isHost
                           ? Container()
                           : Obx(() {
                               final isExpanded = _livekitStreamingController
@@ -2052,7 +2130,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                               );
                             }),
                       // Allow Comment and Emoji sends
-                      !widget.isBroadcaster
+                      !_isHost
                           ? Container()
                           : Obx(() {
                               if (!_livekitStreamingController
@@ -2294,7 +2372,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         final credential = await _livekitStreamingController.createLiveKitToken(
           channelName: widget.channelName,
         );
-        if (credential == null || _isDisposed || !mounted) {
+        if (_isDisposed || !mounted) return;
+        if (credential == null) {
+          _livekitStreamingController.busyConnectingEngine.value = false;
+          _showJoinFailure();
           return;
         }
 
@@ -2335,6 +2416,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         if (!_isDisposed) unawaited(_syncRoomAdmins());
       } catch (e) {
         _livekitStreamingController.busyConnectingEngine.value = false;
+        if (!_isDisposed && mounted) _showJoinFailure();
       }
     } else {
       _closeEverything();
@@ -2358,7 +2440,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       pendingLiveData = {
         "id": 16,
         "channel_id": _myUid,
-        "title": widget.fullName,
+        "title": _hostFullName,
         "is_pk": false,
         "is_video": true,
         "is_locked": false,
@@ -2366,8 +2448,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         "cm_flt_nm": null,
         "owner_profile": {
           "uid": _myUid,
-          "full_name": widget.fullName,
-          "profile_image": widget.profileImage,
+          "full_name": _hostFullName,
+          "profile_image": _hostProfileImage,
           "cover_image": null,
           "vvip_or_vip_gif": _hostVipPreference['vvip_or_vip_gif'],
           "diamonds": myProfile.diamonds,
@@ -2389,123 +2471,186 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       );
     }
 
-    await _room!
-        .connect(
-          _serverUrl,
-          token,
-          fastConnectOptions: _fastConnect || widget.isBroadcaster
-              ? FastConnectOptions(
-                  microphone: const TrackOption(enabled: true),
-                  camera: const TrackOption(enabled: true),
-                )
-              : null,
-        )
-        .then(
-          (value) async {
-            // Room Connected
-            if (widget.isBroadcaster) {
-              if (_livekitStreamingController.listActiveCall.isEmpty) {
-                dynamic callerData = {
-                  'uid': _myUid,
-                  'full_name': widget.fullName,
-                  'profile_image': widget.profileImage,
-                  'diamonds': _authController.profile.value.diamonds,
-                  'vvip_or_vip_preference':
-                      _authController.profile.value.vvip_or_vip_preference,
-                  'followers': _authController.profile.value.followers,
-                  'muted': false,
-                  'video_disabled': false,
-                };
-                _livekitStreamingController.listActiveCall.insert(
-                  0,
-                  callerData,
-                );
+    await _connectWithRetry(
+      token: token,
+      fastConnectOptions: _fastConnect || widget.isBroadcaster
+          ? FastConnectOptions(
+              microphone: const TrackOption(enabled: true),
+              camera: const TrackOption(enabled: true),
+            )
+          : null,
+    ).then(
+      (value) async {
+        // Room Connected
+        if (widget.isBroadcaster) {
+          if (_livekitStreamingController.listActiveCall.isEmpty) {
+            dynamic callerData = {
+              'uid': _myUid,
+              'full_name': _hostFullName,
+              'profile_image': _hostProfileImage,
+              'diamonds': _authController.profile.value.diamonds,
+              'vvip_or_vip_preference':
+                  _authController.profile.value.vvip_or_vip_preference,
+              'followers': _authController.profile.value.followers,
+              'muted': false,
+              'video_disabled': false,
+            };
+            _livekitStreamingController.listActiveCall.insert(0, callerData);
 
-                // // TODO: Testing
-                // for (int i = 1; i <= 10; i++) {
-                //   _livekitStreamingController.listActiveCall.insert(
-                //     i,
-                //     callerData,
-                //   );
-                // }
-              }
+            // // TODO: Testing
+            // for (int i = 1; i <= 10; i++) {
+            //   _livekitStreamingController.listActiveCall.insert(
+            //     i,
+            //     callerData,
+            //   );
+            // }
+          }
 
-              final liveData = pendingLiveData ?? <String, dynamic>{};
-              _livekitStreamingController.channelName.value = _myUid.toString();
-              _livekitStreamingController.liveStreamData.value = liveData;
+          final liveData = pendingLiveData ?? <String, dynamic>{};
+          _livekitStreamingController.channelName.value = _myUid.toString();
+          _livekitStreamingController.liveStreamData.value = liveData;
 
-              // One time History
-              LiveRoomIsolationActions.useIsolateToDeleteContributionHistory(
-                token: _authController.token.value,
-              );
-              // _livekitStreamingController.tryToDeleteContributionHistory();
-              // Notify followers about Live Streaming
-              LiveRoomIsolationActions.useIsolateNotifyFollowerAboutLiveStreaming(
-                token: _authController.token.value,
-              );
-              // // Notify followers about Live Streaming
-              // _livekitStreamingController.tryToNotifyFollowerAboutLiveStreaming();
-            }
-            await _audioRouting.refresh();
+          // One time History
+          LiveRoomIsolationActions.useIsolateToDeleteContributionHistory(
+            token: _authController.token.value,
+          );
+          // _livekitStreamingController.tryToDeleteContributionHistory();
+          // Notify followers about Live Streaming
+          LiveRoomIsolationActions.useIsolateNotifyFollowerAboutLiveStreaming(
+            token: _authController.token.value,
+          );
+          // // Notify followers about Live Streaming
+          // _livekitStreamingController.tryToNotifyFollowerAboutLiveStreaming();
+        }
+        await _audioRouting.refresh();
 
-            _livekitStreamingController.busyConnectingEngine.value = false;
-            if (widget.isBroadcaster) {
-              _livekitStreamingController.startLiveRoomHeartbeat(
-                channelId: int.parse(widget.channelName),
-                onRoomMissing: _handleMissingLiveRoomHeartbeat,
-              );
-            }
-            _renderParticipants();
+        _livekitStreamingController.busyConnectingEngine.value = false;
+        if (_hostRoleActive) {
+          _livekitStreamingController.startLiveRoomHeartbeat(
+            channelId: _channelId,
+            onRoomMissing: _handleMissingLiveRoomHeartbeat,
+          );
+        }
+        _renderParticipants();
 
-            // For only participant
-            if (!widget.isBroadcaster) {
-              dynamic userJoined = {
-                'action': 'participant_joined',
-                'uid': _myUid,
-                'full_name': _authController.profile.value.full_name,
-                'profile_image':
-                    _authController.profile.value.profile_image ??
-                    _authController.profile.value.photo_url,
-                'is_moderator': _authController.profile.value.is_moderator,
-                'is_reseller': _authController.profile.value.is_reseller,
-                'diamonds': _authController.profile.value.diamonds,
-                'level': _authController.profile.value.level,
-                'vvip_or_vip_preference':
-                    _authController.profile.value.vvip_or_vip_preference,
-                'entry_effect': _authController.profile.value.entryEffect
-                    ?.toJson(),
-              };
+        // For only participant
+        if (!widget.isBroadcaster) {
+          dynamic userJoined = {
+            'action': 'participant_joined',
+            'uid': _myUid,
+            'full_name': _authController.profile.value.full_name,
+            'profile_image':
+                _authController.profile.value.profile_image ??
+                _authController.profile.value.photo_url,
+            'is_moderator': _authController.profile.value.is_moderator,
+            'is_reseller': _authController.profile.value.is_reseller,
+            'diamonds': _authController.profile.value.diamonds,
+            'level': _authController.profile.value.level,
+            'vvip_or_vip_preference':
+                _authController.profile.value.vvip_or_vip_preference,
+            'entry_effect': _authController.profile.value.entryEffect?.toJson(),
+          };
 
-              onUpdateAction(userJoined);
+          onUpdateAction(userJoined);
 
-              if (_listGroupIds.isEmpty) {
-                _sortParticipants();
-              }
-              // broadcasterDiamonds
-              _livekitStreamingController.loadGroupCallerList(
-                channelId: widget.channelName,
-                callerIds: _listGroupIds,
-              );
-            }
-          },
-          onError: (error) {
-            // _closeEverything();
-            // Get.defaultDialog(
-            //   title: 'Something is wrong',
-            //   middleText: 'Please try again',
-            //   titleStyle: const TextStyle(
-            //     color: AppColors.warning,
-            //   ),
-            // );
-            if (_isDisposed) return;
-            rShowSnackBar(
-              context: context,
-              title: 'Connection failed. Please try again.',
-              color: AppColors.error,
-              durationInSeconds: 2,
-            );
-          },
-        );
+          if (_listGroupIds.isEmpty) {
+            _sortParticipants();
+          }
+          // broadcasterDiamonds
+          _livekitStreamingController.loadGroupCallerList(
+            channelId: widget.channelName,
+            callerIds: _listGroupIds,
+          );
+        }
+      },
+      onError: (error) {
+        // _closeEverything();
+        // Get.defaultDialog(
+        //   title: 'Something is wrong',
+        //   middleText: 'Please try again',
+        //   titleStyle: const TextStyle(
+        //     color: AppColors.warning,
+        //   ),
+        // );
+        if (_isDisposed) return;
+        _livekitStreamingController.busyConnectingEngine.value = false;
+        _showJoinFailure();
+      },
+    );
+  }
+
+  /// Joins LiveKit, retrying transient failures common on mobile data
+  /// (slow ICE, dropped signalling). The final error is rethrown.
+  Future<void> _connectWithRetry({
+    required String token,
+    FastConnectOptions? fastConnectOptions,
+  }) async {
+    const maxAttempts = 3;
+    _joiningRoom = true;
+    try {
+      for (var attempt = 1; ; attempt++) {
+        final room = _room;
+        if (room == null || _isDisposed) {
+          throw StateError('Live room was closed while connecting');
+        }
+        try {
+          await room.connect(
+            _serverUrl,
+            token,
+            connectOptions: _connectOptions,
+            fastConnectOptions: fastConnectOptions,
+          );
+          return;
+        } catch (_) {
+          if (attempt >= maxAttempts || _isDisposed) rethrow;
+          try {
+            await room.disconnect();
+          } catch (_) {
+            // Reset whatever the failed attempt left behind.
+          }
+          await Future<void>.delayed(Duration(seconds: attempt * 2));
+        }
+      }
+    } finally {
+      _joiningRoom = false;
+    }
+  }
+
+  void _showJoinFailure() {
+    if (_isDisposed || !mounted || _showingJoinFailure) return;
+    _showingJoinFailure = true;
+    showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Could not connect'),
+        content: const Text(
+          'Could not join the live. Check your internet connection and '
+          'try again.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Leave'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    ).then((retry) async {
+      _showingJoinFailure = false;
+      if (_isDisposed || !mounted) return;
+      if (retry != true) {
+        _closeStreamingEvent();
+        return;
+      }
+      await _closeLiveRoom();
+      if (_isDisposed || !mounted) return;
+      _livekitStreamingController.busyConnectingEngine.value = true;
+      await _initLiveKitStuffs();
+    });
   }
 
   /// Video layout wrapper
@@ -2529,7 +2674,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         screenGlobalWidth: _screenGlobalWidth,
         screenGlobalHeight: _screenGlobalHeight,
         channelName: widget.channelName,
-        isBroadcaster: widget.isBroadcaster,
+        isBroadcaster: _isHost,
         context: context,
         onUpdateAction: onUpdateAction,
         livekitStreamingController: _livekitStreamingController,
@@ -2686,7 +2831,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   }
 
   // Future<void> _updateBroadcasterStates() async {
-  //   if (widget.isBroadcaster) {
+  //   if (_isHost) {
   //     _livekitStreamingController.broadcasterDiamonds.value =
   //         _authController.profile.value.diamonds!;
 
@@ -2778,6 +2923,28 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     //   // print(
     //   //     'RoomDisconnectedEvent $event........................................');
     // })
+    // Final disconnect only: LiveKit emits this after reconnect attempts are
+    // exhausted or the room is deleted (current host left/ended). Transient
+    // reconnecting states must not close the live.
+    ..on<RoomDisconnectedEvent>((event) {
+      // A failed join attempt is retried by _connectWithRetry.
+      if (_isDisposed ||
+          _joiningRoom ||
+          event.reason == DisconnectReason.clientInitiated) {
+        return;
+      }
+      final liveEnded = event.reason == DisconnectReason.roomDeleted;
+      _closeEverything();
+      Get.snackbar(
+        liveEnded ? 'Live ended' : 'Disconnected',
+        liveEnded
+            ? 'This live has ended.'
+            : 'You were disconnected from the live.',
+        backgroundColor: AppColors.warning,
+        colorText: AppColors.onPrimary,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    })
     // Should me Mendatory for all apps
     ..on<RoomReconnectedEvent>((event) {
       unawaited(_syncRoomAdmins());
@@ -2804,14 +2971,14 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     ..on<TrackSubscribedEvent>((_) => _renderParticipants())
     ..on<TrackUnsubscribedEvent>((_) => _renderParticipants())
     ..on<ParticipantConnectedEvent>((p0) {
-      if (widget.isBroadcaster) unawaited(_syncRoomAdmins());
+      if (_isHost) unawaited(_syncRoomAdmins());
       _livekitStreamingController.viewersCount.value =
           _room!.remoteParticipants.length;
 
-      if (widget.isBroadcaster) {
+      if (_isHost) {
         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
           submissionData: LiveRoomUpdateRequest.updateViewersCount(
-            channelId: int.parse(widget.channelName),
+            channelId: _channelId,
             viewersCount: _room!.remoteParticipants.length,
           ),
         );
@@ -2824,10 +2991,10 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       _livekitStreamingController.viewersCount.value =
           _room!.remoteParticipants.length;
 
-      if (widget.isBroadcaster) {
+      if (_isHost) {
         LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
           submissionData: LiveRoomUpdateRequest.updateViewersCount(
-            channelId: int.parse(widget.channelName),
+            channelId: _channelId,
             viewersCount: _room!.remoteParticipants.length,
           ),
         );
@@ -2882,8 +3049,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     List<ParticipantTrack> userMediaTracks = [];
     for (var activeCallData in activeCalls) {
       int uid = int.parse(activeCallData['uid'].toString());
-      if (uid.toString() == widget.channelName) {
-        if (widget.isBroadcaster) {
+      if (uid == _currentHostId) {
+        if (_isHost) {
           LocalParticipant? localParticipant = _room!.localParticipant;
           final localParticipantVideoTracks =
               localParticipant?.videoTrackPublications;
@@ -3034,7 +3201,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       if (participant.videoTrackPublications.isNotEmpty) {
         for (var t in participant.videoTrackPublications) {
           if (!t.isScreenShare) {
-            if (participant.identity == widget.channelName) {
+            if (participant.identity == _currentHostId.toString()) {
               userMediaTracks.insert(
                 0,
                 ParticipantTrack(
@@ -3059,7 +3226,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       } else {
         for (var t in participant.audioTrackPublications) {
           if (!t.isScreenShare) {
-            if (participant.identity == widget.channelName) {
+            if (participant.identity == _currentHostId.toString()) {
               userMediaTracks.insert(
                 0,
                 ParticipantTrack(
@@ -3118,7 +3285,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     if (localParticipantVideoTracks != null) {
       for (var t in localParticipantVideoTracks) {
         if (!t.isScreenShare) {
-          if (localParticipant!.identity == widget.channelName) {
+          if (localParticipant!.identity == _currentHostId.toString()) {
             userMediaTracks.insert(
               0,
               ParticipantTrack(
@@ -3146,7 +3313,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       if (localParticipantAudioTracks != null) {
         for (var t in localParticipantAudioTracks) {
           if (!t.isScreenShare) {
-            if (localParticipant!.identity == widget.channelName) {
+            if (localParticipant!.identity == _currentHostId.toString()) {
               userMediaTracks.insert(
                 0,
                 ParticipantTrack(
@@ -3176,11 +3343,21 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
   void _closeStreamingEvent() {
     if (_isDisposed || !mounted) return;
-    if (widget.isBroadcaster) {
+    if (_livekitStreamingController.transferringHost.value) {
+      // Leaving before the server confirms could end the live.
+      rShowSnackBar(
+        context: context,
+        title: 'Host transfer in progress. Please wait.',
+        color: AppColors.warning,
+        durationInSeconds: 2,
+      );
+      return;
+    }
+    if (_isHost) {
       onUpdateAction({'action': 'end_streaming'});
       _livekitStreamingController.onUpdateLiveStreamStatus({
         'type': STREAMING,
-        'channelName': _myUid,
+        'channelName': _channelId,
         'online': false,
         'datetime': DateTime.now().toString(),
       });
@@ -3190,7 +3367,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       onUpdateAction({'action': 'end_call', 'uid': _myUid});
       LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
         submissionData: LiveRoomUpdateRequest.removeUserFromCallingGroup(
-          channelId: int.parse(widget.channelName),
+          channelId: _channelId,
           uid: _myUid,
         ),
       );
@@ -3221,7 +3398,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
           _closeEverything();
           Get.defaultDialog(
             title: 'No Access',
-            middleText: '${widget.fullName} blocked you',
+            middleText: '${_hostFullName} blocked you',
             titleStyle: const TextStyle(color: AppColors.error),
           );
 
@@ -3416,6 +3593,303 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     // disposed exactly once in dispose().
   }
 
+  // ---------------------------------------------------------------------------
+  // Host handover
+  // ---------------------------------------------------------------------------
+
+  /// Room sockets relay client messages too, so the server's room list is the
+  /// authority for who the host is; the socket event only triggers a check.
+  void _onHostChangedMessage(Map data) {
+    if (data['channel_id']?.toString() != widget.channelName) return;
+    unawaited(_verifyHostWithServer());
+  }
+
+  Future<void> _verifyHostWithServer() async {
+    if (_verifyingHost) {
+      _hostVerifyQueued = true;
+      return;
+    }
+    _verifyingHost = true;
+    try {
+      do {
+        _hostVerifyQueued = false;
+        final refreshed = await _livekitStreamingController
+            .refreshActiveLiveRoom();
+        if (_isDisposed) return;
+        final hostId = liveRoomHostId(refreshed.room);
+        if (hostId != null) {
+          _livekitStreamingController.applyHostChange(
+            channelId: widget.channelName,
+            hostId: hostId,
+            room: refreshed.room,
+          );
+          _syncHostDisplay(room: refreshed.room);
+        }
+      } while (_hostVerifyQueued && !_isDisposed);
+    } finally {
+      _verifyingHost = false;
+    }
+  }
+
+  void _onCurrentHostChanged() {
+    if (_isDisposed || !mounted) return;
+    final hostId = _currentHostId;
+    if (hostId <= 0) return;
+    final previousDisplayUid = _hostDisplayUid;
+    _syncHostDisplay(room: _livekitStreamingController.liveStreamData);
+    _moveHostCallFirst();
+
+    final isHostNow = hostId == _myUid;
+    if (isHostNow && !_hostRoleActive) {
+      _hostRoleActive = true;
+      unawaited(_takeOverAsHost());
+    } else if (!isHostNow && _hostRoleActive) {
+      // Former host: stay connected as a participant, never end the live.
+      _hostRoleActive = false;
+      _livekitStreamingController.stopLiveRoomHeartbeat();
+    }
+    setState(() {});
+    _renderParticipants();
+
+    // The former host sees the transfer dialog instead.
+    if (previousDisplayUid != hostId &&
+        !isHostNow &&
+        !_livekitStreamingController.transferringHost.value) {
+      rShowSnackBar(
+        context: context,
+        title: '${_hostFullName ?? 'A new host'} is now the host.',
+        color: AppColors.success,
+        durationInSeconds: 2,
+      );
+    }
+  }
+
+  /// Shows the current host's name, photo and stats. Room data is preferred;
+  /// participant data fills in until the room object arrives.
+  void _syncHostDisplay({dynamic room}) {
+    if (_isDisposed) return;
+    final hostId = _currentHostId;
+    if (hostId <= 0 || hostId == _hostDisplayUid) return;
+
+    final owner = room is Map ? room['owner_profile'] : null;
+    if (owner is Map && _toInt(owner['uid']) == hostId) {
+      _hostDisplayUid = hostId;
+      _hostFullName = owner['full_name']?.toString();
+      _hostProfileImage = owner['profile_image']?.toString();
+      _hostVipPreference = normalizeVipPreference({
+        'rank': owner['vvip_rank'],
+        'vvip_or_vip_gif': owner['vvip_or_vip_gif'] ?? owner['vvip_gif'],
+      });
+      _livekitStreamingController.broadcasterDiamonds.value =
+          _toInt(owner['diamonds']) ?? 0;
+      if (owner['followers'] is List) {
+        _livekitStreamingController.setFollowerList(owner['followers']);
+      }
+      if (owner['blocks'] is List) {
+        _livekitStreamingController.setBlockList(owner['blocks']);
+      }
+    } else if (hostId == _myUid) {
+      final profile = _authController.profile.value;
+      _hostDisplayUid = hostId;
+      _hostFullName = profile.full_name;
+      _hostProfileImage = profile.profile_image ?? profile.photo_url;
+      _hostVipPreference = normalizeVipPreference(
+        profile.vvip_or_vip_preference,
+      );
+      _livekitStreamingController.broadcasterDiamonds.value =
+          profile.diamonds ?? 0;
+      _livekitStreamingController.setFollowerList(profile.followers ?? []);
+      _livekitStreamingController.setBlockList(profile.blocks ?? []);
+    } else {
+      final known =
+          [
+            ..._livekitStreamingController.listActiveCall,
+            ..._livekitStreamingController.viewers,
+          ].firstWhereOrNull(
+            (user) => user is Map && _toInt(user['uid']) == hostId,
+          );
+      if (known == null) {
+        unawaited(_verifyHostWithServer());
+        return;
+      }
+      // Keep _hostDisplayUid unchanged so the room object can refine this.
+      _hostFullName = known['full_name']?.toString();
+      _hostProfileImage = (known['profile_image'] ?? known['photo_url'])
+          ?.toString();
+      _hostVipPreference = normalizeVipPreference(
+        known['vvip_or_vip_preference'],
+      );
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _moveHostCallFirst() {
+    final calls = _livekitStreamingController.listActiveCall;
+    final index = calls.indexWhere(
+      (call) => _toInt(call['uid']) == _currentHostId,
+    );
+    if (index > 0) calls.insert(0, calls.removeAt(index));
+  }
+
+  /// Runs on the replacement's device once it is confirmed as host. The
+  /// transfer API changes ownership only; camera and mic are enabled here.
+  Future<void> _takeOverAsHost() async {
+    if (_isDisposed) return;
+    _livekitStreamingController.startLiveRoomHeartbeat(
+      channelId: _channelId,
+      onRoomMissing: _handleMissingLiveRoomHeartbeat,
+    );
+    unawaited(_syncRoomAdmins());
+    if (mounted) {
+      rShowSnackBar(
+        context: context,
+        title: 'You are now the host of this live.',
+        color: AppColors.success,
+        durationInSeconds: 2,
+      );
+    }
+
+    final calls = _livekitStreamingController.listActiveCall;
+    final existing = calls.firstWhereOrNull(
+      (call) => _toInt(call['uid']) == _myUid,
+    );
+    if (existing != null) {
+      await _applyJoinedCallMedia({
+        ...Map<String, dynamic>.from(existing as Map),
+        'muted': false,
+        'video_disabled': false,
+      });
+      return;
+    }
+
+    final profile = _authController.profile.value;
+    final caller = <String, dynamic>{
+      'action': 'accept_general_callers',
+      'uid': _myUid,
+      'full_name': profile.full_name,
+      'profile_image': profile.profile_image ?? profile.photo_url,
+      'diamonds': profile.diamonds,
+      'followers': profile.followers,
+      'is_moderator': profile.is_moderator,
+      'is_reseller': profile.is_reseller,
+      'call_type': 'video',
+      'muted': false,
+      'video_disabled': false,
+      'level': profile.level,
+      'vvip_or_vip_preference': profile.vvip_or_vip_preference,
+    };
+    // The echo uses our local camera choice; a new host starts with it on.
+    _livekitStreamingController.videoDisabled.value = false;
+    // The room socket echoes this back to us, which publishes our media.
+    if (onUpdateAction(caller)) {
+      LiveRoomIsolationActions.useIsolateUpdateLiveRoom(
+        submissionData: LiveRoomUpdateRequest.addUserToCallingGroup(
+          channelId: _channelId,
+          uid: _myUid,
+        ),
+        authToken: _authController.token.value,
+      );
+      return;
+    }
+    calls.insert(0, caller);
+    await _applyJoinedCallMedia(caller);
+  }
+
+  Future<void> _requestHostTransfer(int uid, String? fullName) async {
+    if (_isDisposed || !mounted || !_isHost || uid == _myUid) return;
+    final name = (fullName == null || fullName.trim().isEmpty)
+        ? 'this user'
+        : fullName.trim();
+    final isConnected =
+        _room?.remoteParticipants.values.any(
+          (participant) => participant.identity == uid.toString(),
+        ) ??
+        false;
+    if (!isConnected) {
+      rShowSnackBar(
+        context: context,
+        title: '$name must be in this live to become host.',
+        color: AppColors.warning,
+        durationInSeconds: 2,
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Transfer host?'),
+        content: Text(
+          '$name will get host controls. The live keeps running if you '
+          'leave afterwards.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Make host'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || _isDisposed || !mounted) return;
+
+    final result = await _livekitStreamingController.transferLiveHost(
+      newHostId: uid,
+    );
+    if (_isDisposed || !mounted) return;
+
+    if (result.isSuccess) {
+      await _showTransferCompletedDialog(name);
+      return;
+    }
+    final message = switch (result.status) {
+      LiveRoomTransferStatus.conflict =>
+        '$name is not ready yet. Ask them to stay in the live, then try again.',
+      LiveRoomTransferStatus.unauthorized =>
+        'Your session has expired. Please sign in again.',
+      LiveRoomTransferStatus.notCurrentHost => 'You are no longer the host.',
+      LiveRoomTransferStatus.notFound =>
+        'This live or $name could not be found.',
+      LiveRoomTransferStatus.uncertain =>
+        'Could not confirm the transfer. Stay in the live and try again.',
+      _ => result.detail ?? 'Could not transfer host. Please try again.',
+    };
+    rShowSnackBar(
+      context: context,
+      title: message,
+      color: AppColors.warning,
+      durationInSeconds: 3,
+    );
+  }
+
+  Future<void> _showTransferCompletedDialog(String name) async {
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Host transferred'),
+        content: Text(
+          '$name is now the host. You can stay as a participant or leave; '
+          'the live will keep running.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Stay'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Leave live'),
+          ),
+        ],
+      ),
+    );
+    if (leave == true && !_isDisposed && mounted) _closeStreamingEvent();
+  }
+
   bool onUpdateAction(dynamic data) => onUpdateAgtionWithWebSocketClient(data);
 
   bool onUpdateAgtionWithWebSocketClient(dynamic data) {
@@ -3529,10 +4003,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   }
 
   Future<bool> _updateRoomAdmin(int uid, bool enabled) async {
-    if (!widget.isBroadcaster ||
-        _isDisposed ||
-        _updatingRoomAdmin ||
-        uid == _myUid) {
+    if (!_isHost || _isDisposed || _updatingRoomAdmin || uid == _myUid) {
       return false;
     }
     final participant = _room?.localParticipant;
@@ -3562,7 +4033,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       await _room?.localParticipant?.publishData(
         utf8.encode(
           jsonEncode(
-            widget.isBroadcaster
+            _isHost
                 ? {
                     'admin_ids': _livekitStreamingController.roomAdminIds
                         .toList(),
@@ -3572,9 +4043,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
         ),
         reliable: true,
         topic: _roomAdminTopic,
-        destinationIdentities: widget.isBroadcaster
-            ? null
-            : [widget.channelName],
+        destinationIdentities: _isHost ? null : [_currentHostId.toString()],
       );
     } catch (_) {
       // Synchronize again when the participant or transport reconnects.
@@ -3586,11 +4055,11 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     try {
       final data = jsonDecode(utf8.decode(event.data));
       if (data is! Map) return;
-      if (widget.isBroadcaster &&
+      if (_isHost &&
           data['request_admins'] == true &&
           event.participant != null) {
         unawaited(_syncRoomAdmins());
-      } else if (!widget.isBroadcaster) {
+      } else if (!_isHost) {
         // Trust the LiveKit sender identity, never a uid supplied in the payload.
         _livekitStreamingController.applyRoomAdmins(
           senderIdentity: event.participant?.identity,
@@ -3765,7 +4234,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       final newPosition = _cameraPosition.switched();
       await track.setCameraPosition(newPosition);
       _cameraPosition = newPosition;
-      // if (widget.isBroadcaster) {
+      // if (_isHost) {
       //   _livekitStreamingController.cameraPosition.value = _cameraPosition;
       //   _livekitStreamingController.tryToUpdateStreamingStuffs(
       //       channelName: _livekitStreamingController.channelName.value);
@@ -3803,7 +4272,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
   }
 
   void _onHostSwitchPosition() {
-    if (!widget.isBroadcaster) {
+    if (!_isHost) {
       return;
     }
     final activeCalls = _livekitStreamingController.listActiveCall;
@@ -3817,7 +4286,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       return;
     }
 
-    final hostUid = _toInt(widget.channelName) ?? _myUid;
+    final hostUid = _currentHostId;
     final hostIndex = activeCalls.indexWhere(
       (element) => _toInt(element['uid']) == hostUid,
     );
@@ -4130,7 +4599,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
           // data: {
           //   'profile_image': _profileImage,
           //   'full_name': _fullName,
-          //   'uid': int.parse(widget.channelName),
+          //   'uid': _currentHostId,
           // },
           data: data,
           onUpdateAction: onUpdateAction,

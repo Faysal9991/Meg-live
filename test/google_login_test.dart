@@ -145,6 +145,51 @@ void main() {
   );
 
   testWidgets(
+    'logs OAuth audience without exposing ID tokens when backend rejects login',
+    (tester) async {
+      await openLogin(tester);
+      const audience =
+          '976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com';
+      final payload = base64Url.encode(
+        utf8.encode(
+          jsonEncode({'aud': audience, 'email': 'private@example.test'}),
+        ),
+      );
+      final idToken = 'header.$payload.signature';
+      google.result = () async => GoogleLoginIdentity(
+        id: 'google-user',
+        email: 'user@example.test',
+        idToken: idToken,
+      );
+      final originalDebugPrint = debugPrint;
+      final logs = <String>[];
+      debugPrint = (message, {wrapWidth}) {
+        if (message != null) logs.add(message);
+      };
+      try {
+        final login = auth.tryToSignInWithGoogle();
+        await tester.pumpAndSettle();
+        await login;
+      } finally {
+        debugPrint = originalDebugPrint;
+      }
+      await tester.pumpAndSettle();
+      expect(
+        logs,
+        contains(
+          '[GOOGLE-AUTH] Google returned an ID token for audience $audience',
+        ),
+      );
+      expect(logs, contains('[GOOGLE-AUTH] Backend rejected login: HTTP 403'));
+      expect(logs.join('\n'), isNot(contains(idToken)));
+      expect(logs.join('\n'), isNot(contains('private@example.test')));
+      expect(backend.requests.single.data['server_auth_code'], idToken);
+      expect(find.text('Login screen'), findsOneWidget);
+      await finish(tester);
+    },
+  );
+
+  testWidgets(
     'missing ID token never reaches backend and releases loading state',
     (tester) async {
       await openLogin(tester);

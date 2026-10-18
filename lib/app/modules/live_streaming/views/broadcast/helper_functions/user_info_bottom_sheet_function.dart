@@ -1,5 +1,6 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'room_admin_button.dart';
+import 'transfer_host_button.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/messenger/utils/utils.dart';
@@ -23,6 +24,42 @@ void showUserInfoBottomSheet({
   Future.delayed(Duration.zero, () {
     profileController.fetchProfileForUserInfo(userId: data['uid']);
   });
+
+  // Agency the user hosts for; hidden when they aren't linked to one.
+  Widget _agencyBadge(dynamic agency) {
+    if (agency is! Map) return const SizedBox.shrink();
+    final name = '${agency['agent_name'] ?? ''}'.trim();
+    if (name.isEmpty) return const SizedBox.shrink();
+    final logo = '${agency['logo'] ?? ''}'.trim();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 12,
+            backgroundColor: AppColors.textSecondary,
+            backgroundImage: logo.isNotEmpty
+                ? CachedNetworkImageProvider(logo)
+                : null,
+            child: logo.isEmpty
+                ? const Icon(LucideIcons.building2, size: 14)
+                : null,
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              'Agency: $name',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _messageWidget({required dynamic data}) {
     dynamic profile = {
@@ -118,7 +155,7 @@ void showUserInfoBottomSheet({
                   //             authController.profile.value.user!.uid.toString() &&
                   profileData['uid'] != authController.profile.value.user!.uid
                   ? MediaQuery.of(context).size.height * .70
-                  : 160,
+                  : (profileData['agency'] is Map ? 192 : 160),
               // decoration: BoxDecoration(
               //   gradient: Palette.linearGradient2,
               // ),
@@ -156,6 +193,10 @@ void showUserInfoBottomSheet({
                           const SizedBox(height: 50),
                           RoomAdminButton(
                             uid: int.parse(data['uid'].toString()),
+                          ),
+                          TransferHostButton(
+                            uid: int.parse(data['uid'].toString()),
+                            fullName: data['full_name']?.toString(),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -235,6 +276,7 @@ void showUserInfoBottomSheet({
                               ),
                             ],
                           ),
+                          _agencyBadge(profileData['agency']),
                           // const SizedBox(
                           //   height: 8,
                           // ),
@@ -333,13 +375,7 @@ void showUserInfoBottomSheet({
                                       }),
                                     ),
                                     const SizedBox(width: 8),
-                                    streamingController.channelName.value ==
-                                            authController
-                                                .profile
-                                                .value
-                                                .user!
-                                                .uid
-                                                .toString()
+                                    streamingController.isCurrentHost
                                         ? ElevatedButton.icon(
                                             onPressed: () async {
                                               if (profileController

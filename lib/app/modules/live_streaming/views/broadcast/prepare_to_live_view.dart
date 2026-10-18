@@ -230,6 +230,24 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                             .restoreIfActive()) {
                           return;
                         }
+                        // A live handed over to another host keeps this
+                        // user's channel ID until it ends.
+                        final handedOver = _livekitStreamingController
+                            .handedOverLiveRoom(
+                              _authController.profile.value.user!.uid!,
+                            );
+                        if (handedOver != null) {
+                          Get.snackbar(
+                            'Live still running',
+                            'Your previous live is still running with '
+                                '${handedOver['owner_profile']?['full_name'] ?? 'another host'}. '
+                                'Please wait until it ends.',
+                            backgroundColor: AppColors.warning,
+                            colorText: AppColors.onPrimary,
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                          return;
+                        }
                         // Go to Live
                         _livekitStreamingController.setBroadcastStreamingStuffs(
                           brdchannelName:

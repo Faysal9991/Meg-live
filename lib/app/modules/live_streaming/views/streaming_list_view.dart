@@ -7,6 +7,7 @@ import 'package:doyel_live/app/modules/live_streaming/views/others/slides_top_ag
 import 'package:doyel_live/app/modules/live_streaming/views/widgets/home_banner_carousel.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
 import 'package:get/get.dart';
 
 class StreamingListView extends StatelessWidget {
@@ -301,6 +302,11 @@ class StreamingListView extends StatelessWidget {
       return null;
     }
 
+    final currentHostId = _toInt(liveRoomData['current_host_id']);
+    if (currentHostId != null) {
+      return currentHostId;
+    }
+
     final ownerProfile = liveRoomData['owner_profile'];
     if (ownerProfile is Map) {
       final ownerUid = _toInt(ownerProfile['uid']);
@@ -325,7 +331,7 @@ class StreamingListView extends StatelessWidget {
   void _onClickingLiveRoom({required dynamic data}) {
     if (_livekitStreamingController.liveSession.restoreIfActive()) return;
     if (_livekitStreamingController.loadingRoom.value != 0) return;
-    if (data['channel_id'] == _authController.profile.value.user!.uid!) {
+    if (liveRoomHostId(data) == _authController.profile.value.user!.uid!) {
       Get.snackbar(
         'Not allowed',
         "Can't join own Live.",
@@ -355,6 +361,7 @@ class StreamingListView extends StatelessWidget {
       brdLoveReacts: liveRoomData['reacts'] ?? 0,
       brdLevel: null,
       allowSend: liveRoomData['allow_send'] ?? true,
+      hostId: liveRoomHostId(liveRoomData),
     );
 
     _livekitStreamingController.liveSession.open(

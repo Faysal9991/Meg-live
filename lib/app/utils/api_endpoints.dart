@@ -88,6 +88,8 @@ String kFollowerCreateUrl(int uid) =>
 String kBlockListUrl = '$_baseUrl/profiles/block-list/';
 // # Perform both add and remove
 String kBlockCreateUrl(int uid) => '$_baseUrl/profiles/block-create/$uid/';
+// Feedback & user reports (in-app, required by Play Child Safety Standards)
+const kFeedbackCreateUrl = '$_baseUrl/profiles/feedback-create/';
 // Broadcasting histories
 const kBroadcastingHistoryListUrl =
     '$_baseUrl/profiles/broadcasting-history-list/';
@@ -111,6 +113,8 @@ const kLiveKitEngineCheckAndTokenCreateUrl =
     '$_baseUrl/livekit-stuffs/engine-check-and-token-create/';
 const kLiveRoomListUrl = '$_baseUrl/livekit-stuffs/live-room-list/';
 const kLiveRoomUpdateUrl = '$_baseUrl/livekit-stuffs/live-room-update/';
+const kLiveRoomTransferHostUrl =
+    '$_baseUrl/livekit-stuffs/live-room-transfer-host/';
 String kFollowingLiveRoomIdListUrl({userId}) =>
     '$_baseUrl/livekit-stuffs/following-live-room-id-list/$userId/';
 String kGroupCallerCreateUrl({channelId}) =>

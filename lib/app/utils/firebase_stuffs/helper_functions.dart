@@ -5,6 +5,7 @@ import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/live_streaming_view.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/utils/api_endpoints.dart';
+import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:share_plus/share_plus.dart';
@@ -116,6 +117,7 @@ class HelperFunctions {
         brdLoveReacts: streamingData['reacts'] ?? 0,
         brdLevel: null,
         fromLink: true,
+        hostId: liveRoomHostId(streamingData),
       );
       streamingController.liveSession.open(
         Get.context!,

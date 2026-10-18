@@ -1,7 +1,7 @@
 name: doyel_live
 description: "Live Streaming App."
 publish_to: 'none'
-version: 1.0.1+1
+version: 1.0.2+5
 
 environment:
   sdk: ^3.8.0
@@ -27,7 +27,7 @@ dependencies:
   firebase_core: ^3.15.2
   # firebase_auth: ^5.7.0
   firebase_messaging: ^15.2.10
-  google_sign_in: ^7.1.1
+  google_sign_in: ^7.2.0
   app_links: ^6.4.0 # Alternative to uni_links
   # livekit_client: 2.3.6
   # livekit_client: ^2.5.0+hotfix.3
@@ -74,6 +74,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  google_sign_in_platform_interface: ^3.1.0
 
 flutter: 
   uses-material-design: true

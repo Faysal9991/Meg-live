@@ -50,6 +50,8 @@ class LiveStreamingController extends GetxController {
   final liveSession = LiveRoomSession();
   final roomAdminIds = <int>{}.obs;
   Future<bool> Function(int uid, bool enabled)? updateRoomAdmin;
+  // Set by the open live room; runs the confirm + transfer + leave flow.
+  void Function(int uid, String? fullName)? requestHostTransfer;
 
   bool get isRoomAdmin =>
       roomAdminIds.contains(_authController.profile.value.user?.uid);
@@ -58,7 +60,9 @@ class LiveStreamingController extends GetxController {
     required String? senderIdentity,
     required dynamic ids,
   }) {
-    if (senderIdentity != channelName.value || ids is! List) return false;
+    if (senderIdentity != currentHostId.value.toString() || ids is! List) {
+      return false;
+    }
     final parsed = ids.map((id) => int.tryParse(id.toString())).toList();
     if (parsed.any((id) => id == null || id <= 0)) return false;
     roomAdminIds.assignAll(parsed.cast<int>());
@@ -120,6 +124,23 @@ class LiveStreamingController extends GetxController {
   final liveRunningDuration = '00:00:00'.obs;
   // Live Broadcast Stuffs
   final channelName = '0'.obs;
+
+  /// User ID of the live's current host. [channelName] stays the room ID after
+  /// a host handover, so host controls and host-targeted actions (profile,
+  /// follow, gifts) must use this instead.
+  final currentHostId = 0.obs;
+  final transferringHost = false.obs;
+  // Bumped on every authoritative host change so slower, older room snapshots
+  // (list polls, isolate results) cannot roll the host back.
+  int _hostEpoch = 0;
+  // Dashboard rooms removed by `delete_live`, keyed by channel ID, so an
+  // in-flight list snapshot taken before the removal cannot restore the card.
+  final Map<String, int> _deletedLiveRoomSeq = <String, int>{};
+  int _liveRoomDeleteSeq = 0;
+
+  int get myUid => _authController.profile.value.user?.uid ?? 0;
+  bool get isCurrentHost =>
+      currentHostId.value > 0 && currentHostId.value == myUid;
   final broadcastingTitle = ''.obs;
   final broadcasterFullname = ''.obs;
   final broadcasterProfileImage = ''.obs;
@@ -279,7 +300,126 @@ class LiveStreamingController extends GetxController {
   Future<LiveRoomUpdateResult> sendLiveRoomUpdate(
     LiveRoomUpdateRequest request,
   ) async {
-    return sendLiveRoomUpdateRequest(dio: _dio, request: request);
+    return sendLiveRoomUpdateRequest(
+      dio: _dio,
+      request: request,
+      authToken: _authController.token.value,
+    );
+  }
+
+  void setCurrentHost(int hostId) {
+    if (hostId <= 0) return;
+    currentHostId.value = hostId;
+    isBroadcaster.value = hostId == myUid;
+  }
+
+  /// Applies a confirmed host change for the active room ([room] is the
+  /// server's live-room object when available).
+  void applyHostChange({
+    required dynamic channelId,
+    required int hostId,
+    Map<String, dynamic>? room,
+  }) {
+    if (channelId?.toString() != channelName.value || hostId <= 0) return;
+    _hostEpoch++;
+    setCurrentHost(hostId);
+    if (room != null && room['channel_id'] != null) {
+      _useIsolateLoadLiveStreamingList(liveData: room);
+    }
+  }
+
+  void _syncActiveRoomHost(dynamic room, {required int hostEpoch}) {
+    if (hostEpoch != _hostEpoch || room is! Map) return;
+    if (room['channel_id']?.toString() != channelName.value) return;
+    final hostId = liveRoomHostId(room);
+    if (hostId != null && hostId != currentHostId.value) {
+      setCurrentHost(hostId);
+    }
+  }
+
+  /// Hands the active live to [newHostId]. Resolves timeouts and 403s against
+  /// the room list so the caller knows who is host before anyone disconnects.
+  Future<LiveRoomTransferResult> transferLiveHost({
+    required int newHostId,
+  }) async {
+    final channelId = int.tryParse(channelName.value) ?? 0;
+    if (transferringHost.value) {
+      return const LiveRoomTransferResult(
+        status: LiveRoomTransferStatus.failed,
+        detail: 'A host transfer is already in progress.',
+      );
+    }
+    transferringHost.value = true;
+    try {
+      var result = await sendLiveRoomTransferHostRequest(
+        dio: _dio,
+        channelId: channelId,
+        newHostId: newHostId,
+        authToken: _authController.token.value,
+      );
+      if (result.isSuccess) {
+        applyHostChange(
+          channelId: channelId,
+          hostId: liveRoomHostId(result.room) ?? newHostId,
+          room: result.room,
+        );
+        return result;
+      }
+      if (result.status == LiveRoomTransferStatus.uncertain ||
+          result.status == LiveRoomTransferStatus.notCurrentHost ||
+          result.status == LiveRoomTransferStatus.notFound) {
+        final refreshed = await refreshActiveLiveRoom();
+        final hostId = liveRoomHostId(refreshed.room);
+        if (hostId != null) {
+          applyHostChange(
+            channelId: channelId,
+            hostId: hostId,
+            room: refreshed.room,
+          );
+        }
+        if (result.status == LiveRoomTransferStatus.uncertain &&
+            hostId == newHostId) {
+          result = LiveRoomTransferResult(
+            status: LiveRoomTransferStatus.success,
+            room: refreshed.room,
+          );
+        } else if (result.status == LiveRoomTransferStatus.uncertain &&
+            refreshed.ok) {
+          result = const LiveRoomTransferResult(
+            status: LiveRoomTransferStatus.failed,
+            detail: 'The transfer was not completed. You are still the host.',
+          );
+        }
+      }
+      return result;
+    } finally {
+      transferringHost.value = false;
+    }
+  }
+
+  /// The live started on [channelId] when it is now hosted by someone else.
+  Map<String, dynamic>? handedOverLiveRoom(int channelId) {
+    final room = listLiveRoom.firstWhereOrNull(
+      (room) => _liveRoomId(room) == channelId.toString(),
+    );
+    final hostId = liveRoomHostId(room);
+    if (room is! Map || hostId == null || hostId == channelId) return null;
+    return Map<String, dynamic>.from(room);
+  }
+
+  /// Fetches a fresh room list and returns the active room. `ok` is false when
+  /// the list could not be fetched; `room` is null when the live has ended.
+  Future<({bool ok, Map<String, dynamic>? room})>
+  refreshActiveLiveRoom() async {
+    final rooms = await _fetchAndApplyLiveRoomList();
+    if (rooms == null) return (ok: false, room: null);
+    final room = rooms.firstWhereOrNull(
+      (room) => _liveRoomId(room) == channelName.value,
+    );
+    return (
+      ok: true,
+      room: room is Map ? Map<String, dynamic>.from(room) : null,
+    );
   }
 
   void startLiveRoomHeartbeat({
@@ -405,6 +545,8 @@ class LiveStreamingController extends GetxController {
         webSocketConnectionState.value = 'reconnected';
 
         isStreamingWebSocketConnected.value = true;
+        // Socket events are transient; drop cards ended while disconnected.
+        tryToLoadLiveRoomList();
       } else if (state == const Disconnecting()) {
         // print(
         //     ' disconnecting: the connection is going through the closing handshake or the close method has been invoked.');
@@ -501,12 +643,7 @@ class LiveStreamingController extends GetxController {
       else if (data['type'] == STREAMING) {
         _useIsolateLoadLiveStreamingList(liveData: data);
       } else if (data['type'] == DELETE_LIVE) {
-        listLiveRoom.removeWhere(
-          (element) => element['channel_id'] == data['channel_id'],
-        );
-        listFilterLiveStreams.removeWhere(
-          (element) => element['channel_id'] == data['channel_id'],
-        );
+        _removeEndedLiveRoom(data['channel_id']);
       } else if (data['type'] == UPDATE_CAMERA_FILTER) {
         dynamic liveData = listLiveRoom.firstWhereOrNull(
           (element) => element['channel_id'] == data['channel_id'],
@@ -581,6 +718,30 @@ class LiveStreamingController extends GetxController {
         }
       }
     }
+  }
+
+  void _removeEndedLiveRoom(dynamic channelId) {
+    final roomId = channelId?.toString();
+    if (roomId == null || roomId.isEmpty) return;
+    _deletedLiveRoomSeq.remove(roomId);
+    _deletedLiveRoomSeq[roomId] = ++_liveRoomDeleteSeq;
+    if (_deletedLiveRoomSeq.length > 50) {
+      _deletedLiveRoomSeq.remove(_deletedLiveRoomSeq.keys.first);
+    }
+    listLiveRoom.removeWhere((room) => _liveRoomId(room) == roomId);
+    listFilterLiveStreams.removeWhere((room) => _liveRoomId(room) == roomId);
+  }
+
+  /// Drops rooms ended after a snapshot was taken at [snapshotDeleteSeq].
+  List<dynamic> _withoutRoomsEndedSince(
+    List<dynamic> rooms,
+    int snapshotDeleteSeq,
+  ) {
+    if (_liveRoomDeleteSeq == snapshotDeleteSeq) return rooms;
+    return rooms.where((room) {
+      final deletedAt = _deletedLiveRoomSeq[_liveRoomId(room)];
+      return deletedAt == null || deletedAt <= snapshotDeleteSeq;
+    }).toList();
   }
 
   // void _loadLiveStreamingListFromFirebase() {
@@ -666,6 +827,7 @@ class LiveStreamingController extends GetxController {
     required dynamic brdLevel,
     bool fromLink = false,
     bool allowSend = true,
+    int? hostId,
     // required Room room,
     // required EventsListener<RoomEvent> listener,
   }) {
@@ -676,7 +838,10 @@ class LiveStreamingController extends GetxController {
     channelName.value = brdchannelName;
     broadcasterFullname.value = broadcasterName ?? '';
     broadcasterProfileImage.value = brdImage ?? '';
-    isBroadcaster.value = isBrdOwner;
+    setCurrentHost(
+      isBrdOwner ? myUid : (hostId ?? int.tryParse(brdchannelName) ?? 0),
+    );
+    isBroadcaster.value = isBrdOwner || isCurrentHost;
     allowCommentAndEmojiSend.value = allowSend;
     followers.addAll(brdFollowers);
     blocks.addAll(brdBlocks);
@@ -691,6 +856,7 @@ class LiveStreamingController extends GetxController {
         liveStreamData.value = listFilterLiveStreams.firstWhereOrNull(
           (element) => element['channel_id'].toString() == brdchannelName,
         );
+        _syncActiveRoomHost(liveStreamData, hostEpoch: _hostEpoch);
       } catch (e) {
         //
       }
@@ -863,6 +1029,8 @@ class LiveStreamingController extends GetxController {
     updateRoomAdmin = null;
     liveStreamData.value = {};
     channelName.value = '';
+    currentHostId.value = 0;
+    transferringHost.value = false;
     broadcasterFullname.value = '';
     broadcasterProfileImage.value = '';
     liveRunningDuration.value = '00:00:00';
@@ -985,8 +1153,11 @@ class LiveStreamingController extends GetxController {
       'channel_name': channelName,
       'identity': _authController.profile.value.user!.uid!.toString(),
       'full_name': _authController.profile.value.full_name,
+      // A handed-over live keeps the creator's channel ID; only its current
+      // host may join as owner. Replacement hosts join as participants.
       'is_owner':
-          channelName == _authController.profile.value.user!.uid!.toString(),
+          channelName == _authController.profile.value.user!.uid!.toString() &&
+          (currentHostId.value <= 0 || isCurrentHost),
     };
 
     // dynamic data2 = {
@@ -995,29 +1166,28 @@ class LiveStreamingController extends GetxController {
     //       channelName == _authController.profile.value.user!.uid!.toString(),
     // };
 
-    try {
-      Response response = await _dio.post(
-        kLiveKitEngineCheckAndTokenCreateUrl,
-        options: Options(headers: _publicHeaders()),
-        // data: data2,
-        data: data,
-      );
-
-      // print('Data 1');
-      // print(response.data);
-      return response.data;
-
-      // String engine = response.data['engine'];
-      // String url = response.data['url'];
-      // dynamic responseData = await createLiveKitToken2(data: data, url: url);
-      // if (responseData != null) {
-      //   responseData['engine'] = engine;
-      // }
-      // // print('responseData: $responseData');
-      // return responseData;
-    } catch (e) {
-      return null;
+    // Without a timeout a stalled mobile connection leaves the room loading
+    // forever; retry once since mobile data often drops the first request.
+    for (var attempt = 1; attempt <= 2; attempt++) {
+      try {
+        Response response = await _dio.post(
+          kLiveKitEngineCheckAndTokenCreateUrl,
+          options: Options(
+            headers: _publicHeaders(),
+            sendTimeout: const Duration(seconds: 20),
+            receiveTimeout: const Duration(seconds: 20),
+          ),
+          data: data,
+        );
+        return response.data;
+      } on DioException catch (e) {
+        final retryable =
+            e.response == null || (e.response!.statusCode ?? 0) >= 500;
+        if (!retryable || attempt == 2) return null;
+        await Future.delayed(const Duration(seconds: 2));
+      }
     }
+    return null;
   }
 
   // Future<dynamic> createLiveKitToken2({
@@ -1248,32 +1418,44 @@ class LiveStreamingController extends GetxController {
     }
 
     loadingLiveRoomList.value = true;
+    try {
+      await _fetchAndApplyLiveRoomList();
+    } finally {
+      loadingLiveRoomList.value = false;
+    }
+  }
 
+  /// Replaces the dashboard list with the server's. Returns null on failure.
+  Future<List<dynamic>?> _fetchAndApplyLiveRoomList() async {
+    final deleteSeq = _liveRoomDeleteSeq;
+    final hostEpoch = _hostEpoch;
     try {
       final response = await _dio.get(
         kLiveRoomListUrl,
-        options: Options(
-          headers: {
-            'accept': '*/*',
-            // 'Authorization': 'Token ${_authController.token.value}',
-            // 'X-Api-Key': DRF_API_KEY,
-          },
-        ),
+        options: Options(headers: {'accept': '*/*'}),
       );
-      int? statusCode = response.statusCode;
-      if (statusCode == 200) {
-        final responseData = response.data;
-        if (responseData is! Map || responseData['live_room_list'] is! List) {
-          return;
-        }
-        final incomingRooms = responseData['live_room_list'] as List;
-        _reconcileLiveRoomCollection(listLiveRoom, incomingRooms.toList());
-        _useIsolateLoadLiveStreamingList(liveData: null);
+      final responseData = response.data;
+      if (response.statusCode != 200 ||
+          responseData is! Map ||
+          responseData['live_room_list'] is! List) {
+        return null;
       }
+      final incomingRooms = _withoutRoomsEndedSince(
+        (responseData['live_room_list'] as List).toList(),
+        deleteSeq,
+      );
+      _reconcileLiveRoomCollection(listLiveRoom, incomingRooms);
+      _syncActiveRoomHost(
+        incomingRooms.firstWhereOrNull(
+          (room) => _liveRoomId(room) == channelName.value,
+        ),
+        hostEpoch: hostEpoch,
+      );
+      _useIsolateLoadLiveStreamingList(liveData: null);
+      return incomingRooms;
     } catch (_) {
-      // Keep the current dashboard list when a periodic refresh fails.
-    } finally {
-      loadingLiveRoomList.value = false;
+      // Keep the current dashboard list when a refresh fails.
+      return null;
     }
   }
 
@@ -1703,6 +1885,8 @@ class LiveStreamingController extends GetxController {
     Map<String, dynamic>? liveData,
   }) async {
     var recievePort = ReceivePort(); //creating new port to listen data
+    final deleteSeq = _liveRoomDeleteSeq;
+    final hostEpoch = _hostEpoch;
 
     await Isolate.spawn(loadLiveRoomList, [
       recievePort.sendPort,
@@ -1721,11 +1905,19 @@ class LiveStreamingController extends GetxController {
       }
       if (data != null) {
         if (data['type'] == 'liveStreamData') {
+          // The user may have left this room while the isolate was running.
+          if (data['data']['channel_id'].toString() != channelName.value) {
+            return;
+          }
           liveStreamData.value = {};
           liveStreamData.value = data['data'];
           allowCommentAndEmojiSend.value = data['data']['allow_send'] ?? true;
+          _syncActiveRoomHost(data['data'], hostEpoch: hostEpoch);
         } else if (data['type'] == 'listLiveStreams') {
-          final incomingRooms = (data['listLiveStreams'] as List).toList();
+          final incomingRooms = _withoutRoomsEndedSince(
+            (data['listLiveStreams'] as List).toList(),
+            deleteSeq,
+          );
           _reconcileLiveRoomCollection(listLiveRoom, incomingRooms);
           _reconcileLiveRoomCollection(
             listFilterLiveStreams,
@@ -1753,11 +1945,14 @@ void loadLiveRoomList(List<dynamic> args) {
       sendPort.send(jsonData);
     }
 
+    // Upsert by channel_id: a host handover keeps the same card.
     listLiveStreams.removeWhere(
-      (element) => element['channel_id'] == data['channel_id'],
+      (element) =>
+          element['channel_id'].toString() == data['channel_id'].toString(),
     );
-    if (data['owner_profile'] != null &&
-        !data['owner_profile']['blocks'].contains(uid)) {
+    final ownerProfile = data['owner_profile'];
+    if (ownerProfile is Map &&
+        !((ownerProfile['blocks'] as List?)?.contains(uid) ?? false)) {
       listLiveStreams.add(data);
     }
   }

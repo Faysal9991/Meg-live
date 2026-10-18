@@ -115,6 +115,11 @@ class AuthController extends GetxController {
               'No Google ID token. Check the web OAuth client configuration.',
         );
       }
+      final audience = _googleTokenAudience(idToken);
+      debugPrint(
+        '[GOOGLE-AUTH] Google returned an ID token'
+        '${audience == null ? '' : ' for audience $audience'}',
+      );
       stage = 'device';
       final deviceId = await getUniqueDeviceId();
       final data = {
@@ -176,7 +181,9 @@ class AuthController extends GetxController {
       }
     } on GoogleSignInException catch (error) {
       debugPrint(
-        '[GOOGLE-AUTH] ${error.code.name}: ${_googleErrorHint(error.code)}',
+        '[GOOGLE-AUTH] ${error.code.name}: '
+        '${error.description ?? _googleErrorHint(error.code)} '
+        '(details: ${error.details ?? 'none'})',
       );
       if (error.code != GoogleSignInExceptionCode.canceled) {
         final configurationError =
@@ -197,6 +204,27 @@ class AuthController extends GetxController {
       );
     } finally {
       authLoading.value = false;
+    }
+  }
+
+  // This is diagnostic metadata only. The backend still verifies the ID token.
+  // Never log the token itself or the other account claims.
+  String? _googleTokenAudience(String idToken) {
+    try {
+      final parts = idToken.split('.');
+      if (parts.length != 3) return null;
+      final payload = jsonDecode(
+        utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+      );
+      final audience = payload is Map ? payload['aud'] : null;
+      return audience is String &&
+              RegExp(
+                r'^[A-Za-z0-9-]+\.apps\.googleusercontent\.com$',
+              ).hasMatch(audience)
+          ? audience
+          : null;
+    } catch (_) {
+      return null;
     }
   }
 

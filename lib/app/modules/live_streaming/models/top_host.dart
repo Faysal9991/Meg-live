@@ -35,14 +35,8 @@ class TopHost {
   final bool isModerator;
 
   factory TopHost.fromJson(Map<String, dynamic> json) {
-    final user = json['user'] is Map
-        ? Map<String, dynamic>.from(json['user'])
-        : <String, dynamic>{};
-
     return TopHost(
-      uid: intFromDynamic(
-        json['uid'] ?? user['uid'] ?? json['id'],
-      ),
+      uid: _uidFromJson(json),
       level: json['level'],
       vvipOrVipPreference: mapFromDynamic(
         json['vvip_or_vip_preference'],
@@ -71,5 +65,32 @@ class TopHost {
       isHost: boolFromDynamic(json['is_host']),
       isModerator: boolFromDynamic(json['is_moderator']),
     );
+  }
+
+  /// Ranking endpoints don't agree on where the user's uid lives, so check
+  /// each known shape and use the first non-zero value.
+  static int _uidFromJson(Map<String, dynamic> json) {
+    Map<String, dynamic> asMap(dynamic value) =>
+        value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
+
+    final profile = asMap(json['profile']);
+    final user = asMap(json['user']);
+    final profileUser = asMap(profile['user']);
+    final candidates = [
+      json['uid'],
+      json['user_uid'],
+      user['uid'],
+      json['user_id'],
+      profile['uid'],
+      profileUser['uid'],
+      if (json['user'] is! Map) json['user'],
+      user['id'],
+      profileUser['id'],
+    ];
+    for (final candidate in candidates) {
+      final uid = intFromDynamic(candidate);
+      if (uid != 0) return uid;
+    }
+    return 0;
   }
 }

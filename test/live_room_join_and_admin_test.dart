@@ -29,7 +29,9 @@ void main() {
     auth = Get.put<AuthController>(
       TestAuthController()..profile.value = buildTestProfile(),
     );
-    controller = Get.put(LiveStreamingController())..channelName.value = '100';
+    controller = Get.put(LiveStreamingController())
+      ..channelName.value = '100'
+      ..setCurrentHost(100);
     Get.put<VVIPorVipPackageController>(_Packages());
     controller.listActiveCall.add({'uid': 100, 'full_name': 'Host'});
     actions.clear();
@@ -173,6 +175,17 @@ void main() {
     expect(controller.isRoomAdmin, isTrue);
     controller.setClearStreamingRelatedFields();
     expect(controller.isRoomAdmin, isFalse);
+
+    // After a handover only the new host may publish the admin list.
+    controller.setCurrentHost(202);
+    expect(
+      controller.applyRoomAdmins(senderIdentity: '100', ids: [999]),
+      isFalse,
+    );
+    expect(
+      controller.applyRoomAdmins(senderIdentity: '202', ids: [999]),
+      isTrue,
+    );
   });
 
   testWidgets('host can assign and revoke a room admin', (tester) async {

@@ -40,8 +40,7 @@ class GiftsWidget extends StatelessWidget {
         // height: 260,
         height:
             streamingController.listActiveCall.length == 1 &&
-                streamingController.channelName.value ==
-                    authController.profile.value.user!.uid!.toString()
+                streamingController.isCurrentHost
             ? 260
             : 300,
         child: Column(

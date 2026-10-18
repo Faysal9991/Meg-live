@@ -8,8 +8,11 @@ import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/modules/live_streaming/utlls/live_room_update_api.dart';
 
 class LiveRoomIsolationActions {
+  /// [authToken] must be the current host's login token for
+  /// `delete_live_room`; other actions keep working without it.
   static void useIsolateUpdateLiveRoom({
     required dynamic submissionData,
+    String? authToken,
   }) async {
     var recievePort = ReceivePort(); //creating new port to listen data
     await Isolate.spawn(_tryToUpdatingLiveRoom, [
@@ -17,6 +20,7 @@ class LiveRoomIsolationActions {
       submissionData is LiveRoomUpdateRequest
           ? submissionData.toJson()
           : submissionData,
+      authToken,
     ]); //spawing/creating new thread as isolates.
     // recievePort.listen((data) {
     //   //listening data from isolate
@@ -72,6 +76,7 @@ void _tryToDeleteContributionHistory(List<dynamic> args) async {
 void _tryToUpdatingLiveRoom(List<dynamic> args) async {
   SendPort resultPort = args[0];
   dynamic submissionData = args[1];
+  final authToken = args.length > 2 ? args[2] as String? : null;
   final dio = createApiDio();
 
   try {
@@ -80,6 +85,7 @@ void _tryToUpdatingLiveRoom(List<dynamic> args) async {
       request: LiveRoomUpdateRequest.fromMap(
         Map<String, dynamic>.from(submissionData as Map),
       ),
+      authToken: authToken,
     );
   } catch (e) {
     //

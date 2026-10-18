@@ -36,8 +36,7 @@ void showUserInteractBottomSheet({
             // height: 350,
             height:
                 streamingController.listActiveCall.length == 1 &&
-                    streamingController.channelName.value ==
-                        authController.profile.value.user!.uid!.toString()
+                    streamingController.isCurrentHost
                 ? 350
                 : 390,
 

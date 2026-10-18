@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleLoginIdentity {
@@ -17,20 +18,26 @@ class GoogleLoginIdentity {
 }
 
 /// Initializes on demand so a Google configuration error cannot prevent app
-/// startup. The web OAuth client is supplied explicitly because the Firebase
-/// configuration does not contain OAuth clients for the authentication project.
+/// startup. Android reads its web OAuth client from google-services.json unless
+/// an explicit backend audience is supplied with GOOGLE_SERVER_CLIENT_ID.
 class GoogleAuthService {
   static final instance = GoogleAuthService();
   static Future<void>? _initialization;
- static const _serverClientId = String.fromEnvironment(
-  'GOOGLE_SERVER_CLIENT_ID',
-  defaultValue:
-      '976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com',
-);
+  static const _serverClientIdOverride = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+  );
+  static const _nonAndroidServerClientId =
+      '976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com';
+
   Future<void> _initialize() async {
+    final serverClientId = _serverClientIdOverride.isNotEmpty
+        ? _serverClientIdOverride
+        : defaultTargetPlatform == TargetPlatform.android
+        ? null
+        : _nonAndroidServerClientId;
     try {
       await (_initialization ??= GoogleSignIn.instance.initialize(
-        serverClientId: _serverClientId.isEmpty ? null : _serverClientId,
+        serverClientId: serverClientId,
       ));
     } catch (_) {
       _initialization = null;

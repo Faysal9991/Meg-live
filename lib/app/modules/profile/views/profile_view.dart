@@ -17,13 +17,13 @@ import 'package:doyel_live/app/modules/products/views/vvip_package_view.dart';
 import 'package:doyel_live/app/modules/profile/views/block_list_view.dart';
 import 'package:doyel_live/app/modules/profile/views/broadcasting_histories.dart';
 import 'package:doyel_live/app/modules/profile/views/edit_profile_view.dart';
+import 'package:doyel_live/app/modules/profile/views/feedback_view.dart';
 import 'package:doyel_live/app/modules/profile/views/info/privacy_policy_view.dart';
 import 'package:doyel_live/app/modules/profile/views/info/terms_and_conditions_view.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../controllers/profile_controller.dart';
 
@@ -308,14 +308,7 @@ class ProfileView extends GetView<ProfileController>{
                 //   iconColor: AppColors.accent,
                 // ),
                 _ProfileActionTile(
-                  onTap: () {
-                    final Uri emailLaunchUri = Uri(
-                      scheme: 'mailto',
-                      path: 'biholive88@gmail.com',
-                    );
-
-                    launchUrl(emailLaunchUri);
-                  },
+                  onTap: () => Get.to(() => const FeedbackView()),
                   icon: LucideIcons.messageCircleQuestion,
                   label: 'Help & Feedback',
                   iconColor: AppColors.accent,

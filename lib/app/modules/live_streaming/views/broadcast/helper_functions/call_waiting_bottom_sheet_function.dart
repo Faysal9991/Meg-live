@@ -613,51 +613,7 @@ class _guestLiveItem extends StatelessWidget {
                       },
                     ),
                     const SizedBox(width: 16),
-                    data['call_type'] == 'video'
-                        ? CircleButton(
-                            icon: data['video_disabled']
-                                ? LucideIcons.videoOff
-                                : LucideIcons.video,
-                            iconSize: 16,
-                            minWidth: 24,
-                            minHeight: 24,
-                            iconColor: data['video_disabled']
-                                ? AppColors.textSecondary
-                                : AppColors.info,
-                            onPressed: () {
-                              String action = 'controller';
-                              // if (_pk) {
-                              //   action = 'controller_pk';
-                              // }
-                              dynamic activeData = {
-                                // 'room_name':
-                                //     '${streamingController.channelName.value}_actions',
-                                'action': action,
-                                'uid': data['uid'],
-                                // 'full_name': data['full_name'],
-                                'profile_image': data['profile_image'],
-                                'call_type': data['call_type'],
-                                'muted': data['muted'],
-                                'video_disabled': !data['video_disabled'],
-                                // 'diamonds': data['diamonds'],
-                                // 'gift_coins': data['gift_coins'],
-                                // 'is_moderator': data['is_moderator'],
-                                // 'is_host': data['is_host'],
-                                // 'is_reseller': data['is_reseller'],
-                                // 'level': data['level'],
-                                'vvip_or_vip_preference':
-                                    data['vvip_or_vip_preference'],
-                                // 'package_theme_gif': data['package_theme_gif'],
-                                // 'followers': data['followers'],
-                                // 'blocks': data['blocks'],
-                              };
-                              onUpdateAction(activeData);
-                            },
-                          )
-                        : Container(),
-                    data['call_type'] == 'video'
-                        ? const SizedBox(width: 16)
-                        : Container(),
+                    // Cameras belong to each guest; the host cannot toggle them.
                     CircleButton(
                       icon: LucideIcons.x,
                       iconSize: 24,

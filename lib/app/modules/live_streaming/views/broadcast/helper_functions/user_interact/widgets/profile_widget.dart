@@ -5,7 +5,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/profile/controllers/profile_controller.dart';
-import 'package:doyel_live/app/widgets/reusable_widgets.dart';
+import 'package:doyel_live/app/modules/profile/views/feedback_view.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ProfileWidget extends StatefulWidget {
@@ -305,9 +305,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    widget.streamingController.channelName.value ==
-                            widget.authController.profile.value.user!.uid
-                                .toString()
+                    widget.streamingController.isCurrentHost
                         ? ElevatedButton.icon(
                             onPressed: () async {
                               if (widget
@@ -381,34 +379,18 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                             ),
                           )
                         : Container(),
-                    widget.streamingController.channelName.value ==
-                            widget.authController.profile.value.user!.uid
-                                .toString()
+                    widget.streamingController.isCurrentHost
                         ? const SizedBox(width: 8)
                         : Container(),
                     ElevatedButton(
-                      onPressed: () {
-                        // Get.snackbar(
-                        //   'Coming Soon',
-                        //   "Will be implemented later.",
-                        //   backgroundColor: AppColors.warning,
-                        //   colorText: AppColors.surface,
-                        // );
-                        // rShowSnackBar(
-                        //   context: context,
-                        //   title: "Coming soon",
-                        //   color: AppColors.success,
-                        //   durationInSeconds: 1,
-                        // );
-                        rShowAlertDialog(
-                          context: context,
-                          title: 'Coming soon',
-                          content: 'Please try again later',
-                          onConfirm: () {
-                            Navigator.of(context).pop();
-                          },
-                        );
-                      },
+                      onPressed: () => Get.to(
+                        () => FeedbackView(
+                          initialCategory: FeedbackCategory.userReport,
+                          reportedUserId: int.tryParse('${widget.data['uid']}'),
+                          channelName:
+                              widget.streamingController.channelName.value,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         // fixedSize: Size(
