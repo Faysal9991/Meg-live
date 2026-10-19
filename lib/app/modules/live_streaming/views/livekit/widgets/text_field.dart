@@ -22,10 +22,7 @@ class LKTextField extends StatelessWidget {
       Container(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
         decoration: BoxDecoration(
-          border: Border.all(
-            width: 1,
-            color: AppColors.surface.withValues(alpha: .3),
-          ),
+          border: Border.all(width: 1, color: AppColors.border),
           borderRadius: BorderRadius.circular(8),
         ),
         child: AppInsetSurface(

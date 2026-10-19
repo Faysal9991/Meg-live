@@ -20,7 +20,7 @@ class MessengerView extends GetView<MessengerController> {
           ),
           decoration: BoxDecoration(
             border: Border.all(
-              color: Theme.of(context).primaryColor,
+              color: AppColors.border,
             ),
             borderRadius: BorderRadius.circular(20.0),
           ),
@@ -32,12 +32,12 @@ class MessengerView extends GetView<MessengerController> {
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                 ),
-                color: Theme.of(context).primaryColor,
+                color: AppColors.pink,
                 child: const Center(
                   child: Text(
                     'Messages',
                     style: TextStyle(
-                      color: AppColors.surface,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),

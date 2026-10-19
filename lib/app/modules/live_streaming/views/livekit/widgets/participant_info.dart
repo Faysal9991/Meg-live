@@ -31,7 +31,7 @@ class ParticipantInfoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    color: AppColors.textPrimary.withValues(alpha: 0.3),
+    color: AppColors.overlayChip,
     padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -49,7 +49,7 @@ class ParticipantInfoWidget extends StatelessWidget {
                 padding: EdgeInsets.only(left: 5),
                 child: Icon(
                   LucideIcons.monitor,
-                  color: AppColors.surface,
+                  color: AppColors.onMedia,
                   size: 16,
                 ),
               )
@@ -57,7 +57,7 @@ class ParticipantInfoWidget extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 5),
                 child: Icon(
                   audioAvailable ? LucideIcons.mic : LucideIcons.micOff,
-                  color: audioAvailable ? AppColors.surface : AppColors.error,
+                  color: audioAvailable ? AppColors.onMedia : AppColors.error,
                   size: 16,
                 ),
               ),

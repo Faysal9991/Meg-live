@@ -179,7 +179,7 @@ class _MessagesListState extends State<MessagesList> {
               ? Expanded(
                   child: Center(
                     child: SpinKitCircle(
-                      color: Theme.of(context).primaryColor,
+                      color: AppColors.pinkLight,
                       size: 50.0,
                     ),
                   ),
@@ -207,7 +207,7 @@ class _MessagesListState extends State<MessagesList> {
                               Get.snackbar(
                                 "Can't delete message",
                                 "Chat is blocked",
-                                backgroundColor: AppColors.textPrimary,
+                                backgroundColor: AppColors.surfaceHigh,
                               );
                               return;
                             }
@@ -224,7 +224,7 @@ class _MessagesListState extends State<MessagesList> {
                                 content: const Text('Will remove for both'),
                                 title: 'Delete',
                                 textConfirm: 'Confirm',
-                                confirmTextColor: AppColors.surface,
+                                confirmTextColor: AppColors.onLight,
                                 buttonColor: AppColors.error,
                                 onConfirm: () async {
                                   // await FirebaseFirestore.instance

@@ -45,13 +45,13 @@ class MessageBubble extends StatelessWidget {
                     bottomRight: Radius.circular(30)),
             elevation: 5,
             color: senderId == uid
-                ? Theme.of(context).primaryColor
-                : AppColors.textSecondary,
+                ? AppColors.pink
+                : AppColors.surfaceHigh,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               child: Text(
                 text,
-                style: const TextStyle(color: AppColors.surface, fontSize: 15),
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
               ),
             ),
           ),
@@ -65,7 +65,7 @@ class MessageBubble extends StatelessWidget {
                 .add_jm()
                 .format(DateTime.parse(timestamp.toString()).toLocal()),
             // timestamp.toString(),
-            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
+            style: const TextStyle(fontSize: 12, color: AppColors.textHint),
           ),
           // senderId == uid
           //     ? Text(

@@ -88,7 +88,7 @@ class DevicesController extends GetxController {
           'No Access',
           'You are not allowed to perform action.',
           backgroundColor: AppColors.error,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
@@ -96,7 +96,7 @@ class DevicesController extends GetxController {
           'Failed',
           'Something is wrong. Please try again.',
           backgroundColor: AppColors.error,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 201) {
@@ -104,7 +104,7 @@ class DevicesController extends GetxController {
           'Success',
           'Device has been blocked.',
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
         userDevicesInfoList

@@ -78,7 +78,7 @@ class _AgentForHostViewState extends State<AgentForHostView> {
                           height: 50,
                           fit: BoxFit.cover,
                           placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(color: AppColors.error),
+                            child: CircularProgressIndicator(color: AppColors.pinkLight),
                           ),
                         ),
                       ),
@@ -98,9 +98,9 @@ class _AgentForHostViewState extends State<AgentForHostView> {
               // Displaying LoadingSpinner to indicate waiting state
               return const Center(
                 child: SpinKitWaveSpinner(
-                  trackColor: AppColors.textSecondary,
-                  waveColor: AppColors.error,
-                  color: AppColors.surface,
+                  trackColor: AppColors.surfaceHigh,
+                  waveColor: AppColors.pinkLight,
+                  color: AppColors.textPrimary,
                   size: 50.0,
                 ),
               );

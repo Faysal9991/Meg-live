@@ -86,7 +86,9 @@ class RoomDisplayLayout {
                           // !data['muted']
                           view.participant.isMicrophoneEnabled()
                       ? Border.all(
-                          color: AppColors.error,
+                          color: data['call_type'] == 'audio'
+                              ? AppColors.cyan
+                              : AppColors.pinkLight,
                           width: 3,
                           // strokeAlign: StrokeAlign.center,
                           strokeAlign: BorderSide.strokeAlignCenter,
@@ -125,7 +127,7 @@ class RoomDisplayLayout {
                           vertical: 1,
                         ),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
+                          color: AppColors.overlayChip,
                           borderRadius: BorderRadius.circular(20.0),
                           border: VIDEO_AS_CONTAINER
                               ? Border.all(color: AppColors.onMediaSubtle)
@@ -154,7 +156,7 @@ class RoomDisplayLayout {
                                         ),
                                         border: Border.all(
                                           width: 2.0,
-                                          color: AppColors.warning,
+                                          color: AppColors.onMediaMuted,
                                         ),
                                       ),
                                       child: ClipRRect(
@@ -202,8 +204,8 @@ class RoomDisplayLayout {
                                                     const Center(
                                                       child:
                                                           CircularProgressIndicator(
-                                                            color:
-                                                                AppColors.error,
+                                                            color: AppColors
+                                                                .onMedia,
                                                           ),
                                                     ),
                                               ),
@@ -223,7 +225,7 @@ class RoomDisplayLayout {
                                                 //   bottomRight: Radius.circular(20.0),
                                                 // ),
                                                 border: Border.all(
-                                                  color: AppColors.warning,
+                                                  color: AppColors.gold,
                                                   // width: 2.0,
                                                 ),
                                                 borderRadius:
@@ -279,7 +281,7 @@ class RoomDisplayLayout {
                                       // "${data['full_name'].length > ((!livekitStreamingController.pkState.value && (livekitStreamingController.listActiveCall.length > 4 || livekitStreamingController.allowVideoCall.value)) ? 8 : 12) ? data['full_name'].substring(0, ((!livekitStreamingController.pkState.value && (livekitStreamingController.listActiveCall.length > 4 || livekitStreamingController.allowVideoCall.value)) ? 8 : 12)) + '...' : data['full_name']}",
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                        color: AppColors.surface,
+                                        color: AppColors.onMedia,
                                         fontSize:
                                             (!livekitStreamingController
                                                     .pkState
@@ -313,7 +315,7 @@ class RoomDisplayLayout {
                                         '${data['diamonds'] ?? 0}',
                                         // '${(data['diamonds'] ?? 0) / 1000}K',
                                         style: TextStyle(
-                                          color: AppColors.surface,
+                                          color: AppColors.onMedia,
                                           fontSize:
                                               (!livekitStreamingController
                                                       .pkState
@@ -397,7 +399,7 @@ class RoomDisplayLayout {
                   margin: const EdgeInsets.all(4.0),
                   decoration: BoxDecoration(
                     // color: AppColors.error.withOpacity(.6),
-                    color: AppColors.surface,
+                    color: AppColors.overlayChip,
                     borderRadius: BorderRadius.circular(100),
                     border: VIDEO_AS_CONTAINER
                         ? Border.all(color: AppColors.onMediaSubtle)
@@ -423,7 +425,7 @@ class RoomDisplayLayout {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: AppColors.overlay,
+                      color: AppColors.overlayChip,
                       borderRadius: BorderRadius.circular(20),
                       border: VIDEO_AS_CONTAINER
                           ? Border.all(color: AppColors.onMediaSubtle)
@@ -432,7 +434,7 @@ class RoomDisplayLayout {
                     child: Text(
                       serial,
                       style: const TextStyle(
-                        color: AppColors.surface,
+                        color: AppColors.onMedia,
                         fontSize: 16,
                       ),
                     ),
@@ -456,7 +458,7 @@ class RoomDisplayLayout {
                 !view.isScreenShare &&
                 view.participant.isMicrophoneEnabled()
             ? Border.all(
-                color: AppColors.error,
+                color: AppColors.pinkLight,
                 width: 3,
                 strokeAlign: BorderSide.strokeAlignCenter,
               )

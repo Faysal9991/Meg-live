@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
+import 'package:doyel_live/app/theme/app_surface_styles.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:convert';
 import 'dart:isolate';
@@ -623,7 +623,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
 
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: AppNeumorphicStyles.decoration(radius: 18, compact: true),
+      decoration: AppSurfaceStyles.decoration(radius: 18),
       child: Row(
         children: [
           SizedBox(
@@ -686,13 +686,13 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                     const Icon(
                       Icons.diamond,
                       size: 15,
-                      color: AppColors.warning,
+                      color: AppColors.gold,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${_formatDiamonds(score)} Diamonds',
                       style: const TextStyle(
-                        color: AppColors.warning,
+                        color: AppColors.gold,
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
                       ),
@@ -740,11 +740,11 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                       actions: [
                         Padding(
                           padding: const EdgeInsets.only(right: 12),
-                          child: NeumorphicIconButton(
+                          child: AppIconButton(
                             tooltip: 'Top Hosts and Contributors',
                             onPressed: _showTopRankingsBottomSheet,
                             icon: Icons.workspace_premium,
-                            iconColor: AppColors.primary,
+                            iconColor: AppColors.gold,
                             size: 38,
                             iconSize: 20,
                           ),

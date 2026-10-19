@@ -85,8 +85,8 @@ class _MessagesViewState extends State<MessagesView>
     final popupTextColor =
         ThemeData.estimateBrightnessForColor(popupBackgroundColor) ==
             Brightness.dark
-        ? AppColors.surface
-        : AppColors.textPrimary;
+        ? AppColors.textPrimary
+        : AppColors.onLight;
     final appBarIconColor = Theme.of(context).colorScheme.onSurface;
     return AppBar(
       automaticallyImplyLeading: false,

@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class SearchView extends StatelessWidget {
@@ -20,7 +21,7 @@ class SearchView extends StatelessWidget {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).primaryColor,
+              color: AppColors.textSecondary,
             ),
           ),
         ),

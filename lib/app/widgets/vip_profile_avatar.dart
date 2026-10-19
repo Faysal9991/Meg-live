@@ -73,7 +73,7 @@ class VipProfileAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: showBorder
-            ? Border.all(width: 2, color: AppColors.surface)
+            ? Border.all(width: 2, color: AppColors.border)
             : null,
       ),
       clipBehavior: Clip.antiAlias,
@@ -85,7 +85,7 @@ class VipProfileAvatar extends StatelessWidget {
               placeholder: (_, __) => const Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: AppColors.error,
+                  color: AppColors.textSecondary,
                 ),
               ),
               errorWidget: (_, __, ___) =>

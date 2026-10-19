@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -10,7 +11,7 @@ class PrivacyPolicyView extends GetView {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: AppColors.bg,
         appBar: AppBar(
           title: const Text('Privacy Policy'),
           centerTitle: true,

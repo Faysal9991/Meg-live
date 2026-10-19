@@ -105,7 +105,7 @@ class _ReceiverMessageCardState extends State<ReceiverMessageCard> {
               padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
               child: Text(
                 widget.time,
-                style: const TextStyle(fontSize: 12, color: AppColors.surface),
+                style: const TextStyle(fontSize: 12, color: AppColors.textHint),
               ),
             ),
           ],

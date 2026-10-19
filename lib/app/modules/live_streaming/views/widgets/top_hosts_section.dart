@@ -56,7 +56,7 @@ class TopHostsSection extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 25,
-                            backgroundColor: AppColors.primarySoft,
+                            backgroundColor: AppColors.surfaceHigh,
                             backgroundImage:
                                 host.profileImage != null &&
                                     host.profileImage!.isNotEmpty
@@ -67,7 +67,7 @@ class TopHostsSection extends StatelessWidget {
                                     host.profileImage!.isEmpty
                                 ? const Icon(
                                     Icons.person_outline,
-                                    color: AppColors.primary,
+                                    color: AppColors.textHint,
                                   )
                                 : null,
                           ),

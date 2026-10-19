@@ -34,7 +34,7 @@ class _ResellerRechargeHistoryListViewState
           Obx(() {
             return _businessController.loadingResellerRechargeHistoryList.value
                 ? const SpinKitCircle(
-                    color: AppColors.error,
+                    color: AppColors.pinkLight,
                   )
                 : _businessController.resellerRechargeHistoryList.isEmpty
                     ? const AppCard(
@@ -65,7 +65,7 @@ class _ResellerRechargeHistoryListViewState
                                 horizontal: 16.0,
                               ),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).primaryColorLight,
+                                color: AppColors.surfaceHigh,
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
                               child: Row(
@@ -100,7 +100,7 @@ class _ResellerRechargeHistoryListViewState
                                           );
                                           Navigator.of(context).pop();
                                         },
-                                        confirmTextColor: AppColors.surface,
+                                        confirmTextColor: AppColors.onLight,
                                         onCancel: () =>
                                             Navigator.of(context).pop(),
                                       );

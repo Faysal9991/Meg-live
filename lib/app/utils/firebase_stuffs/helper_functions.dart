@@ -94,7 +94,7 @@ class HelperFunctions {
         'Not allowed',
         "You can't enter your own stream.",
         backgroundColor: AppColors.warning,
-        colorText: AppColors.surface,
+        colorText: AppColors.onLight,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 1),
       );
@@ -116,7 +116,7 @@ class HelperFunctions {
             'Not allowed',
             "Live is Locked.",
             backgroundColor: AppColors.error,
-            colorText: AppColors.surface,
+            colorText: AppColors.onLight,
             snackPosition: SnackPosition.BOTTOM,
             duration: const Duration(seconds: 2),
           );

@@ -37,7 +37,7 @@ class _ModeratorRequestViewState extends State<ModeratorRequestView> {
               SizedBox(height: MediaQuery.of(context).size.height * .20),
               Obx(() {
                 return _businessController.loadingModeratorRequest.value
-                    ? const SpinKitCircle(color: AppColors.error)
+                    ? const SpinKitCircle(color: AppColors.pinkLight)
                     : _businessController.moderatorRequestedData.value['id'] !=
                           null
                     ? Padding(
@@ -71,11 +71,12 @@ class _ModeratorRequestViewState extends State<ModeratorRequestView> {
                                         .tryToRemoveModeratorRequest();
                                     Navigator.of(context).pop();
                                   },
-                                  confirmTextColor: AppColors.surface,
+                                  confirmTextColor: AppColors.onLight,
                                   onCancel: () => Navigator.of(context).pop(),
                                 );
                               },
                               primaryColor: AppColors.error,
+                              buttonTextColor: AppColors.onLight,
                               buttonText: 'Remove Request',
                               fontSize: 16,
                               iconData: Icons.close,
@@ -99,11 +100,11 @@ class _ModeratorRequestViewState extends State<ModeratorRequestView> {
                                       .tryToSendModeratorRequest();
                                   Navigator.of(context).pop();
                                 },
-                                confirmTextColor: AppColors.surface,
+                                confirmTextColor: AppColors.onLight,
                                 onCancel: () => Navigator.of(context).pop(),
                               );
                             },
-                            primaryColor: Theme.of(context).primaryColorLight,
+                            primaryColor: AppColors.pink,
                             buttonText: 'Sent Moderator Request',
                             fontSize: 16,
                             iconData: Icons.touch_app,

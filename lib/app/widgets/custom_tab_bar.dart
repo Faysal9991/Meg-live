@@ -1,6 +1,6 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
-import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
-import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
+import 'package:doyel_live/app/theme/app_surface_styles.dart';
+import 'package:flutter/material.dart';
 
 class CustomTabItem {
   const CustomTabItem({
@@ -45,15 +45,14 @@ class CustomTabBar extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Neumorphic(
+                    AnimatedContainer(
                       duration: MediaQuery.disableAnimationsOf(context)
                           ? Duration.zero
-                          : AppNeumorphicStyles.duration,
-                      style: AppNeumorphicStyles.raised(
+                          : AppSurfaceStyles.duration,
+                      decoration: AppSurfaceStyles.decoration(
                         color: selected
                             ? AppColors.primarySoft
                             : AppColors.surface,
-                        depth: selected ? AppNeumorphicStyles.insetDepth : 0,
                         radius: 14,
                       ),
                       padding: const EdgeInsets.symmetric(
@@ -63,7 +62,7 @@ class CustomTabBar extends StatelessWidget {
                       child: Icon(
                         selected ? item.activeIcon : item.inactiveIcon,
                         color: selected
-                            ? AppColors.primary
+                            ? AppColors.pinkLight
                             : AppColors.textSecondary,
                         size: 20,
                       ),
@@ -75,7 +74,7 @@ class CustomTabBar extends StatelessWidget {
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         fontSize: 10,
                         color: selected
-                            ? AppColors.primary
+                            ? AppColors.pinkLight
                             : AppColors.textSecondary,
                         fontWeight: selected
                             ? FontWeight.w700

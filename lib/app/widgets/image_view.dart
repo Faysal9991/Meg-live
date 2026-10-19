@@ -10,8 +10,11 @@ class ImageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: AppColors.textPrimary,
-        appBar: AppBar(backgroundColor: AppColors.transparent),
+        backgroundColor: AppColors.mediaBackground,
+        appBar: AppBar(
+          backgroundColor: AppColors.transparent,
+          foregroundColor: AppColors.onMedia,
+        ),
         body: Center(
           child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.contain),
         ),

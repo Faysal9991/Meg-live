@@ -42,7 +42,7 @@ class BroadcastingHistoriesView extends GetView {
                   return const Center(
                     child: Text(
                       'No history',
-                      style: TextStyle(color: AppColors.error),
+                      style: TextStyle(color: AppColors.textSecondary),
                     ),
                   );
                 }
@@ -64,7 +64,7 @@ class BroadcastingHistoriesView extends GetView {
             }
             return Center(
               child: SpinKitHourGlass(
-                color: Theme.of(context).primaryColor,
+                color: AppColors.pinkLight,
                 size: 50.0,
               ),
             );

@@ -203,12 +203,12 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.workspace_premium, color: AppColors.primaryDark, size: 10),
+          Icon(Icons.workspace_premium, color: AppColors.onLight, size: 10),
           SizedBox(width: 3),
           Text(
             'Owner',
             style: TextStyle(
-              color: AppColors.primaryDark,
+              color: AppColors.onLight,
               fontSize: 9,
               fontWeight: FontWeight.w700,
             ),
@@ -229,13 +229,6 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
               border: Border.all(width: 2, color: AppColors.textPrimary),
-              boxShadow: const [
-                BoxShadow(
-                  color: AppColors.overlay,
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
-                ),
-              ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(100),
@@ -287,7 +280,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               child: Text(
                 '$serial',
                 style: const TextStyle(
-                  color: AppColors.primaryDark,
+                  color: AppColors.onLight,
                   fontWeight: FontWeight.w800,
                   fontSize: 9,
                 ),
@@ -313,7 +306,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           const Text(
             'TOP',
             style: TextStyle(
-              color: AppColors.primaryDark,
+              color: AppColors.onLight,
               fontSize: 9,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
@@ -323,7 +316,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           Text(
             topLabel,
             style: const TextStyle(
-              color: AppColors.primaryDark,
+              color: AppColors.onLight,
               fontSize: 13,
               fontWeight: FontWeight.w800,
             ),

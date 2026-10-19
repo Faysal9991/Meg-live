@@ -102,7 +102,10 @@ class _GiftsWidgetState extends State<GiftsWidget> {
         return const SizedBox(
           height: 300,
           child: Center(
-            child: SpinKitChasingDots(color: AppColors.error, size: 50.0),
+            child: SpinKitChasingDots(
+              color: AppColors.textSecondary,
+              size: 50.0,
+            ),
           ),
         );
       }
@@ -246,11 +249,11 @@ class _GiftsWidgetState extends State<GiftsWidget> {
                       left: -1,
                       child: CircleAvatar(
                         radius: 7,
-                        backgroundColor: AppColors.accent,
+                        backgroundColor: AppColors.cyan,
                         child: Icon(
                           Icons.mic_rounded,
                           size: 9,
-                          color: AppColors.textOnAccent,
+                          color: AppColors.onLight,
                         ),
                       ),
                     ),
@@ -279,7 +282,7 @@ class _GiftsWidgetState extends State<GiftsWidget> {
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? AppColors.primary : AppColors.textSecondary,
+                color: selected ? AppColors.pinkLight : AppColors.textSecondary,
               ),
             ),
           ],
@@ -328,7 +331,7 @@ class _GiftsWidgetState extends State<GiftsWidget> {
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
                 color: allSelected
-                    ? AppColors.primary
+                    ? AppColors.pinkLight
                     : AppColors.textSecondary,
               ),
             ),
@@ -468,7 +471,7 @@ class _GiftsWidgetState extends State<GiftsWidget> {
           'Oops',
           "Coming Soon!",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.surface,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.TOP,
         ),
         child: Container(
@@ -485,7 +488,7 @@ class _GiftsWidgetState extends State<GiftsWidget> {
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AppColors.gold,
                   ),
                 );
               }),
@@ -494,13 +497,13 @@ class _GiftsWidgetState extends State<GiftsWidget> {
                 width: 22,
                 height: 22,
                 decoration: const BoxDecoration(
-                  color: AppColors.success,
+                  color: AppColors.gold,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.add_rounded,
                   size: 16,
-                  color: AppColors.textOnPrimary,
+                  color: AppColors.onLight,
                 ),
               ),
             ],
@@ -529,11 +532,11 @@ class _GiftsWidgetState extends State<GiftsWidget> {
             height: 32,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: canSend || isSending
-                    ? const [AppColors.primaryLight, AppColors.primary]
-                    : const [AppColors.disabled, AppColors.disabled],
-              ),
+              gradient: canSend || isSending
+                  ? AppGradients.brand
+                  : const LinearGradient(
+                      colors: [AppColors.disabled, AppColors.disabled],
+                    ),
               borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
             child: Row(
@@ -613,7 +616,7 @@ class _GiftsWidgetState extends State<GiftsWidget> {
         'Failed',
         "You've no sufficient diamonds. Please +Recharge.",
         backgroundColor: AppColors.error,
-        colorText: AppColors.surface,
+        colorText: AppColors.onLight,
         snackPosition: SnackPosition.TOP,
       );
       return;
@@ -660,7 +663,7 @@ class giftItem extends StatelessWidget {
             'Failed',
             "You've no sufficient diamonds. Please +Recharge.",
             backgroundColor: AppColors.error,
-            colorText: AppColors.surface,
+            colorText: AppColors.onLight,
             snackPosition: SnackPosition.TOP,
           );
           return;
@@ -726,7 +729,7 @@ class giftItem extends StatelessWidget {
                                   height: 16,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: AppColors.primary,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ),
@@ -753,9 +756,7 @@ class giftItem extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.textPrimary,
+                            color: AppColors.gold,
                           ),
                         ),
                       ],

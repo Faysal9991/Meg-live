@@ -10,7 +10,7 @@ import 'package:doyel_live/app/utils/firebase_stuffs/fcm_notifications.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/notification_message.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 
@@ -81,21 +81,17 @@ void main() async {
   // Override the ssl certificate requirements
   HttpOverrides.global = MyHttpOverrides();
   runApp(
-    NeumorphicTheme(
-      theme: AppTheme.neumorphicTheme,
-      themeMode: ThemeMode.light,
-      child: GetMaterialApp(
-        title: "Biho Live",
-        builder: (context, child) => MinimizedLiveOverlay(
-          session: Get.find<LiveStreamingController>().liveSession,
-          child: child ?? const SizedBox.shrink(),
-        ),
-        initialRoute: AppPages.INITIAL,
-        getPages: AppPages.routes,
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        themeMode: ThemeMode.light,
+    GetMaterialApp(
+      title: "Biho Live",
+      builder: (context, child) => MinimizedLiveOverlay(
+        session: Get.find<LiveStreamingController>().liveSession,
+        child: child ?? const SizedBox.shrink(),
       ),
+      initialRoute: AppPages.INITIAL,
+      getPages: AppPages.routes,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
     ),
   );
 }

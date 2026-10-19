@@ -22,7 +22,7 @@ Widget rBuildCountryPickerDropdown({
     decoration: BoxDecoration(
       // color: AppColors.textSecondary,
       borderRadius: BorderRadius.circular(8.0),
-      border: Border.all(color: AppColors.textSecondary),
+      border: Border.all(color: AppColors.border),
     ),
     child: Row(
       children: <Widget>[
@@ -135,7 +135,7 @@ Widget _buildDropdownSelectedItemBuilder(
           child: Text(
             '${country.name}',
             style: const TextStyle(
-              color: AppColors.error,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -191,10 +191,10 @@ void openCountryPickerDialog({
 }) => showDialog(
   context: context,
   builder: (context) => Theme(
-    data: Theme.of(context).copyWith(primaryColor: AppColors.accent),
+    data: Theme.of(context).copyWith(primaryColor: AppColors.primary),
     child: CountryPickerDialog(
       titlePadding: const EdgeInsets.all(8.0),
-      searchCursorColor: AppColors.accentLight,
+      searchCursorColor: AppColors.pinkLight,
       searchInputDecoration: const InputDecoration(hintText: 'Search...'),
       isSearchable: true,
       title: const Text('Select your phone code'),

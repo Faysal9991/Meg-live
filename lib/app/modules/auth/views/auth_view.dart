@@ -90,8 +90,8 @@ class AuthView extends GetView<AuthController> {
                             () => PrimaryButton(
                               label: 'Phone Login',
                               icon: Icons.phone_outlined,
-                              backgroundColor: AppColors.surface,
-                              foregroundColor: AppColors.primary,
+                              backgroundColor: AppColors.surfaceHigh,
+                              foregroundColor: AppColors.textPrimary,
                               onPressed: _authController.authLoading.value
                                   ? null
                                   : () =>

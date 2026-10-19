@@ -1,4 +1,4 @@
-import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
+import 'package:doyel_live/app/theme/app_surface_styles.dart';
 import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +37,7 @@ class _RequestedHostListViewState extends State<RequestedHostListView> {
           Obx(() {
             return _businessController.loadingHostRequestList.value ||
                     _businessController.loadingHostRequestConfirmation.value
-                ? const SpinKitCircle(color: AppColors.error)
+                ? const SpinKitCircle(color: AppColors.pinkLight)
                 : _businessController.hostRequestList.isEmpty
                 ? const AppCard(
                     elevation: 5,
@@ -61,9 +61,8 @@ class _RequestedHostListViewState extends State<RequestedHostListView> {
                         rPrimaryTextField(
                           controller: _editingControllerSearchUid,
                           keyboardType: TextInputType.number,
-                          borderColor: Theme.of(context).primaryColor,
+                          borderColor: AppColors.border,
                           hintText: 'Search user with UserID here',
-                          useNeumorphic: true,
                           suffixIcon: IconButton(
                             onPressed: () {
                               FocusScope.of(context).unfocus();
@@ -116,7 +115,7 @@ class _RequestedHostListViewState extends State<RequestedHostListView> {
                           if (_businessController
                               .loadingHostRequestSearch
                               .value) {
-                            return const SpinKitCircle(color: AppColors.error);
+                            return const SpinKitCircle(color: AppColors.pinkLight);
                           }
                           if (_businessController
                                   .searchedHostRequestedData
@@ -136,7 +135,7 @@ class _RequestedHostListViewState extends State<RequestedHostListView> {
                                   horizontal: 16.0,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).primaryColor,
+                                  color: AppColors.surfaceHigh,
                                   borderRadius: BorderRadius.circular(20.0),
                                 ),
                                 child: InkWell(
@@ -155,7 +154,7 @@ class _RequestedHostListViewState extends State<RequestedHostListView> {
                                         );
                                         Get.close;
                                       },
-                                      confirmTextColor: AppColors.surface,
+                                      confirmTextColor: AppColors.onLight,
                                       onCancel: () => Get.close,
                                     );
                                   },
@@ -190,7 +189,7 @@ class _RequestedHostListViewState extends State<RequestedHostListView> {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              const Divider(color: AppColors.surface),
+                              const Divider(color: AppColors.border),
                               const SizedBox(height: 4),
                             ],
                           );
@@ -208,7 +207,7 @@ class _RequestedHostListViewState extends State<RequestedHostListView> {
                                   vertical: 8.0,
                                   horizontal: 16.0,
                                 ),
-                                decoration: AppNeumorphicStyles.decoration(),
+                                decoration: AppSurfaceStyles.decoration(),
                                 child: InkWell(
                                   onTap: () {
                                     Get.defaultDialog(
@@ -225,7 +224,7 @@ class _RequestedHostListViewState extends State<RequestedHostListView> {
                                         );
                                         Get.close;
                                       },
-                                      confirmTextColor: AppColors.surface,
+                                      confirmTextColor: AppColors.onLight,
                                       onCancel: () => Get.close,
                                     );
                                   },

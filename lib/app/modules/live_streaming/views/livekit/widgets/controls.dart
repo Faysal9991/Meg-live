@@ -282,7 +282,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                     child: const ListTile(
                       leading: Icon(
                         LucideIcons.micOff,
-                        color: AppColors.surface,
+                        color: AppColors.textSecondary,
                       ),
                       title: Text('Mute Microphone'),
                     ),
@@ -297,11 +297,11 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                                   widget.room.selectedAudioInputDeviceId)
                               ? const Icon(
                                   LucideIcons.squareCheckBig,
-                                  color: AppColors.surface,
+                                  color: AppColors.pinkLight,
                                 )
                               : const Icon(
                                   LucideIcons.square,
-                                  color: AppColors.surface,
+                                  color: AppColors.textSecondary,
                                 ),
                           title: Text(device.label),
                         ),
@@ -327,7 +327,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                     child: ListTile(
                       leading: Icon(
                         LucideIcons.speaker,
-                        color: AppColors.surface,
+                        color: AppColors.textSecondary,
                       ),
                       title: Text('Select Audio Output'),
                     ),
@@ -342,11 +342,11 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                                   widget.room.selectedAudioOutputDeviceId)
                               ? const Icon(
                                   LucideIcons.squareCheckBig,
-                                  color: AppColors.surface,
+                                  color: AppColors.pinkLight,
                                 )
                               : const Icon(
                                   LucideIcons.square,
-                                  color: AppColors.surface,
+                                  color: AppColors.textSecondary,
                                 ),
                           title: Text(device.label),
                         ),
@@ -379,7 +379,7 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                     child: const ListTile(
                       leading: Icon(
                         LucideIcons.videoOff,
-                        color: AppColors.surface,
+                        color: AppColors.textSecondary,
                       ),
                       title: Text('Disable Camera'),
                     ),
@@ -394,11 +394,11 @@ class _ControlsWidgetState extends State<ControlsWidget> {
                                   widget.room.selectedVideoInputDeviceId)
                               ? const Icon(
                                   LucideIcons.squareCheckBig,
-                                  color: AppColors.surface,
+                                  color: AppColors.pinkLight,
                                 )
                               : const Icon(
                                   LucideIcons.square,
-                                  color: AppColors.surface,
+                                  color: AppColors.textSecondary,
                                 ),
                           title: Text(device.label),
                         ),

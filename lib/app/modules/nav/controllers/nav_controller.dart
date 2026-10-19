@@ -55,7 +55,7 @@ class NavController extends GetxController {
             'Blocked',
             "Your device has been blocked.",
             backgroundColor: AppColors.error,
-            colorText: AppColors.textOnPrimary,
+            colorText: AppColors.onLight,
             snackPosition: SnackPosition.BOTTOM,
           );
           authController.setShowingOverlay(overlay: false);

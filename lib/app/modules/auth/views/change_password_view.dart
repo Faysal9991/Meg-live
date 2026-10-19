@@ -71,7 +71,7 @@ class ChangePasswordView extends StatelessWidget {
                           'Failed',
                           "New password length must be 8 charecters long.",
                           backgroundColor: AppColors.error,
-                          colorText: AppColors.surface,
+                          colorText: AppColors.onLight,
                           snackPosition: SnackPosition.BOTTOM,
                         );
                         return;
@@ -88,14 +88,14 @@ class ChangePasswordView extends StatelessWidget {
                         'Failed',
                         "All fields are required.",
                         backgroundColor: AppColors.error,
-                        colorText: AppColors.surface,
+                        colorText: AppColors.onLight,
                         snackPosition: SnackPosition.BOTTOM,
                       );
                     }
                   },
                   primaryColor: Theme.of(context).primaryColor,
                   buttonText: 'Submit',
-                  buttonTextColor: AppColors.surface,
+                  buttonTextColor: AppColors.textPrimary,
                   fontSize: 16.0,
                   fixedSize: Size(MediaQuery.of(context).size.width - 32, 46),
                   borderRadius: AppRadius.button,

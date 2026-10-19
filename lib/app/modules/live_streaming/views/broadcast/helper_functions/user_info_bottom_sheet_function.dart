@@ -39,7 +39,7 @@ void showUserInfoBottomSheet({
         children: [
           CircleAvatar(
             radius: 12,
-            backgroundColor: AppColors.textSecondary,
+            backgroundColor: AppColors.surfaceHigh,
             backgroundImage: logo.isNotEmpty
                 ? CachedNetworkImageProvider(logo)
                 : null,
@@ -113,7 +113,10 @@ void showUserInfoBottomSheet({
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Center(
-                    child: SpinKitHourGlass(color: AppColors.error, size: 50.0),
+                    child: SpinKitHourGlass(
+                      color: AppColors.textSecondary,
+                      size: 50.0,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -159,7 +162,7 @@ void showUserInfoBottomSheet({
               // decoration: BoxDecoration(
               //   gradient: Palette.linearGradient2,
               // ),
-              color: AppColors.textPrimary,
+              color: AppColors.transparent,
               child: Stack(
                 children: <Widget>[
                   Positioned(
@@ -211,7 +214,7 @@ void showUserInfoBottomSheet({
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w700,
-                                          color: AppColors.surface,
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
                                     )
@@ -343,14 +346,12 @@ void showUserInfoBottomSheet({
                                                 //             .uid!)
                                                 //     ? AppColors.info
                                                 //     : AppColors.error,
-                                                color: AppColors.surface,
+                                                color: AppColors.textPrimary,
                                                 size: 12,
                                               )
                                             : Icon(
                                                 LucideIcons.refreshCw,
-                                                color: Theme.of(
-                                                  context,
-                                                ).primaryColor,
+                                                color: AppColors.textPrimary,
                                                 size: 12,
                                               );
                                       }),
@@ -410,14 +411,14 @@ void showUserInfoBottomSheet({
                                                               )
                                                           ? LucideIcons.ban
                                                           : LucideIcons.flag,
-                                                      color: AppColors.surface,
+                                                      color:
+                                                          AppColors.textPrimary,
                                                       size: 12,
                                                     )
                                                   : Icon(
                                                       LucideIcons.refreshCw,
-                                                      color: Theme.of(
-                                                        context,
-                                                      ).primaryColor,
+                                                      color:
+                                                          AppColors.textPrimary,
                                                       size: 12,
                                                     );
                                             }),
@@ -531,7 +532,7 @@ void showUserInfoBottomSheet({
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(
                                   child: CircularProgressIndicator(
-                                    color: AppColors.error,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ),
@@ -556,7 +557,7 @@ void showUserInfoBottomSheet({
                                 //   bottomRight: Radius.circular(20.0),
                                 // ),
                                 border: Border.all(
-                                  color: AppColors.warning,
+                                  color: AppColors.gold,
                                   // width: 2.0,
                                 ),
                                 borderRadius: BorderRadius.circular(100.0),
@@ -583,7 +584,7 @@ void showUserInfoBottomSheet({
                                 child: Text(
                                   '${data['level'] != null ? data['level']['level'] : 0}',
                                   style: const TextStyle(
-                                    color: AppColors.surface,
+                                    color: AppColors.onLight,
                                     fontSize: 8,
                                   ),
                                 ),

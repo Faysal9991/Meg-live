@@ -66,7 +66,7 @@ class _MessagesComposeState extends State<MessagesCompose>
           const SizedBox(width: 12),
           Obx(() {
             final loading = _messengerController.loadingMessageList.value;
-            return NeumorphicIconButton(
+            return AppIconButton(
               icon: Icons.send_rounded,
               tooltip: 'Send message',
               backgroundColor: AppColors.primary,
@@ -85,6 +85,7 @@ class _MessagesComposeState extends State<MessagesCompose>
         "Can't send message",
         "Chat is blocked by ${_messengerController.chatBlockedBy.value == _authController.profile.value.user!.uid! ? "you" : widget.peerUserFullName}",
         backgroundColor: AppColors.error,
+        colorText: AppColors.onLight,
         animationDuration: Duration.zero,
         duration: const Duration(seconds: 3),
       );

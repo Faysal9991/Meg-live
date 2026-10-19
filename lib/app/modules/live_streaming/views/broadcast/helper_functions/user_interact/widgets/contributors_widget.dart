@@ -51,7 +51,10 @@ class _ContributorsWidgetState extends State<ContributorsWidget> {
           if (widget.streamingController.loadingContributionRankingList.value) {
             // Displaying LoadingSpinner to indicate waiting state
             return const Center(
-              child: SpinKitHourGlass(color: AppColors.error, size: 50.0),
+              child: SpinKitHourGlass(
+                color: AppColors.textSecondary,
+                size: 50.0,
+              ),
             );
           }
           // Extracting data from snapshot object
@@ -150,7 +153,7 @@ class _contributorItem extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(
                                   child: CircularProgressIndicator(
-                                    color: AppColors.error,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ),
@@ -172,7 +175,7 @@ class _contributorItem extends StatelessWidget {
                       child: Text(
                         '${data['contributor_profile']['level'] != null ? data['contributor_profile']['level']['level'] : 0}',
                         style: const TextStyle(
-                          color: AppColors.surface,
+                          color: AppColors.onLight,
                           fontSize: 8,
                         ),
                       ),

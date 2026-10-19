@@ -95,7 +95,7 @@ class _FeedbackViewState extends State<FeedbackView> {
         'Thank you',
         'Your submission has been received. Our team will review it.',
         backgroundColor: AppColors.success,
-        colorText: AppColors.textOnPrimary,
+        colorText: AppColors.onLight,
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (_) {
@@ -105,7 +105,7 @@ class _FeedbackViewState extends State<FeedbackView> {
         'Failed',
         'Could not send right now. Please check your connection and try again.',
         backgroundColor: AppColors.error,
-        colorText: AppColors.textOnPrimary,
+        colorText: AppColors.onLight,
         snackPosition: SnackPosition.BOTTOM,
       );
     }

@@ -49,7 +49,7 @@ class _EditProfileViewState extends State<EditProfileView> {
           isLoading: _profileController.loadingProfile.value,
           // opacity: 0.8,
           progressIndicator: SpinKitThreeInOut(
-            color: Theme.of(context).primaryColor,
+            color: AppColors.pinkLight,
             size: 50.0,
           ),
           child: Scaffold(
@@ -74,7 +74,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                                   borderRadius: BorderRadius.circular(100.0),
                                   border: Border.all(
                                     width: 4,
-                                    color: AppColors.warning,
+                                    color: AppColors.border,
                                   ),
                                 ),
                                 child: Obx(() {
@@ -84,7 +84,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                                           .path !=
                                       '') {
                                     return CircleAvatar(
-                                      backgroundColor: AppColors.textSecondary,
+                                      backgroundColor: AppColors.surfaceHigh,
                                       backgroundImage: FileImage(
                                         _profileController
                                             .selectedProfileImageFile
@@ -98,7 +98,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                                           .profile_image !=
                                       null) {
                                     return CircleAvatar(
-                                      backgroundColor: AppColors.textSecondary,
+                                      backgroundColor: AppColors.surfaceHigh,
                                       backgroundImage:
                                           CachedNetworkImageProvider(
                                             _authController
@@ -110,7 +110,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                                     );
                                   }
                                   return const CircleAvatar(
-                                    backgroundColor: AppColors.textSecondary,
+                                    backgroundColor: AppColors.surfaceHigh,
                                     backgroundImage: AssetImage(
                                       'assets/others/person.jpg',
                                     ),
@@ -125,7 +125,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                             left: 130,
                             right: 0,
                             child: Center(
-                              child: NeumorphicIconButton(
+                              child: AppIconButton(
                                 icon: MdiIcons.camera,
                                 iconSize: 20,
                                 size: 42,
@@ -182,7 +182,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                     rPrimaryTextField(
                       controller: _editingControllerFullName,
                       keyboardType: TextInputType.name,
-                      borderColor: AppColors.overlayStrong,
+                      borderColor: AppColors.border,
                       hintText: 'Your full name',
                       maxLength: 50,
                     ),
@@ -200,7 +200,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                               'Failed',
                               "Your name must be 50 characters or fewer.",
                               backgroundColor: AppColors.error,
-                              colorText: AppColors.surface,
+                              colorText: AppColors.onLight,
                               snackPosition: SnackPosition.TOP,
                             );
                             return;

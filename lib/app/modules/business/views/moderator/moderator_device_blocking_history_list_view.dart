@@ -35,7 +35,7 @@ class _ModeratorDeviceBlockingHistoryListViewState
           Obx(() {
             return _devicesController.loadingBlockedDevicesHistories.value
                 ? const SpinKitCircle(
-                    color: AppColors.error,
+                    color: AppColors.pinkLight,
                   )
                 : _devicesController.userBlockedDevicesList.isEmpty
                     ? const AppCard(
@@ -66,7 +66,7 @@ class _ModeratorDeviceBlockingHistoryListViewState
                                 horizontal: 16.0,
                               ),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).primaryColorLight,
+                                color: AppColors.surfaceHigh,
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
                               child: Column(

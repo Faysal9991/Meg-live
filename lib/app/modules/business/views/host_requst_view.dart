@@ -1,4 +1,4 @@
-import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
+import 'package:doyel_live/app/theme/app_surface_styles.dart';
 import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +51,7 @@ class _HostRequstViewState extends State<HostRequstView> {
               Obx(() {
                 return _businessController.loadingAgentList.value ||
                         _businessController.loadingHostRequest.value
-                    ? const SpinKitCircle(color: AppColors.error)
+                    ? const SpinKitCircle(color: AppColors.pinkLight)
                     : _businessController.hostRequestedData.value['id'] != null
                     ? Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -84,11 +84,12 @@ class _HostRequstViewState extends State<HostRequstView> {
                                         .tryToRemoveHostRequest();
                                     Navigator.of(context).pop();
                                   },
-                                  confirmTextColor: AppColors.surface,
+                                  confirmTextColor: AppColors.onLight,
                                   onCancel: () => Get.close,
                                 );
                               },
                               primaryColor: AppColors.error,
+                              buttonTextColor: AppColors.onLight,
                               buttonText: 'Remove Request',
                               fontSize: 16,
                               iconData: Icons.close,
@@ -119,9 +120,8 @@ class _HostRequstViewState extends State<HostRequstView> {
                             rPrimaryTextField(
                               controller: _editingControllerSearchUid,
                               keyboardType: TextInputType.number,
-                              borderColor: Theme.of(context).primaryColor,
+                              borderColor: AppColors.border,
                               hintText: 'Search agent with UserID here',
-                              useNeumorphic: true,
                               suffixIcon: IconButton(
                                 onPressed: () {
                                   FocusScope.of(context).unfocus();
@@ -173,7 +173,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                   .loadingAgentSearch
                                   .value) {
                                 return const SpinKitCircle(
-                                  color: AppColors.error,
+                                  color: AppColors.pinkLight,
                                 );
                               }
                               if (_businessController
@@ -201,7 +201,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                       horizontal: 16.0,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor,
+                                      color: AppColors.surfaceHigh,
                                       borderRadius: BorderRadius.circular(20.0),
                                     ),
                                     child: InkWell(
@@ -247,7 +247,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                                       );
                                                   Get.back();
                                                 },
-                                                primaryColor: AppColors.error,
+                                                primaryColor: AppColors.pink,
                                                 buttonText: 'Video Live',
                                                 fontSize: 16,
                                                 iconData:
@@ -287,7 +287,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  const Divider(color: AppColors.textSecondary),
+                                  const Divider(color: AppColors.border),
                                   const SizedBox(height: 4),
                                 ],
                               );
@@ -307,7 +307,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                       vertical: 8.0,
                                       horizontal: 16.0,
                                     ),
-                                    decoration: AppNeumorphicStyles.decoration(),
+                                    decoration: AppSurfaceStyles.decoration(),
                                     child: InkWell(
                                       onTap: () {
                                         // if (_authController.profile.value
@@ -347,7 +347,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                                       );
                                                   Get.back();
                                                 },
-                                                primaryColor: AppColors.error,
+                                                primaryColor: AppColors.pink,
                                                 buttonText: 'Video Live',
                                                 fontSize: 16,
                                                 iconData:

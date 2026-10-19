@@ -37,7 +37,7 @@ class _ResellerRequestViewState extends State<ResellerRequestView> {
               SizedBox(height: MediaQuery.of(context).size.height * .20),
               Obx(() {
                 return _businessController.loadingResellerRequest.value
-                    ? const SpinKitCircle(color: AppColors.error)
+                    ? const SpinKitCircle(color: AppColors.pinkLight)
                     : _businessController.resellerRequestedData.value['id'] !=
                           null
                     ? Padding(
@@ -71,11 +71,12 @@ class _ResellerRequestViewState extends State<ResellerRequestView> {
                                         .tryToRemoveResellerRequest();
                                     Navigator.of(context).pop();
                                   },
-                                  confirmTextColor: AppColors.surface,
+                                  confirmTextColor: AppColors.onLight,
                                   onCancel: () => Navigator.of(context).pop(),
                                 );
                               },
                               primaryColor: AppColors.error,
+                              buttonTextColor: AppColors.onLight,
                               buttonText: 'Remove Request',
                               fontSize: 16,
                               iconData: Icons.close,
@@ -99,11 +100,11 @@ class _ResellerRequestViewState extends State<ResellerRequestView> {
                                       .tryToSendResellerRequest();
                                   Navigator.of(context).pop();
                                 },
-                                confirmTextColor: AppColors.surface,
+                                confirmTextColor: AppColors.onLight,
                                 onCancel: () => Navigator.of(context).pop(),
                               );
                             },
-                            primaryColor: Theme.of(context).primaryColorLight,
+                            primaryColor: AppColors.pink,
                             buttonText: 'Sent Reseller Request',
                             fontSize: 16,
                             iconData: Icons.touch_app,

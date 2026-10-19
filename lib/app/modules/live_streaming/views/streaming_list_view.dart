@@ -6,6 +6,7 @@ import 'package:doyel_live/app/modules/live_streaming/views/broadcast/live_strea
 import 'package:doyel_live/app/modules/live_streaming/views/others/slides_top_agents_view.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/widgets/home_banner_carousel.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
+import 'package:doyel_live/app/widgets/live_overlay_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
 import 'package:get/get.dart';
@@ -24,7 +25,8 @@ class StreamingListView extends StatelessWidget {
         onPressed: () {
           _livekitStreamingController.refreshStreamingHomeFeed();
         },
-        backgroundColor: AppColors.accent,
+        backgroundColor: AppColors.surfaceHigh,
+        foregroundColor: AppColors.textPrimary,
         tooltip: 'Refresh live rooms',
         elevation: 3.0,
         child: Obx(() {
@@ -35,7 +37,7 @@ class StreamingListView extends StatelessWidget {
             return const SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(color: AppColors.onPrimary),
+              child: CircularProgressIndicator(color: AppColors.textPrimary),
             );
           }
           return const Icon(Icons.refresh_outlined, size: 32.0);
@@ -53,13 +55,13 @@ class StreamingListView extends StatelessWidget {
                 _livekitStreamingController.loadingBannerList.value)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16,0, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                   child: HomeBannerCarousel(
                     banners: _livekitStreamingController.bannerList.toList(),
                   ),
                 ),
               ),
-      
+
             if (_livekitStreamingController
                 .topSlidingAgentRankingList
                 .isNotEmpty)
@@ -171,40 +173,14 @@ class StreamingListView extends StatelessWidget {
                         fit: BoxFit.cover,
                       ),
                     ),
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.overlayStrong,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'LIVE',
-                        style: TextStyle(
-                          color: AppColors.onMedia,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
-                  ),
+                  const Positioned(top: 8, left: 8, child: LiveBadge()),
                   Positioned(
                     right: 8,
                     bottom: 8,
-                    child: Container(
+                    child: LiveOverlayChip(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 7,
                         vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.overlayStrong,
-                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -335,7 +311,7 @@ class StreamingListView extends StatelessWidget {
         'Not allowed',
         "Can't join own Live.",
         backgroundColor: AppColors.warning,
-        colorText: AppColors.onPrimary,
+        colorText: AppColors.onLight,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 1),
       );

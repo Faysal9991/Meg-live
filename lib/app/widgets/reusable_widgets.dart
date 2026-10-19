@@ -13,7 +13,7 @@ Color _resolveReadableForegroundColor({
   final brightness = ThemeData.estimateBrightnessForColor(backgroundColor);
   return brightness == Brightness.dark
       ? AppColors.onPrimary
-      : AppColors.textPrimary;
+      : AppColors.onLight;
 }
 
 Widget rPrimaryTextButton({
@@ -52,7 +52,6 @@ Widget rPrimaryTextField({
   FocusNode? focusNode,
   double borderRadius = AppRadius.control,
   Function(String)? onChanged,
-  bool useNeumorphic = true,
   EdgeInsetsGeometry contentPadding = const EdgeInsets.symmetric(
     horizontal: 16,
     vertical: 12,
@@ -109,15 +108,11 @@ Widget rPrimaryTextField({
       contentPadding: contentPadding,
 
       filled: true,
-      fillColor: useNeumorphic
-          ? AppColors.transparent
-          : fillColor,
+      fillColor: fillColor,
 
       enabledBorder: OutlineInputBorder(
         borderSide: BorderSide(
-          color: useNeumorphic
-              ? AppColors.transparent
-              : borderColor,
+          color: borderColor,
         ),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
@@ -132,9 +127,7 @@ Widget rPrimaryTextField({
 
       disabledBorder: OutlineInputBorder(
         borderSide: BorderSide(
-          color: useNeumorphic
-              ? AppColors.transparent
-              : borderColor,
+          color: borderColor,
         ),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
@@ -166,13 +159,7 @@ Widget rPrimaryTextField({
     onChanged: onChanged,
   );
 
-  return useNeumorphic
-      ? AppInsetSurface(
-          color: fillColor,
-          radius: borderRadius,
-          child: field,
-        )
-      : field;
+  return field;
 }
 Widget rPrimaryElevatedButton({
   required VoidCallback onPressed,

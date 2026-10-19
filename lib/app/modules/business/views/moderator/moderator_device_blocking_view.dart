@@ -42,9 +42,8 @@ class _ModeratorDeviceBlockingViewState
           rPrimaryTextField(
             controller: _editingControllerSearchUid,
             keyboardType: TextInputType.number,
-            borderColor: Theme.of(context).primaryColorLight,
+            borderColor: AppColors.border,
             hintText: 'Search user with UserID here',
-            useNeumorphic: true,
             suffixIcon: IconButton(
               onPressed: () {
                 FocusScope.of(context).unfocus();
@@ -80,7 +79,7 @@ class _ModeratorDeviceBlockingViewState
           const SizedBox(height: 16),
           Obx(
             () => _devicesController.loadingUserDeviceInfo.value
-                ? const Center(child: SpinKitCircle(color: AppColors.error))
+                ? const Center(child: SpinKitCircle(color: AppColors.pinkLight))
                 : _devicesController.userDevicesInfoList.isEmpty
                 ? const Text("User doesn't exists.")
                 : Expanded(
@@ -106,7 +105,7 @@ class _ModeratorDeviceBlockingViewState
                                     );
                                 Navigator.of(context).pop();
                               },
-                              confirmTextColor: AppColors.surface,
+                              confirmTextColor: AppColors.onLight,
                               onCancel: () => Navigator.of(context).pop(),
                             );
                           },
@@ -117,7 +116,7 @@ class _ModeratorDeviceBlockingViewState
                               horizontal: 16.0,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColorLight,
+                              color: AppColors.surfaceHigh,
                               borderRadius: BorderRadius.circular(20.0),
                             ),
                             child: Row(

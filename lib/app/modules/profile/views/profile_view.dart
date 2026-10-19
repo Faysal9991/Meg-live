@@ -131,7 +131,7 @@ class ProfileView extends GetView<ProfileController>{
                                 () => Text(
                                   '${_authController.profile.value.diamonds ?? 0}',
                                   style: const TextStyle(
-                                    color: AppColors.primary,
+                                    color: AppColors.gold,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -311,19 +311,19 @@ class ProfileView extends GetView<ProfileController>{
                   onTap: () => Get.to(() => const FeedbackView()),
                   icon: LucideIcons.messageCircleQuestion,
                   label: 'Help & Feedback',
-                  iconColor: AppColors.accent,
+                  iconColor: AppColors.textSecondary,
                 ),
                 _ProfileActionTile(
                   onTap: () => Get.to(() => const PrivacyPolicyView()),
                   icon: LucideIcons.shieldCheck,
                   label: 'Privacy Policy',
-                  iconColor: AppColors.accent,
+                  iconColor: AppColors.textSecondary,
                 ),
                 _ProfileActionTile(
                   onTap: () => Get.to(() => const TermsAndConditionsView()),
                   icon: LucideIcons.scrollText,
                   label: 'Terms & Conditions',
-                  iconColor: AppColors.accent,
+                  iconColor: AppColors.textSecondary,
                 ),
               ],
             ),
@@ -364,7 +364,7 @@ class ProfileView extends GetView<ProfileController>{
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,
-              foregroundColor: AppColors.onPrimary,
+              foregroundColor: AppColors.onLight,
             ),
             child: const Text('Log Out'),
           ),
@@ -383,7 +383,7 @@ class _ProfileActionTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.iconColor = AppColors.primary,
+    this.iconColor = AppColors.textSecondary,
     this.textColor = AppColors.textPrimary,
     this.isLoading = false,
   });

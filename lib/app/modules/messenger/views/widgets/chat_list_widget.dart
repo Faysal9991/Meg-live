@@ -59,7 +59,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
                   _messengerController.loadingLastMessageList.value
                       ? Center(
                           child: SpinKitCircle(
-                            color: Theme.of(context).primaryColor,
+                            color: AppColors.pinkLight,
                             size: 50.0,
                           ),
                         )
@@ -89,7 +89,7 @@ class _ChatListWidgetState extends State<ChatListWidget> {
                                       title: 'Go to delete',
                                       content: const Text(
                                           'Do you wanna delete this last message?'),
-                                      confirmTextColor: AppColors.surface,
+                                      confirmTextColor: AppColors.textPrimary,
                                       onCancel: () => Get.back(),
                                       onConfirm: () async {
                                         await _messengerController
@@ -255,7 +255,7 @@ Widget chatItem({
                     height: 50,
                     decoration: BoxDecoration(
                       // color: AppColors.textSecondary,
-                      color: AppColors.textPrimary,
+                      color: AppColors.surfaceHigh,
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: ClipRRect(
@@ -320,7 +320,7 @@ Widget chatItem({
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -341,7 +341,7 @@ Widget chatItem({
                     .format(DateTime.parse(message['datetime']).toLocal()),
 
             style: const TextStyle(
-              color: AppColors.textSecondary,
+              color: AppColors.textHint,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),

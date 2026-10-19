@@ -1,10 +1,10 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
-import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
+import 'package:doyel_live/app/theme/app_surface_styles.dart';
 import 'package:doyel_live/app/theme/app_radius.dart';
 import 'package:doyel_live/app/theme/app_spacing.dart';
-import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
+import 'package:flutter/material.dart';
 
-/// Soft depth around native Material controls preserves keyboard, focus,
+/// Flat surface around native Material controls preserves keyboard, focus,
 /// disabled, ink, and accessibility behavior.
 class _ControlSurface extends StatefulWidget {
   const _ControlSurface({
@@ -13,14 +13,12 @@ class _ControlSurface extends StatefulWidget {
     required this.color,
     required this.radius,
     this.circle = false,
-    this.showShadow = true,
   });
   final Widget Function(WidgetStatesController) builder;
   final bool enabled;
   final Color color;
   final double radius;
   final bool circle;
-  final bool showShadow;
 
   @override
   State<_ControlSurface> createState() => _ControlSurfaceState();
@@ -56,16 +54,13 @@ class _ControlSurfaceState extends State<_ControlSurface> {
         builder: (context, states, _) => AnimatedContainer(
           duration: MediaQuery.disableAnimationsOf(context)
               ? Duration.zero
-              : AppNeumorphicStyles.duration,
+              : AppSurfaceStyles.duration,
           curve: Curves.easeOutCubic,
-          decoration: AppNeumorphicStyles.decoration(
+          decoration: AppSurfaceStyles.decoration(
             color: widget.enabled ? widget.color : AppColors.disabledBackground,
             radius: widget.radius,
-            enabled: widget.enabled,
-            pressed: states.contains(WidgetState.pressed),
-            compact: true,
             shape: widget.circle ? BoxShape.circle : BoxShape.rectangle,
-          ).copyWith(boxShadow: widget.showShadow ? null : const []),
+          ),
           child: widget.builder(_states),
         ),
       );
@@ -103,7 +98,7 @@ class PrimaryButton extends StatelessWidget {
         (ThemeData.estimateBrightnessForColor(backgroundColor) ==
                 Brightness.dark
             ? AppColors.textOnPrimary
-            : AppColors.textPrimary);
+            : AppColors.onLight);
     final style =
         FilledButton.styleFrom(
           backgroundColor: backgroundColor,
@@ -152,17 +147,16 @@ class PrimaryButton extends StatelessWidget {
   }
 }
 
-class NeumorphicIconButton extends StatelessWidget {
-  const NeumorphicIconButton({
+class AppIconButton extends StatelessWidget {
+  const AppIconButton({
     super.key,
     required this.icon,
     required this.onPressed,
     this.tooltip,
     this.size = 48,
     this.iconSize = 21,
-    this.iconColor = AppColors.primary,
-    this.backgroundColor = AppColors.surface,
-    this.depth = AppNeumorphicStyles.controlDepth,
+    this.iconColor = AppColors.textPrimary,
+    this.backgroundColor = AppColors.surfaceHigh,
   });
   final IconData icon;
   final VoidCallback? onPressed;
@@ -171,7 +165,6 @@ class NeumorphicIconButton extends StatelessWidget {
   final double iconSize;
   final Color iconColor;
   final Color backgroundColor;
-  final double depth;
 
   @override
   Widget build(BuildContext context) => SizedBox.square(
@@ -181,7 +174,6 @@ class NeumorphicIconButton extends StatelessWidget {
       color: backgroundColor,
       radius: AppRadius.pill,
       circle: true,
-      showShadow: depth != 0,
       builder: (states) {
         // TextButton exposes its state controller on Flutter 3.32 as well,
         // keeping the outer surface in sync with pointer and keyboard presses.
@@ -199,7 +191,7 @@ class NeumorphicIconButton extends StatelessWidget {
               ).copyWith(
                 side: WidgetStateProperty.resolveWith(
                   (states) => states.contains(WidgetState.focused)
-                      ? const BorderSide(color: AppColors.primary, width: 2)
+                      ? const BorderSide(color: AppColors.pinkLight, width: 2)
                       : BorderSide.none,
                 ),
               ),
@@ -214,7 +206,7 @@ class NeumorphicIconButton extends StatelessWidget {
 }
 
 /// The standard surface for lists, panels, packages, and navigation.
-/// A Material child keeps InkWell feedback visible inside the soft shell.
+/// A Material child keeps InkWell feedback visible inside the flat shell.
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
@@ -224,7 +216,7 @@ class AppCard extends StatelessWidget {
     this.color = AppColors.card,
     this.shape,
     this.clipBehavior = Clip.antiAlias,
-    this.elevation = AppNeumorphicStyles.cardDepth,
+    this.elevation = 1,
     this.surfaceTintColor,
   });
   final Widget child;
@@ -233,6 +225,7 @@ class AppCard extends StatelessWidget {
   final Color? color;
   final ShapeBorder? shape;
   final Clip clipBehavior;
+  /// Any positive value draws a hairline border; zero renders borderless.
   final double elevation;
   final Color? surfaceTintColor;
 
@@ -242,23 +235,17 @@ class AppCard extends StatelessWidget {
         shape ??
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.card),
+          side: elevation <= 0
+              ? BorderSide.none
+              : const BorderSide(color: AppColors.divider),
         );
     return Padding(
       padding: margin,
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: color ?? AppColors.card,
-          shape: resolvedShape,
-          shadows: elevation <= 0
-              ? const []
-              : AppNeumorphicStyles.raisedShadows,
-        ),
-        child: Material(
-          color: color ?? AppColors.card,
-          shape: resolvedShape,
-          clipBehavior: clipBehavior,
-          child: Padding(padding: padding, child: child),
-        ),
+      child: Material(
+        color: color ?? AppColors.card,
+        shape: resolvedShape,
+        clipBehavior: clipBehavior,
+        child: Padding(padding: padding, child: child),
       ),
     );
   }
@@ -276,12 +263,8 @@ class AppInsetSurface extends StatelessWidget {
   final double radius;
 
   @override
-  Widget build(BuildContext context) => Neumorphic(
-    style: AppNeumorphicStyles.inset(color: color, radius: radius),
-    padding: EdgeInsets.zero,
-    duration: MediaQuery.disableAnimationsOf(context)
-        ? Duration.zero
-        : AppNeumorphicStyles.duration,
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: AppSurfaceStyles.decoration(color: color, radius: radius),
     child: Theme(
       data: Theme.of(context).copyWith(
         inputDecorationTheme: Theme.of(

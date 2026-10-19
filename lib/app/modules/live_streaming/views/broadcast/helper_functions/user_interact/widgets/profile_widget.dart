@@ -48,11 +48,11 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           children: [
             Text(
               'User ID: ${widget.data['uid']}',
-              style: const TextStyle(color: AppColors.surface),
+              style: const TextStyle(color: AppColors.textPrimary),
             ),
             const SizedBox(height: 8),
             const Center(
-              child: SpinKitHourGlass(color: AppColors.surface, size: 50.0),
+              child: SpinKitHourGlass(color: AppColors.textPrimary, size: 50.0),
             ),
           ],
         );
@@ -76,7 +76,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   Text(
                     '${widget.profileController.profileForHost.value['followers'].length}',
                     style: const TextStyle(
-                      color: AppColors.surface,
+                      color: AppColors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
@@ -84,7 +84,10 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   const SizedBox(width: 4),
                   const Text(
                     'Fans',
-                    style: TextStyle(color: AppColors.surface, fontSize: 16),
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
@@ -132,13 +135,13 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Icon(LucideIcons.gem, color: AppColors.info, size: 16),
+                  const Icon(LucideIcons.gem, color: AppColors.gold, size: 16),
                   const SizedBox(width: 4),
                   Text(
                     '${widget.profileController.profileForHost.value['diamonds']}',
                     // '${(data['sender_diamonds'] ?? data['diamonds']) / 1000}K',
                     style: const TextStyle(
-                      color: AppColors.surface,
+                      color: AppColors.textPrimary,
                       fontSize: 12,
                     ),
                   ),
@@ -164,7 +167,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   Text(
                     'User ID: ${widget.data['uid']}',
                     style: const TextStyle(
-                      color: AppColors.surface,
+                      color: AppColors.textPrimary,
                       fontSize: 12,
                     ),
                   ),
@@ -264,12 +267,12 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                 //             .profile.value.user!.uid!)
                                 //     ? AppColors.info
                                 //     : AppColors.error,
-                                color: AppColors.surface,
+                                color: AppColors.textPrimary,
                                 size: 12,
                               )
                             : Icon(
                                 LucideIcons.refreshCw,
-                                color: Theme.of(context).primaryColor,
+                                color: AppColors.textPrimary,
                                 size: 12,
                               );
                       }),
@@ -286,14 +289,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                             ? const Text(
                                 'Follow',
                                 style: TextStyle(
-                                  color: AppColors.surface,
+                                  color: AppColors.textPrimary,
                                   fontSize: 12,
                                 ),
                               )
                             : const Text(
                                 'Unfollow',
                                 style: TextStyle(
-                                  color: AppColors.surface,
+                                  color: AppColors.textPrimary,
                                   fontSize: 12,
                                 ),
                               );
@@ -339,12 +342,12 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                               .contains(widget.data['uid'])
                                           ? LucideIcons.ban
                                           : LucideIcons.flag,
-                                      color: AppColors.surface,
+                                      color: AppColors.textPrimary,
                                       size: 12,
                                     )
                                   : Icon(
                                       LucideIcons.refreshCw,
-                                      color: Theme.of(context).primaryColor,
+                                      color: AppColors.textPrimary,
                                       size: 12,
                                     );
                             }),
@@ -358,14 +361,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                   ? const Text(
                                       'Block',
                                       style: TextStyle(
-                                        color: AppColors.surface,
+                                        color: AppColors.textPrimary,
                                         fontSize: 12,
                                       ),
                                     )
                                   : const Text(
                                       'Unblock',
                                       style: TextStyle(
-                                        color: AppColors.surface,
+                                        color: AppColors.textPrimary,
                                         fontSize: 12,
                                       ),
                                     );
@@ -399,7 +402,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                       child: const Text(
                         'Report',
                         style: TextStyle(
-                          color: AppColors.surface,
+                          color: AppColors.textPrimary,
                           fontSize: 12,
                         ),
                       ),

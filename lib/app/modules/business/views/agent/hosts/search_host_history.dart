@@ -44,9 +44,8 @@ class _SearchHostHistoryState extends State<SearchHostHistory> {
           rPrimaryTextField(
             controller: _editingControllerSearchUid,
             keyboardType: TextInputType.number,
-            borderColor: Theme.of(context).primaryColor,
+            borderColor: AppColors.border,
             hintText: 'Search user with UserID here',
-            useNeumorphic: true,
             suffixIcon: IconButton(
               onPressed: () {
                 if (FocusScope.of(context).hasFocus) {
@@ -99,7 +98,7 @@ class _SearchHostHistoryState extends State<SearchHostHistory> {
             if (_profileController.loadingHostBroadcastingHistories.value) {
               return Center(
                 child: SpinKitCubeGrid(
-                  color: Theme.of(context).primaryColor,
+                  color: AppColors.pinkLight,
                   size: 50.0,
                 ),
               );
@@ -109,7 +108,7 @@ class _SearchHostHistoryState extends State<SearchHostHistory> {
               return const Center(
                 child: Text(
                   'No history',
-                  style: TextStyle(color: AppColors.error),
+                  style: TextStyle(color: AppColors.textSecondary),
                 ),
               );
             }

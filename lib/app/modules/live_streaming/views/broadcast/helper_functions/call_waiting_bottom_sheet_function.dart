@@ -66,7 +66,7 @@ Widget _buildSelfCallActionButton({
           borderRadius: BorderRadius.circular(20.0),
         ),
       ),
-      child: const Text('Cancel', style: TextStyle(color: AppColors.surface)),
+      child: const Text('Cancel', style: TextStyle(color: AppColors.onLight)),
     );
   }
 
@@ -90,6 +90,7 @@ Widget _buildSelfCallActionButton({
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.error,
+        foregroundColor: AppColors.onLight,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0),
         ),
@@ -224,7 +225,7 @@ void showCallWaitingBottomSheet({
                     padding: const EdgeInsets.only(bottom: 4),
                     decoration: const BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(color: AppColors.textSecondary),
+                        bottom: BorderSide(color: AppColors.border),
                       ),
                     ),
                     child: Row(
@@ -241,7 +242,7 @@ void showCallWaitingBottomSheet({
                                 color:
                                     streamingController.callTabName.value ==
                                         'views'
-                                    ? Theme.of(context).primaryColor
+                                    ? AppColors.pinkLight
                                     : AppColors.textSecondary,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -260,7 +261,7 @@ void showCallWaitingBottomSheet({
                                 color:
                                     streamingController.callTabName.value ==
                                         'waiting'
-                                    ? Theme.of(context).primaryColor
+                                    ? AppColors.pinkLight
                                     : AppColors.textSecondary,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -280,7 +281,7 @@ void showCallWaitingBottomSheet({
                                   color:
                                       streamingController.callTabName.value ==
                                           'live'
-                                      ? Theme.of(context).primaryColor
+                                      ? AppColors.pinkLight
                                       : AppColors.textSecondary,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -568,7 +569,7 @@ class _guestLiveItem extends StatelessWidget {
                   // textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,
-                    backgroundColor: AppColors.overlayLight,
+                    backgroundColor: AppColors.surfaceHigh,
                     fontSize: 10,
                   ),
                 )
@@ -587,8 +588,8 @@ class _guestLiveItem extends StatelessWidget {
                         minWidth: 32,
                         minHeight: 32,
                         iconColor: data['muted']
-                            ? AppColors.textSecondary
-                            : AppColors.info,
+                            ? AppColors.textHint
+                            : AppColors.textPrimary,
                         onPressed: () {
                           String action = 'controller';
                           // if (_pk) {
@@ -685,7 +686,7 @@ class ViewerWidget extends StatelessWidget {
     return Obx(() {
       if (streamingController.loadingParticipantList.value) {
         return const Center(
-          child: SpinKitHourGlass(color: AppColors.error, size: 50.0),
+          child: SpinKitHourGlass(color: AppColors.textSecondary, size: 50.0),
         );
       }
       return ListView.separated(
@@ -755,7 +756,7 @@ Widget _profileImageWithVVIPWidget({required data}) {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100.0),
-              border: Border.all(width: 2.0, color: AppColors.warning),
+              border: Border.all(width: 2.0, color: AppColors.border),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(100.0),
@@ -773,7 +774,7 @@ Widget _profileImageWithVVIPWidget({required data}) {
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const Center(
                         child: CircularProgressIndicator(
-                          color: AppColors.error,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -793,7 +794,7 @@ Widget _profileImageWithVVIPWidget({required data}) {
                     //   bottomRight: Radius.circular(20.0),
                     // ),
                     border: Border.all(
-                      color: AppColors.warning,
+                      color: AppColors.gold,
                       // width: 2.0,
                     ),
                     borderRadius: BorderRadius.circular(100.0),

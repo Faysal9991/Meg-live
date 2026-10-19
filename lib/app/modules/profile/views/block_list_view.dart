@@ -37,7 +37,7 @@ class _BlockListViewState extends State<BlockListView> {
         () => LoadingOverlay(
           isLoading: _profileController.listLoading.value,
           progressIndicator: SpinKitHourGlass(
-            color: Theme.of(context).primaryColor,
+            color: AppColors.pinkLight,
             size: 50.0,
           ),
           child: Scaffold(
@@ -47,7 +47,7 @@ class _BlockListViewState extends State<BlockListView> {
                   ? const Center(
                       child: Text(
                         'No block',
-                        style: TextStyle(color: AppColors.error),
+                        style: TextStyle(color: AppColors.textSecondary),
                       ),
                     )
                   : Padding(
@@ -99,15 +99,7 @@ class BlockItem extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         // color: Theme.of(context).primaryColor.withOpacity(.5),
-        gradient: LinearGradient(
-          colors: [
-            AppColors.warning.withValues(alpha: .5),
-            Theme.of(context).primaryColor.withValues(alpha: .5),
-            AppColors.overlay,
-          ],
-          begin: Alignment.bottomLeft,
-          end: Alignment.topRight,
-        ),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
       ),
       child: ListTile(
@@ -143,7 +135,7 @@ class BlockItem extends StatelessWidget {
                           fit: BoxFit.cover,
                           placeholder: (context, url) => const Center(
                             child: CircularProgressIndicator(
-                              color: AppColors.error,
+                              color: AppColors.pinkLight,
                             ),
                           ),
                         ),
@@ -163,7 +155,7 @@ class BlockItem extends StatelessWidget {
                     child: Text(
                       '${data['level'] != null ? data['level']['level'] : 0}',
                       style: const TextStyle(
-                        color: AppColors.surface,
+                        color: AppColors.onLight,
                         fontSize: 8,
                       ),
                     ),
@@ -209,7 +201,7 @@ class BlockItem extends StatelessWidget {
             return profileController.loadingPerformBlock.value !=
                     data['user']['uid']
                 ? const Text('Unblock')
-                : const CircularProgressIndicator(color: AppColors.error);
+                : const CircularProgressIndicator(color: AppColors.textPrimary);
           }),
         ),
       ),

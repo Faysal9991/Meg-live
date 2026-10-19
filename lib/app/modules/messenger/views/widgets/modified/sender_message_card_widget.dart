@@ -86,7 +86,7 @@ class _SenderMessageCardState extends State<SenderMessageCard> {
     return Align(
       alignment: Alignment.centerRight,
       child: AppCard(
-        color: Theme.of(context).primaryColor,
+        color: AppColors.pink,
         elevation: 5,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(

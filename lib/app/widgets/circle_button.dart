@@ -1,5 +1,4 @@
 import 'package:doyel_live/app/theme/app_colors.dart';
-import 'package:doyel_live/app/theme/app_neumorphic_styles.dart';
 import 'package:doyel_live/app/widgets/app_design_widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +13,6 @@ class CircleButton extends StatelessWidget {
     this.iconColor = AppColors.textPrimary,
     this.backgroundColor,
     this.tooltip,
-    this.depth = AppNeumorphicStyles.controlDepth,
   });
   final IconData icon;
   final double iconSize, minWidth, minHeight;
@@ -22,18 +20,16 @@ class CircleButton extends StatelessWidget {
   final Color iconColor;
   final Color? backgroundColor;
   final String? tooltip;
-  final double depth;
 
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.all(6),
-    child: NeumorphicIconButton(
+    child: AppIconButton(
       icon: icon,
-      depth: depth,
       iconSize: iconSize,
       onPressed: onPressed,
       iconColor: iconColor,
-      backgroundColor: backgroundColor ?? AppColors.surface,
+      backgroundColor: backgroundColor ?? AppColors.surfaceHigh,
       size: minWidth > minHeight ? minWidth : minHeight,
       tooltip:
           tooltip ??

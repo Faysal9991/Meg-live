@@ -1,3 +1,4 @@
+import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:doyel_live/app/modules/business/controllers/business_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:doyel_live/app/modules/business/views/agent/hosts/host_list_view.dart';
@@ -40,7 +41,7 @@ class _HostsViewState extends State<HostsView> {
               'Host List ${widget.agentUserId != null ? '(AgentUid: ${widget.agentUserId})' : ''}',
             ),
             bottom: TabBar(
-              labelColor: Theme.of(context).primaryColor,
+              labelColor: AppColors.pinkLight,
               tabs: const [
                 Tab(
                   icon: Icon(Icons.group),

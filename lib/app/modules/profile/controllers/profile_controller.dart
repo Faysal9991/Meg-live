@@ -208,7 +208,7 @@ class ProfileController extends GetxController {
           'Success',
           "Your profile has been updated.",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else {
@@ -216,7 +216,7 @@ class ProfileController extends GetxController {
           'Failed',
           "Something is wrong. Please try again.",
           backgroundColor: AppColors.error,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -226,7 +226,7 @@ class ProfileController extends GetxController {
         'Failed',
         "Something is wrong. Please try again.",
         backgroundColor: AppColors.error,
-        colorText: AppColors.textOnPrimary,
+        colorText: AppColors.onLight,
         snackPosition: SnackPosition.BOTTOM,
       );
     }

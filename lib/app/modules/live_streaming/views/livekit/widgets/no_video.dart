@@ -26,7 +26,7 @@ class NoVideoWidget extends StatelessWidget {
       width: data['width'],
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.textPrimary, Theme.of(context).primaryColor],
+          colors: [AppColors.bg, AppColors.surfaceHigh],
           begin: Alignment.bottomLeft,
           end: Alignment.topRight,
         ),
@@ -72,7 +72,7 @@ class NoVideoWidget extends StatelessWidget {
                               fit: BoxFit.cover,
                               placeholder: (context, url) => const Center(
                                 child: CircularProgressIndicator(
-                                  color: AppColors.error,
+                                  color: AppColors.onMedia,
                                 ),
                               ),
                               errorWidget: (context, url, error) => Image.asset(
@@ -100,7 +100,7 @@ class NoVideoWidget extends StatelessWidget {
                           fit: BoxFit.cover,
                           placeholder: (context, url) => const Center(
                             child: CircularProgressIndicator(
-                              color: AppColors.error,
+                              color: AppColors.onMedia,
                             ),
                           ),
                           errorWidget: (context, url, error) => Image.asset(

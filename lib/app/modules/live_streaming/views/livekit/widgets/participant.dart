@@ -157,7 +157,7 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
         ? Stack(
             children: [
               Container(
-                color: AppColors.textPrimary,
+                color: AppColors.mediaBackground,
                 child: VideoTrackRenderer(
                   activeVideoTrack!,
                   // fit: rtc.RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
@@ -206,7 +206,7 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
                         padding: const EdgeInsets.all(8),
                         alignment: Alignment.center,
                         decoration: const BoxDecoration(
-                          color: AppColors.overlay,
+                          gradient: AppGradients.videoBottomScrim,
                         ),
                         child: Text(
                           widget.participant.name,
@@ -223,7 +223,7 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
             alignment: Alignment.center,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.textPrimary, Theme.of(context).primaryColor],
+                colors: [AppColors.bg, AppColors.surfaceHigh],
                 begin: Alignment.bottomLeft,
                 end: Alignment.topRight,
               ),
@@ -357,7 +357,7 @@ class RemoteTrackPublicationMenuWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: AppColors.textPrimary.withValues(alpha: 0.3),
+    color: AppColors.overlayChip,
     child: PopupMenuButton<Function>(
       tooltip: 'Subscribe menu',
       icon: Icon(

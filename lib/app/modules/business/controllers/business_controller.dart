@@ -92,7 +92,7 @@ class BusinessController extends GetxController {
           'Success',
           "Your request is pending now",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 226) {
@@ -100,7 +100,7 @@ class BusinessController extends GetxController {
           'Failed',
           "You are already a Moderator",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 207) {
@@ -108,7 +108,7 @@ class BusinessController extends GetxController {
           'Failed',
           "You are already Agent / Host / Reseller",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 208) {
@@ -116,7 +116,7 @@ class BusinessController extends GetxController {
           'Failed',
           "You already requested for Moderator",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -145,7 +145,7 @@ class BusinessController extends GetxController {
           'Success',
           "Your request has been removed",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
@@ -153,7 +153,7 @@ class BusinessController extends GetxController {
           'Failed',
           "Something is wrong",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -204,7 +204,7 @@ class BusinessController extends GetxController {
           'Success',
           "Your request is pending now",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 226) {
@@ -212,7 +212,7 @@ class BusinessController extends GetxController {
           'Failed',
           "You are already an Reseller",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 207) {
@@ -220,7 +220,7 @@ class BusinessController extends GetxController {
           'Failed',
           "You are already a Host / Agent / Moderator",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 208) {
@@ -228,7 +228,7 @@ class BusinessController extends GetxController {
           'Failed',
           "You already requested for Reseller",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -257,7 +257,7 @@ class BusinessController extends GetxController {
           'Success',
           "Your request has been removed",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
@@ -265,7 +265,7 @@ class BusinessController extends GetxController {
           'Failed',
           "Something is wrong",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -309,7 +309,7 @@ class BusinessController extends GetxController {
         'Failed',
         "You haven't sufficient diamonds to recharge the client",
         backgroundColor: AppColors.warning,
-        colorText: AppColors.textOnPrimary,
+        colorText: AppColors.onLight,
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 1),
       );
@@ -345,7 +345,7 @@ class BusinessController extends GetxController {
           'Success',
           "You have recharged $diamonds daimonds",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
@@ -355,7 +355,7 @@ class BusinessController extends GetxController {
           'Failed',
           'Recharge was not completed. Check your balance and the user ID.',
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -366,7 +366,7 @@ class BusinessController extends GetxController {
           'Failed',
           _validationMessage(e.response?.data),
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 401) {
@@ -374,7 +374,7 @@ class BusinessController extends GetxController {
           'Failed',
           'Your session has expired. Please log in again.',
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else {
@@ -384,7 +384,7 @@ class BusinessController extends GetxController {
           'Please check',
           'Could not confirm the recharge. Refreshing balances before you try again.',
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
         await _refreshAfterUncertainRecharge(customerId: customerId);
@@ -495,7 +495,7 @@ class BusinessController extends GetxController {
           'Success',
           "History removed successfully",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
@@ -503,7 +503,7 @@ class BusinessController extends GetxController {
           'Failed',
           "Incorrect data",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -538,7 +538,7 @@ class BusinessController extends GetxController {
           'Success',
           "Your request is pending now",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 226) {
@@ -546,7 +546,7 @@ class BusinessController extends GetxController {
           'Failed',
           "You are already a Host",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 207) {
@@ -554,7 +554,7 @@ class BusinessController extends GetxController {
           'Failed',
           "You are already an Agent / Moderator / Reseller",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 208) {
@@ -562,7 +562,7 @@ class BusinessController extends GetxController {
           'Failed',
           "You already requested for Host",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
@@ -570,7 +570,7 @@ class BusinessController extends GetxController {
           'Failed',
           "Your selected Agent is incorrect",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -723,7 +723,7 @@ class BusinessController extends GetxController {
           'Success',
           "Host request has been confirmed",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 226) {
@@ -731,7 +731,7 @@ class BusinessController extends GetxController {
           'Failed',
           "Candidate is already a Host",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 207) {
@@ -739,7 +739,7 @@ class BusinessController extends GetxController {
           'Failed',
           "candidate is already an Agent / Moderator / Reseller",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
@@ -747,7 +747,7 @@ class BusinessController extends GetxController {
           'Failed',
           "Incorrect data",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -794,7 +794,7 @@ class BusinessController extends GetxController {
           'Success',
           "Host removed successfully",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
@@ -802,7 +802,7 @@ class BusinessController extends GetxController {
           'Failed',
           "Incorrect data",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -831,7 +831,7 @@ class BusinessController extends GetxController {
           'Success',
           "Your request has been removed",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 204) {
@@ -839,7 +839,7 @@ class BusinessController extends GetxController {
           'Failed',
           "Something is wrong",
           backgroundColor: AppColors.warning,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }

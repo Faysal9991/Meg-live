@@ -41,7 +41,7 @@ class _KingPackageViewState extends State<KingPackageView> {
               _packageController.loadingAllKingPackageList.value ||
               _packageController.purchasingKingPackage.value,
           progressIndicator: SpinKitCubeGrid(
-            color: Theme.of(context).primaryColor,
+            color: AppColors.pinkLight,
             size: 50.0,
           ),
           child: Scaffold(
@@ -151,7 +151,11 @@ class _KingPackageViewState extends State<KingPackageView> {
           children: [
             Text(
               '${_packageController.kingPackageDiamondCost(packageItem)} Diamonds',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                color: AppColors.gold,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             !isPurchased ? Text('${data['days']} days validity') : Container(),
             !isPurchased

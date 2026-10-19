@@ -91,7 +91,7 @@ class _RegistrationViewState extends State<RegistrationView> {
         rPrimaryTextField(
           controller: _editingControllerName,
           keyboardType: TextInputType.name,
-          borderColor: AppColors.textSecondary,
+          borderColor: AppColors.border,
           hintText: 'Your name',
         ),
         const SizedBox(height: 16),
@@ -120,7 +120,7 @@ class _RegistrationViewState extends State<RegistrationView> {
           controller: _editingControllerPassword,
           keyboardType: TextInputType.visiblePassword,
           obscureText: true,
-          borderColor: AppColors.textSecondary,
+          borderColor: AppColors.border,
           hintText: 'Enter password',
         ),
         Obx(() {
@@ -128,7 +128,7 @@ class _RegistrationViewState extends State<RegistrationView> {
             return Container();
           }
           return const SpinKitFadingCircle(
-            color: AppColors.warning,
+            color: AppColors.pinkLight,
             size: 48.0,
           );
         }),
@@ -153,7 +153,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                   'Failed',
                   "Password length must be at least 8 characters long.",
                   backgroundColor: AppColors.error,
-                  colorText: AppColors.surface,
+                  colorText: AppColors.onLight,
                   snackPosition: SnackPosition.BOTTOM,
                 );
                 return;
@@ -168,7 +168,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                     'Failed',
                     "${_authController.country.value.name} mobile number is incorrect.",
                     backgroundColor: AppColors.error,
-                    colorText: AppColors.surface,
+                    colorText: AppColors.onLight,
                     snackPosition: SnackPosition.BOTTOM,
                   );
                   return;
@@ -186,7 +186,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                 'Failed',
                 "All fields are required.",
                 backgroundColor: AppColors.error,
-                colorText: AppColors.surface,
+                colorText: AppColors.onLight,
                 snackPosition: SnackPosition.BOTTOM,
               );
             }

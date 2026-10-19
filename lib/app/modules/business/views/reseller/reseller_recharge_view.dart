@@ -65,7 +65,7 @@ class _ResellerRechargeViewState extends State<ResellerRechargeView> {
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 24,
-                        color: AppColors.info,
+                        color: AppColors.gold,
                       ),
                     ),
                   ],
@@ -77,9 +77,8 @@ class _ResellerRechargeViewState extends State<ResellerRechargeView> {
           rPrimaryTextField(
             controller: _editingControllerSearchUid,
             keyboardType: TextInputType.number,
-            borderColor: Theme.of(context).primaryColorLight,
+            borderColor: AppColors.border,
             hintText: 'Search user with UserID here',
-            useNeumorphic: true,
             suffixIcon: IconButton(
               onPressed: () {
                 FocusScope.of(context).unfocus();
@@ -122,7 +121,7 @@ class _ResellerRechargeViewState extends State<ResellerRechargeView> {
             () =>
                 _profileController.loadingProfileSearch.value ||
                     _businessController.loadingResellerRecharge.value
-                ? const Center(child: SpinKitCircle(color: AppColors.error))
+                ? const Center(child: SpinKitCircle(color: AppColors.pinkLight))
                 : _profileController.searchedProfile.value['id'] == null
                 ? const Text("User doesn't exists.")
                 : InkWell(
@@ -134,11 +133,11 @@ class _ResellerRechargeViewState extends State<ResellerRechargeView> {
                         content: rPrimaryTextField(
                           controller: _editingControllerDiamonds,
                           keyboardType: TextInputType.number,
-                          borderColor: Theme.of(context).primaryColorLight,
+                          borderColor: AppColors.border,
                           hintText: 'Diamonds',
                           prefixIcon: const Icon(
                             Icons.diamond,
-                            color: AppColors.info,
+                            color: AppColors.gold,
                             size: 32,
                           ),
                           suffixIcon: IconButton(
@@ -201,7 +200,7 @@ class _ResellerRechargeViewState extends State<ResellerRechargeView> {
                         horizontal: 16.0,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColorLight,
+                        color: AppColors.surfaceHigh,
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: Row(

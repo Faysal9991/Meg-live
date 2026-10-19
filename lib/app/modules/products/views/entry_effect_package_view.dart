@@ -40,7 +40,7 @@ class _EntryEffectPackageViewState extends State<EntryEffectPackageView> {
               _packageController.loadingEntryEffectPackageList.value ||
               _packageController.purchasingEntryEffectPackage.value,
           progressIndicator: SpinKitCubeGrid(
-            color: Theme.of(context).primaryColor,
+            color: AppColors.pinkLight,
             size: 50,
           ),
           child: Scaffold(
@@ -140,7 +140,10 @@ class _EntryEffectPackageViewState extends State<EntryEffectPackageView> {
                   const SizedBox(height: 4),
                   Text(
                     '$price Diamonds',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text('${package['days'] ?? 0} days validity'),
                   if (package['audio'] != null)
@@ -208,7 +211,7 @@ class _EntryEffectPackageViewState extends State<EntryEffectPackageView> {
       width: 76,
       height: 76,
       decoration: BoxDecoration(
-        color: AppColors.onMediaMuted,
+        color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(

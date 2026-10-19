@@ -21,13 +21,13 @@ class SplashView extends GetView<SplashController> {
               const Text(
                 'Biho Live',
                 style: TextStyle(
-                  color: AppColors.primary,
+                  color: AppColors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 16),
-              const SpinKitThreeInOut(color: AppColors.primary, size: 48),
+              const SpinKitThreeInOut(color: AppColors.pinkLight, size: 48),
               const SizedBox(height: 20),
               Obx(() {
                 final version = controller.appVersionLabel.value;

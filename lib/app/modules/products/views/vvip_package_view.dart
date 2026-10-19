@@ -40,7 +40,7 @@ class _VVIPPackageViewState extends State<VVIPPackageView> {
               _vvipOrVipPackageController.loadingAllVVIPPackageList.value ||
               _vvipOrVipPackageController.purchasingVVIPPackage.value,
           progressIndicator: SpinKitCubeGrid(
-            color: Theme.of(context).primaryColor,
+            color: AppColors.pinkLight,
             size: 50.0,
           ),
           child: Scaffold(
@@ -146,7 +146,7 @@ class _VVIPPackageViewState extends State<VVIPPackageView> {
               '${data['price']} Diamonds',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                // color: AppColors.surface,
+                color: AppColors.gold,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),

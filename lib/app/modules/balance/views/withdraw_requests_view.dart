@@ -159,7 +159,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
           title: const Text('Withdraw Requests'),
           bottom: TabBar(
             controller: _tabController,
-            labelColor: theme.colorScheme.primary,
+            labelColor: AppColors.pinkLight,
             unselectedLabelColor: theme.colorScheme.onSurface.withValues(
               alpha: 0.72,
             ),
@@ -336,8 +336,8 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
                   ? () {}
                   : _submitWithdrawRequest,
               primaryColor: _balanceController.creatingWithdrawRequest.value
-                  ? AppColors.textSecondary
-                  : Theme.of(context).primaryColor,
+                  ? AppColors.disabledBackground
+                  : AppColors.pink,
               buttonText: _balanceController.creatingWithdrawRequest.value
                   ? 'Submitting...'
                   : 'Submit Request',

@@ -62,17 +62,17 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
                       fadeInDuration: Duration.zero,
                       fadeOutDuration: Duration.zero,
                       placeholder: (context, url) => Container(
-                        color: AppColors.black12,
+                        color: AppColors.surfaceHigh,
                         alignment: Alignment.center,
                         child: const Icon(Icons.image_outlined),
                       ),
                       errorWidget: (context, url, error) => Container(
-                        color: AppColors.black12,
+                        color: AppColors.surfaceHigh,
                         alignment: Alignment.center,
                         child: const Icon(Icons.broken_image_outlined),
                       ),
                     ),
-                ],
+                  ],
                 );
               },
             ),

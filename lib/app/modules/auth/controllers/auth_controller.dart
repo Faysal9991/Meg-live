@@ -233,7 +233,7 @@ class AuthController extends GetxController {
       title,
       message,
       backgroundColor: AppColors.error,
-      colorText: AppColors.textOnPrimary,
+      colorText: AppColors.onLight,
       snackPosition: SnackPosition.BOTTOM,
     );
   }
@@ -311,7 +311,7 @@ class AuthController extends GetxController {
           'Forbidden',
           "Your device has been blocked.",
           backgroundColor: AppColors.error,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else if (statusCode == 203) {
@@ -320,7 +320,7 @@ class AuthController extends GetxController {
           'Failed',
           message,
           backgroundColor: AppColors.error,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -330,7 +330,7 @@ class AuthController extends GetxController {
         'Failed',
         "Something is wrong. Please try again.",
         backgroundColor: AppColors.error,
-        colorText: AppColors.textOnPrimary,
+        colorText: AppColors.onLight,
         snackPosition: SnackPosition.BOTTOM,
       );
     }
@@ -364,7 +364,7 @@ class AuthController extends GetxController {
           'Failed',
           "Something is wrong. Please check your internet connection.",
           backgroundColor: AppColors.error,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -374,7 +374,7 @@ class AuthController extends GetxController {
         'Failed',
         "Something is wrong. Please check your internet connection.",
         backgroundColor: AppColors.error,
-        colorText: AppColors.textOnPrimary,
+        colorText: AppColors.onLight,
         snackPosition: SnackPosition.BOTTOM,
       );
       preferences.clear();
@@ -411,7 +411,7 @@ class AuthController extends GetxController {
           'Success',
           "Your password has been changed.",
           backgroundColor: AppColors.success,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
         return true;
@@ -420,7 +420,7 @@ class AuthController extends GetxController {
           'Failed',
           "Your credential is mismatch.",
           backgroundColor: AppColors.error,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       } else {
@@ -428,7 +428,7 @@ class AuthController extends GetxController {
           'Failed',
           "Something is wrong. Please try again.",
           backgroundColor: AppColors.error,
-          colorText: AppColors.textOnPrimary,
+          colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -438,7 +438,7 @@ class AuthController extends GetxController {
         'Failed',
         "Something is wrong. Please try again.",
         backgroundColor: AppColors.error,
-        colorText: AppColors.textOnPrimary,
+        colorText: AppColors.onLight,
         snackPosition: SnackPosition.BOTTOM,
       );
     }

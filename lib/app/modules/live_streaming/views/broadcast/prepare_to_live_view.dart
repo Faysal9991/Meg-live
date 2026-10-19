@@ -65,7 +65,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
     return SafeArea(
       child: Scaffold(
         body: Container(
-          color: AppColors.textPrimary,
+          color: AppColors.mediaBackground,
           child: Stack(
             children: [
               Positioned(
@@ -85,7 +85,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                     Container(
                       padding: const EdgeInsets.all(4.0),
                       decoration: BoxDecoration(
-                        color: AppColors.overlay,
+                        color: AppColors.overlayChip,
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: Row(
@@ -99,7 +99,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                           Obx(() {
                             return Text(
                               '${_authController.profile.value.diamonds ?? 0}',
-                              style: const TextStyle(color: AppColors.surface),
+                              style: const TextStyle(color: AppColors.onMedia),
                             );
                           }),
                         ],
@@ -109,18 +109,18 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                     Container(
                       padding: const EdgeInsets.all(4.0),
                       decoration: BoxDecoration(
-                        color: AppColors.overlay,
+                        color: AppColors.overlayChip,
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: const Row(
                         children: [
                           Icon(
                             LucideIcons.eye,
-                            color: AppColors.surface,
+                            color: AppColors.onMedia,
                             size: 16.0,
                           ),
                           SizedBox(width: 8),
-                          Text('0', style: TextStyle(color: AppColors.surface)),
+                          Text('0', style: TextStyle(color: AppColors.onMedia)),
                         ],
                       ),
                     ),
@@ -137,7 +137,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
                       decoration: BoxDecoration(
-                        color: AppColors.textSecondary,
+                        color: AppColors.overlayChip,
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: Row(
@@ -149,7 +149,9 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                               //   bottomLeft: Radius.circular(20.0),
                               //   bottomRight: Radius.circular(20.0),
                               // ),
-                              border: Border.all(color: AppColors.warning),
+                              border: Border.all(
+                                color: AppColors.onMediaSubtle,
+                              ),
                               borderRadius: BorderRadius.circular(100.0),
                             ),
                             padding: const EdgeInsets.all(2.0),
@@ -184,7 +186,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                                               const Center(
                                                 child:
                                                     CircularProgressIndicator(
-                                                      color: AppColors.error,
+                                                      color: AppColors.onMedia,
                                                     ),
                                               ),
                                         ),
@@ -199,7 +201,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                               overflow: TextOverflow.ellipsis,
                               // textAlign: TextAlign.center,
                               style: const TextStyle(
-                                color: AppColors.surface,
+                                color: AppColors.onMedia,
                                 fontWeight: FontWeight.w700,
                                 // backgroundColor: AppColors.overlayLight,
                               ),
@@ -221,7 +223,9 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                 right: 0,
                 bottom: 0,
                 child: Container(
-                  decoration: const BoxDecoration(color: AppColors.overlay),
+                  decoration: const BoxDecoration(
+                    gradient: AppGradients.videoBottomScrim,
+                  ),
                   height: 100,
                   child: Center(
                     child: InkWell(
@@ -243,7 +247,7 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                                 '${handedOver['owner_profile']?['full_name'] ?? 'another host'}. '
                                 'Please wait until it ends.',
                             backgroundColor: AppColors.warning,
-                            colorText: AppColors.onPrimary,
+                            colorText: AppColors.onLight,
                             snackPosition: SnackPosition.BOTTOM,
                           );
                           return;
@@ -299,10 +303,24 @@ class _PrepareToLiveViewState extends State<PrepareToLiveView> {
                           replace: true,
                         );
                       },
-                      child: Image.asset(
-                        'assets/others/go_live.png',
+                      borderRadius: BorderRadius.circular(27),
+                      child: Container(
                         width: 150,
                         height: 54,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          gradient: AppGradients.brand,
+                          borderRadius: BorderRadius.circular(27),
+                        ),
+                        child: const Text(
+                          'GO LIVE',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                          ),
+                        ),
                       ),
                     ),
                   ),
