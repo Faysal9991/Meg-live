@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
@@ -294,8 +297,13 @@ class BusinessController extends GetxController {
     }
   }
 
-  void tryToRechargeResellerToClient(
-      {required int customerId, required int diamonds}) async {
+  void tryToRechargeResellerToClient({
+    required int customerId,
+    required int diamonds,
+  }) async {
+    // No idempotency key on this endpoint: never allow a second submission
+    // while one is in flight.
+    if (loadingResellerRecharge.value) return;
     if (diamonds > authController.profile.value.diamonds!) {
       Get.snackbar(
         'Failed',
@@ -308,26 +316,31 @@ class BusinessController extends GetxController {
       return;
     }
     loadingResellerRecharge.value = true;
-    dynamic data = {
-      'customer_id': customerId,
-      'diamonds': diamonds,
-    };
+    dynamic data = {'customer_id': customerId, 'diamonds': diamonds};
     final dio = createApiDio();
     try {
       final response = await dio.post(
         kResellerRechargeCreateUrl,
-        options: Options(headers: {
-          'accept': '*/*',
-          'X-Api-Key': DRF_API_KEY,
-          'Authorization': 'Token ${authController.token.value}',
-        }),
+        options: Options(
+          headers: {
+            'accept': '*/*',
+            'X-Api-Key': DRF_API_KEY,
+            'Authorization': 'Token ${authController.token.value}',
+          },
+        ),
         data: data,
       );
       int? statusCode = response.statusCode;
-      loadingResellerRecharge.value = false;
       if (statusCode == 201) {
-        resellerRechargeHistoryList.insert(
-            0, response.data['reseller_history']);
+        final body = response.data is Map ? response.data as Map : const {};
+        if (body['reseller_history'] != null) {
+          resellerRechargeHistoryList.insert(0, body['reseller_history']);
+        }
+        _applyRechargeProfiles(
+          body: body,
+          customerId: customerId,
+          diamonds: diamonds,
+        );
         Get.snackbar(
           'Success',
           "You have recharged $diamonds daimonds",
@@ -335,22 +348,126 @@ class BusinessController extends GetxController {
           colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
-        final ProfileController profileController = Get.find();
-        dynamic profile = profileController.searchedProfile.value;
-        profile['diamonds'] += diamonds;
-        profileController.searchedProfile.value = profile;
       } else if (statusCode == 204) {
+        // Not completed: insufficient funds, unavailable customer, self-sale
+        // or ineligible seller. Nothing was transferred.
         Get.snackbar(
           'Failed',
-          "Something is wrong",
+          'Recharge was not completed. Check your balance and the user ID.',
           backgroundColor: AppColors.warning,
           colorText: AppColors.textOnPrimary,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
-    } catch (e) {
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 400) {
+        Get.snackbar(
+          'Failed',
+          _validationMessage(e.response?.data),
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else if (statusCode == 401) {
+        Get.snackbar(
+          'Failed',
+          'Your session has expired. Please log in again.',
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else {
+        // The transfer may have committed; establish the result from the
+        // server instead of assuming success or failure.
+        Get.snackbar(
+          'Please check',
+          'Could not confirm the recharge. Refreshing balances before you try again.',
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.textOnPrimary,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        await _refreshAfterUncertainRecharge(customerId: customerId);
+      }
+    } catch (_) {
+      await _refreshAfterUncertainRecharge(customerId: customerId);
+    } finally {
       loadingResellerRecharge.value = false;
     }
+  }
+
+  /// Applies the 201 profiles to the right users: `reseller_profile` to the
+  /// logged-in reseller, `customer_profile` only to the searched customer.
+  void _applyRechargeProfiles({
+    required Map body,
+    required int customerId,
+    required int diamonds,
+  }) {
+    final resellerProfile = body['reseller_profile'];
+    if (resellerProfile is Map &&
+        _uidOf(resellerProfile) == authController.profile.value.user?.uid) {
+      _applyOwnProfile(Map<String, dynamic>.from(resellerProfile));
+    }
+
+    final ProfileController profileController = Get.find();
+    final searched = Map<String, dynamic>.from(
+      profileController.searchedProfile,
+    );
+    if (_uidOf(searched) != customerId) return;
+    final customerProfile = body['customer_profile'];
+    if (customerProfile is Map && _uidOf(customerProfile) == customerId) {
+      searched.addAll(Map<String, dynamic>.from(customerProfile));
+    } else {
+      // Backend without customer_profile: keep the previous local display.
+      searched['diamonds'] = (searched['diamonds'] ?? 0) + diamonds;
+    }
+    profileController.searchedProfile.value = searched;
+  }
+
+  Future<void> _refreshAfterUncertainRecharge({required int customerId}) async {
+    final ProfileController profileController = Get.find();
+    loadResellerRechargeHistoryList();
+    final ownUid = authController.profile.value.user?.uid;
+    final results = await Future.wait([
+      if (ownUid != null) profileController.fetchProfile(userId: ownUid),
+      profileController.fetchProfile(userId: customerId),
+    ]);
+    if (ownUid != null &&
+        results.first is Map &&
+        _uidOf(results.first) == ownUid) {
+      _applyOwnProfile(Map<String, dynamic>.from(results.first));
+    }
+    final customer = results.last;
+    if (customer is Map &&
+        _uidOf(customer) == customerId &&
+        _uidOf(profileController.searchedProfile) == customerId) {
+      profileController.searchedProfile.value = Map<String, dynamic>.from(
+        customer,
+      );
+    }
+  }
+
+  void _applyOwnProfile(Map<String, dynamic> profileData) {
+    // Partial payloads must not erase fields the response did not include.
+    final merged = authController.profile.value.mergedJson(profileData);
+    authController.profile.value = Profile();
+    authController.profile.value = Profile.fromJson(merged);
+    authController.preferences.setString('profile', jsonEncode(merged));
+  }
+
+  static int? _uidOf(dynamic profile) {
+    final user = profile is Map ? profile['user'] : null;
+    return user is Map ? int.tryParse('${user['uid']}') : null;
+  }
+
+  static String _validationMessage(dynamic data) {
+    if (data is Map && data.isNotEmpty) {
+      return data.values
+          .map((value) => value is List ? value.join(' ') : '$value')
+          .join('\n');
+    }
+    if (data is String && data.isNotEmpty) return data;
+    return 'Invalid recharge request.';
   }
 
   void tryToDeleteResellerRechargeHistory({required int historyId}) async {

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.biholive.net",
+      "sha256_cert_fingerprints": [
+        "43:7E:5A:1F:5E:F0:6F:43:07:A2:EF:51:B8:A6:C5:89:59:75:AB:95:FE:11:B4:33:29:50:1C:37:87:93:05:2F"
+      ]
+    }
+  }
+]

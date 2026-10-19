@@ -3,6 +3,7 @@ import 'package:doyel_live/app/utils/model_parsers.dart';
 class TopHost {
   const TopHost({
     required this.uid,
+    this.rank = 0,
     required this.level,
     required this.vvipOrVipPreference,
     required this.fullName,
@@ -18,6 +19,9 @@ class TopHost {
   });
 
   final int uid;
+
+  /// Server-supplied rank (1-based); 0 when the source did not send one.
+  final int rank;
   final dynamic level;
   final dynamic vvipOrVipPreference;
   final String fullName;
@@ -37,10 +41,9 @@ class TopHost {
   factory TopHost.fromJson(Map<String, dynamic> json) {
     return TopHost(
       uid: _uidFromJson(json),
+      rank: intFromDynamic(json['rank']),
       level: json['level'],
-      vvipOrVipPreference: mapFromDynamic(
-        json['vvip_or_vip_preference'],
-      ),
+      vvipOrVipPreference: mapFromDynamic(json['vvip_or_vip_preference']),
       fullName: (json['full_name'] ?? '').toString(),
       profileImage: nullableStringFromDynamic(
         json['profile_image'] ?? json['photo_url'],
@@ -48,17 +51,11 @@ class TopHost {
 
       seconds: intFromDynamic(json['seconds']),
 
-      liveDurationSeconds: intFromDynamic(
-        json['live_duration_seconds'],
-      ),
+      liveDurationSeconds: intFromDynamic(json['live_duration_seconds']),
 
-      giftDiamonds: intFromDynamic(
-        json['gift_diamonds'],
-      ),
+      giftDiamonds: intFromDynamic(json['gift_diamonds']),
 
-      diamondsContributed: intFromDynamic(
-        json['diamonds_contributed'],
-      ),
+      diamondsContributed: intFromDynamic(json['diamonds_contributed']),
 
       isAgent: boolFromDynamic(json['is_agent']),
       isReseller: boolFromDynamic(json['is_reseller']),

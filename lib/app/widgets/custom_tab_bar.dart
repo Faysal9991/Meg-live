@@ -28,7 +28,7 @@ class CustomTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
     child: Row(
       children: List.generate(items.length, (index) {
         final item = items[index];
@@ -41,7 +41,7 @@ class CustomTabBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               onTap: () => onTap(index),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -57,22 +57,23 @@ class CustomTabBar extends StatelessWidget {
                         radius: 14,
                       ),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 7,
+                        horizontal: 10,
+                        vertical: 4,
                       ),
                       child: Icon(
                         selected ? item.activeIcon : item.inactiveIcon,
                         color: selected
                             ? AppColors.primary
                             : AppColors.textSecondary,
-                        size: 22,
+                        size: 20,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 2),
                     Text(
                       item.label,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 10,
                         color: selected
                             ? AppColors.primary
                             : AppColors.textSecondary,

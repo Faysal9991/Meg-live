@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:app_links/app_links.dart';
@@ -21,14 +22,14 @@ class HelperFunctions {
     return true;
   }
 
-  Future<void> initDynamicLinks() async {
-    final appLinks = AppLinks(); // AppLinks is singleton
-    try {
-      final Uri uri = await appLinks.uriLinkStream.first;
-      _handleMyLink(uri);
-    } catch (_) {}
+  static StreamSubscription<Uri>? _linkSubscription;
+  static String? _lastHandledLink;
+  static DateTime? _lastHandledAt;
 
-    appLinks.uriLinkStream.listen(
+  Future<void> initDynamicLinks() async {
+    // uriLinkStream also emits the link that cold-started the app.
+    await _linkSubscription?.cancel();
+    _linkSubscription = AppLinks().uriLinkStream.listen(
       (Uri? uri) {
         // Use the uri and warn the user, if it is not correct
         _handleMyLink(uri);
@@ -42,11 +43,29 @@ class HelperFunctions {
   void _handleMyLink(Uri? uri) {
     if (uri == null || uri.queryParameters.isEmpty) return;
 
-    if (uri.path.contains('/streaming/') &&
-        uri.queryParameters.containsKey('data')) {
+    // https://biholive.com/streaming/?data=... or biholive://streaming?data=...
+    final isStreamingLink =
+        uri.path.startsWith('/streaming') ||
+        (uri.scheme == appLinkScheme && uri.host == 'streaming');
+    if (isStreamingLink && uri.queryParameters.containsKey('data')) {
+      // Skip the same link delivered twice (initial link + resume).
+      final now = DateTime.now();
+      if (_lastHandledLink == uri.toString() &&
+          _lastHandledAt != null &&
+          now.difference(_lastHandledAt!) < const Duration(seconds: 3)) {
+        return;
+      }
+      _lastHandledLink = uri.toString();
+      _lastHandledAt = now;
+
       String base64Data = uri.queryParameters['data']!;
 
-      String decoded = decodeBase64Url(base64Data);
+      String decoded;
+      try {
+        decoded = decodeBase64Url(base64Data);
+      } catch (_) {
+        return;
+      }
 
       // Parse the decoded query string manually
       Uri decodedUri = Uri.parse('$baseUrlAppLink/streaming/?$decoded');
@@ -197,14 +216,20 @@ class HelperFunctions {
     String? image,
     required String channelId,
   }) async {
-    String query = 'channel_id=$channelId&title=$title&image=$image';
+    String query = Uri(
+      queryParameters: {
+        'channel_id': channelId,
+        'title': title,
+        if (image != null && image.isNotEmpty) 'image': image,
+      },
+    ).query;
     // Encode to Base64
     // String encoded = base64.encode(utf8.encode(query));
-    String encoded = encodeBase64Url(query);
+    String encoded = encodeBase64Url(query).replaceAll('=', '');
 
     String customUrl = '$baseUrlAppLink/streaming/?data=$encoded';
 
-    String? desc = 'Biho Live:\n$title\n$customUrl';
+    String desc = '$title is live on Biho Live! Join now:\n$customUrl';
 
     await SharePlus.instance.share(
       ShareParams(text: desc, subject: title),

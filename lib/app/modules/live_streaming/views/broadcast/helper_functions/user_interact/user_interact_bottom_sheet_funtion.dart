@@ -1,11 +1,15 @@
+import 'package:doyel_live/app/data/vip_preference.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:doyel_live/app/theme/app_radius.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
-import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_interact/widgets/contributors_widget.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/helper_functions/user_interact/widgets/gifts_widget.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
+import 'package:doyel_live/app/widgets/vip_profile_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+const double _headerHeight = 64;
+const double _contentHeight = 300;
 
 void showUserInteractBottomSheet({
   required BuildContext context,
@@ -14,248 +18,120 @@ void showUserInteractBottomSheet({
 }) {
   final AuthController authController = Get.find();
   final LiveStreamingController streamingController = Get.find();
+  final user = _normalizeUser(data);
 
-  // Future.delayed(Duration.zero, () {
-  //   profileController.profileForHost.value = {};
-  // });
-
-  // final Function onUpdateAction;
   showModalBottomSheet(
     context: context,
     barrierColor: AppColors.transparent,
+    backgroundColor: AppColors.surface,
     enableDrag: false,
-    // isScrollControlled: true,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppRadius.sheet),
+      ),
+    ),
     builder: (context) {
-      // if (authController.showingOverlay.value) {
-      //   Navigator.of(context).pop();
-      // }
-
       return SafeArea(
-        child: Obx(() {
-          return SizedBox(
-            // height: 350,
-            height:
-                streamingController.listActiveCall.length == 1 &&
-                    streamingController.isCurrentHost
-                ? 350
-                : 390,
-
-            // decoration: BoxDecoration(
-            //   gradient: Palette.linearGradient1,
-            // ),
-            child: Stack(
-              children: <Widget>[
-                Positioned(
-                  top: 58,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    color: AppColors.surface,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Obx(() {
-                          if (streamingController.userInteractTab.value ==
-                              'gifts') {
-                            return GiftsWidget(
-                              data: data,
-                              streamingController: streamingController,
-                              authController: authController,
-                              onUpdateAction: onUpdateAction,
-                            );
-                          } else if (streamingController
-                                  .userInteractTab
-                                  .value ==
-                              'contributors') {
-                            return ContributorsWidget(
-                              streamingController: streamingController,
-                              data: data,
-                              onUpdateAction: onUpdateAction,
-                            );
-                          }
-                          return Container();
-                        }),
-                      ],
-                    ),
-                  ),
+        child: SizedBox(
+          height: _headerHeight + 1 + _contentHeight,
+          child: Column(
+            children: [
+              _SheetHeader(user: user),
+              const Divider(height: 1, color: AppColors.divider),
+              Expanded(
+                child: GiftsWidget(
+                  data: user,
+                  streamingController: streamingController,
+                  authController: authController,
+                  onUpdateAction: onUpdateAction,
                 ),
-                Positioned(
-                  top: 8,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: AppColors.textSecondary)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            if (streamingController.userInteractTab.value !=
-                                'gifts') {
-                              streamingController.setUserInteractTab(
-                                tab: 'gifts',
-                              );
-                            }
-                          },
-                          child: Obx(() {
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Image.asset(
-                                  'assets/others/gift.png',
-                                  width: 18,
-                                  height: 18,
-                                ),
-                                const SizedBox(height: 8),
-                                InkWell(
-                                  // onTap: () => _streamingController.setShowViewersTab(
-                                  //     showViewers: false),
-                                  child: Text(
-                                    'SEND GIFTS',
-                                    style: TextStyle(
-                                      color:
-                                          streamingController
-                                                  .userInteractTab
-                                                  .value !=
-                                              'gifts'
-                                          ? AppColors.textSecondary
-                                          : Theme.of(context).primaryColor,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            if (streamingController.userInteractTab.value !=
-                                'contributors') {
-                              streamingController.setUserInteractTab(
-                                tab: 'contributors',
-                              );
-                            }
-                          },
-                          child: Obx(() {
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // const Icon(
-                                //   Icons.person_pin,
-                                //   color: AppColors.info,
-                                // ),
-                                data['vvip_or_vip_preference'] != null &&
-                                        data['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
-                                            null &&
-                                        data['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
-                                            ''
-                                    ? Container(
-                                        width: 24,
-                                        height: 24,
-                                        foregroundDecoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image: CachedNetworkImageProvider(
-                                              data['vvip_or_vip_preference']['vvip_or_vip_gif'],
-                                            ),
-                                            fit: BoxFit.fill,
-                                          ),
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            100,
-                                          ),
-                                          child:
-                                              data['profile_image'] == null &&
-                                                  data['photo_url'] == null
-                                              ? Image.asset(
-                                                  'assets/others/person.jpg',
-                                                  width: 20,
-                                                  height: 20,
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : CachedNetworkImage(
-                                                  imageUrl:
-                                                      data['profile_image'] ??
-                                                      data['photo_url'],
-                                                  width: 20,
-                                                  height: 20,
-                                                  fit: BoxFit.cover,
-                                                  placeholder: (context, url) =>
-                                                      const Center(
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                              color: AppColors.error,
-                                                            ),
-                                                      ),
-                                                ),
-                                        ),
-                                      )
-                                    : ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          100,
-                                        ),
-                                        child:
-                                            data['profile_image'] == null &&
-                                                data['photo_url'] == null
-                                            ? Image.asset(
-                                                'assets/others/person.jpg',
-                                                width: 24,
-                                                height: 24,
-                                                fit: BoxFit.cover,
-                                              )
-                                            : CachedNetworkImage(
-                                                imageUrl:
-                                                    data['profile_image'] ??
-                                                    data['photo_url'],
-                                                width: 24,
-                                                height: 24,
-                                                fit: BoxFit.cover,
-                                                placeholder: (context, url) =>
-                                                    const Center(
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                            color: AppColors.error,
-                                                          ),
-                                                    ),
-                                              ),
-                                      ),
-                                InkWell(
-                                  // onTap: () => _streamingController.setShowViewersTab(
-                                  //     showViewers: false),
-                                  child: Text(
-                                    '${data['full_name']}',
-                                    style: TextStyle(
-                                      color:
-                                          streamingController
-                                                  .userInteractTab
-                                                  .value !=
-                                              'contributors'
-                                          ? AppColors.textSecondary
-                                          : Theme.of(context).primaryColor,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
+              ),
+            ],
+          ),
+        ),
       );
     },
   );
+}
+
+/// Callers pass user maps from several sources (host fields, LiveKit
+/// participants, socket payloads), so field types and fallbacks differ.
+/// Normalize once here so every child widget reads the same shape.
+Map<String, dynamic> _normalizeUser(dynamic data) {
+  final source = data is Map
+      ? Map<String, dynamic>.from(data)
+      : <String, dynamic>{};
+  String? nonEmpty(dynamic value) {
+    final text = value?.toString().trim();
+    return text == null || text.isEmpty || text == 'null' ? null : text;
+  }
+
+  final uid = int.tryParse('${source['uid'] ?? source['user']?['uid']}');
+  return {
+    ...source,
+    'uid': uid,
+    'full_name':
+        nonEmpty(source['full_name']) ?? 'User${uid != null ? ' #$uid' : ''}',
+    'profile_image':
+        nonEmpty(source['profile_image']) ?? nonEmpty(source['photo_url']),
+    'vvip_or_vip_preference': normalizeVipPreference(
+      source['vvip_or_vip_preference'],
+    ),
+  };
+}
+
+class _SheetHeader extends StatelessWidget {
+  const _SheetHeader({required this.user});
+
+  final Map<String, dynamic> user;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: _headerHeight,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            VipProfileAvatar(
+              profileImage: user['profile_image'],
+              vipPreference: user['vvip_or_vip_preference'],
+              frameSize: 48,
+              unframedSize: 36,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user['full_name'],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (user['uid'] != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'ID: ${user['uid']}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

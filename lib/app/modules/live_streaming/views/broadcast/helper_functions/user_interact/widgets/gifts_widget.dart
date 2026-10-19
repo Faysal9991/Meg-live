@@ -4,12 +4,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/widgets/animated_media_widget.dart';
-import 'package:doyel_live/app/widgets/reusable_widgets.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class GiftsWidget extends StatelessWidget {
+class GiftsWidget extends StatefulWidget {
   const GiftsWidget({
     super.key,
     required this.streamingController,
@@ -23,523 +22,619 @@ class GiftsWidget extends StatelessWidget {
   final Function onUpdateAction;
 
   @override
-  Widget build(BuildContext context) {
-    Future.delayed(Duration.zero, () {
+  State<GiftsWidget> createState() => _GiftsWidgetState();
+}
+
+class _GiftsWidgetState extends State<GiftsWidget> {
+  /// Receivers explicitly picked in the sheet. When empty, the gift goes to
+  /// the user whose sheet was opened (see [_effectiveReceiverUids]).
+  final RxSet<int> _selectedUids = <int>{}.obs;
+
+  LiveStreamingController get streamingController => widget.streamingController;
+  AuthController get authController => widget.authController;
+  dynamic get data => widget.data;
+
+  int get _myUid => authController.profile.value.user!.uid!;
+
+  static int? _uidOf(dynamic user) =>
+      user == null ? null : int.tryParse('${user['uid']}');
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
       if (streamingController.listAnimatedGift.isEmpty ||
           streamingController.listNormalGift.isEmpty) {
         streamingController.fetchGiftList();
       }
     });
+  }
+
+  /// Everyone in the room who can receive a gift: on-mic users first (host
+  /// leads [LiveStreamingController.listActiveCall]), then listeners.
+  List<dynamic> _receiverCandidates() {
+    final seen = <int>{_myUid};
+    final candidates = <dynamic>[];
+    void addAll(Iterable<dynamic> users) {
+      for (final user in users) {
+        final uid = _uidOf(user);
+        if (uid != null && seen.add(uid)) candidates.add(user);
+      }
+    }
+
+    addAll(streamingController.listActiveCall);
+    addAll(streamingController.viewers);
+    // The profile the sheet was opened from may not be in either list yet.
+    if (data is Map && !seen.contains(_uidOf(data))) addAll([data]);
+    return candidates;
+  }
+
+  Set<int> _onMicUids() =>
+      streamingController.listActiveCall.map(_uidOf).whereType<int>().toSet();
+
+  Set<int> _effectiveReceiverUids(List<dynamic> candidates) {
+    final available = candidates.map(_uidOf).whereType<int>().toSet();
+    final picked = _selectedUids.intersection(available);
+    if (picked.isNotEmpty) return picked;
+    final fallback = _uidOf(data);
+    return fallback != null && available.contains(fallback) ? {fallback} : {};
+  }
+
+  void _toggleReceiver(int uid, Set<int> effective) {
+    final next = {...effective};
+    if (!next.remove(uid)) next.add(uid);
+    _selectedUids
+      ..clear()
+      ..addAll(next);
+  }
+
+  void _toggleAll(List<dynamic> candidates, bool allSelected) {
+    _selectedUids.clear();
+    if (!allSelected) {
+      _selectedUids.addAll(candidates.map(_uidOf).whereType<int>());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Obx(() {
       if (streamingController.loadingGfitList.value) {
-        return const Center(
-          child: SpinKitChasingDots(color: AppColors.error, size: 50.0),
+        return const SizedBox(
+          height: 300,
+          child: Center(
+            child: SpinKitChasingDots(color: AppColors.error, size: 50.0),
+          ),
         );
       }
+      final candidates = _receiverCandidates();
+      final receivers = _effectiveReceiverUids(candidates);
       return SizedBox(
-        // height: 260,
-        height:
-            streamingController.listActiveCall.length == 1 &&
-                streamingController.isCurrentHost
-            ? 260
-            : 300,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const SizedBox(height: 2),
-            SizedBox(
-              height: 42,
-              child: Obx(() {
-                return ListView.separated(
-                  padding: EdgeInsets.zero,
+        height: 300,
+        child: DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              if (candidates.isNotEmpty)
+                _receiverSelector(candidates, receivers),
+              _tabBar(),
+              Expanded(
+                child: TabBarView(
                   physics: const BouncingScrollPhysics(),
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: streamingController.listActiveCall.length,
-                  separatorBuilder: (context, index) => SizedBox(
-                    width:
-                        streamingController.listActiveCall[index]['uid'] ==
-                            authController.profile.value.user!.uid!
-                        ? 0
-                        : 4,
-                  ),
-                  itemBuilder: ((context, index) {
-                    dynamic data = streamingController.listActiveCall[index];
-                    if (data['uid'] ==
-                        authController.profile.value.user!.uid!) {
-                      return Container();
-                    }
-                    return InkWell(
-                      onTap: () {
-                        if (data['selected'] != null) {
-                          data['selected'] = !data['selected'];
-                        } else {
-                          data['selected'] = true;
-                        }
-                        streamingController.listActiveCall.removeAt(index);
-                        streamingController.listActiveCall.insert(index, data);
-                      },
-                      child: Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            width: data['selected'] == null || !data['selected']
-                                ? 1
-                                : 2,
-                            color: data['selected'] == null || !data['selected']
-                                ? AppColors.textSecondary
-                                : AppColors.error,
-                          ),
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 28,
-                              height: 28,
-                              child: Stack(
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(
-                                        100.0,
-                                      ),
-                                      border: Border.all(
-                                        width: 2.0,
-                                        color: AppColors.warning,
-                                      ),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(
-                                        100.0,
-                                      ),
-                                      child: data['profile_image'] == null
-                                          ? Image.asset(
-                                              'assets/others/person.jpg',
-                                              width:
-                                                  data['vvip_or_vip_preference'] !=
-                                                          null &&
-                                                      data['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
-                                                          null
-                                                  ? 22
-                                                  : 28,
-                                              height:
-                                                  data['vvip_or_vip_preference'] !=
-                                                          null &&
-                                                      data['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
-                                                          null
-                                                  ? 22
-                                                  : 28,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : CachedNetworkImage(
-                                              imageUrl:
-                                                  '${data['profile_image']}',
-                                              width:
-                                                  data['vvip_or_vip_preference'] !=
-                                                          null &&
-                                                      data['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
-                                                          null
-                                                  ? 22
-                                                  : 28,
-                                              height:
-                                                  data['vvip_or_vip_preference'] !=
-                                                          null &&
-                                                      data['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
-                                                          null
-                                                  ? 22
-                                                  : 28,
-                                              fit: BoxFit.cover,
-                                              placeholder: (context, url) =>
-                                                  const Center(
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                          color:
-                                                              AppColors.error,
-                                                        ),
-                                                  ),
-                                            ),
-                                    ),
-                                  ),
-                                  data['vvip_or_vip_preference'] != null &&
-                                          data['vvip_or_vip_preference']['vvip_or_vip_gif'] !=
-                                              null
-                                      ? Positioned(
-                                          bottom: 0,
-                                          right: 0,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: AppColors.overlay,
-                                              // borderRadius: BorderRadius.only(
-                                              //   bottomLeft: Radius.circular(20.0),
-                                              //   bottomRight: Radius.circular(20.0),
-                                              // ),
-                                              border: Border.all(
-                                                color: AppColors.warning,
-                                                // width: 2.0,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(100.0),
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(100.0),
-                                              child: CachedNetworkImage(
-                                                imageUrl:
-                                                    data['vvip_or_vip_preference']['vvip_or_vip_gif'],
-                                                width: 14,
-                                                height: 14,
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                      : Container(),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              '#${data['uid']}',
-                              style: const TextStyle(
-                                fontSize: 6,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                );
-              }),
-            ),
-            SizedBox(
-              height: 74,
-              child: ListView.builder(
-                padding: EdgeInsets.zero,
-                physics: const BouncingScrollPhysics(),
-                shrinkWrap: true,
-                scrollDirection: Axis.horizontal,
-                itemCount: streamingController.listAnimatedGift.length,
-                itemBuilder: ((context, index) {
-                  dynamic giftData =
-                      streamingController.listAnimatedGift[index];
-                  return giftItem(
-                    streamingController: streamingController,
-                    authController: authController,
-                    giftData: giftData,
-                  );
-                }),
-              ),
-            ),
-            SizedBox(
-              height: 74,
-              child: ListView.builder(
-                padding: EdgeInsets.zero,
-                physics: const BouncingScrollPhysics(),
-                shrinkWrap: true,
-                scrollDirection: Axis.horizontal,
-                itemCount: streamingController.listNormalGift.length,
-                itemBuilder: ((context, index) {
-                  dynamic giftData = streamingController.listNormalGift[index];
-                  return giftItem(
-                    streamingController: streamingController,
-                    authController: authController,
-                    giftData: giftData,
-                  );
-                }),
-              ),
-            ),
-            data['uid'] == authController.profile.value.user!.uid! &&
-                    streamingController.listActiveCall.firstWhereOrNull(
-                          (el) =>
-                              el['selected'] != null &&
-                              el['selected'] == true &&
-                              el['uid'] !=
-                                  authController.profile.value.user!.uid!,
-                        ) ==
-                        null
-                ? const SizedBox(height: 50)
-                : SizedBox(
-                    height: 50,
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 24),
-                        // const Icon(
-                        //   Icons.diamond,
-                        //   color: AppColors.info,
-                        // ),
-                        Image.asset(
-                          'assets/others/diamond.png',
-                          width: 18,
-                          height: 18,
-                        ),
-                        const SizedBox(width: 4),
-                        Obx(() {
-                          return Text(
-                            '${authController.profile.value.diamonds}',
-                            // style: const TextStyle(color: AppColors.surface),
-                          );
-                        }),
-                        const SizedBox(width: 4),
-                        rPrimaryElevatedButton(
-                          onPressed: () => Get.snackbar(
-                            'Oops',
-                            "Coming Soon!",
-                            backgroundColor: AppColors.warning,
-                            colorText: AppColors.surface,
-                            snackPosition: SnackPosition.TOP,
-                          ),
-                          primaryColor: AppColors.success,
-                          buttonText: '+ Recharge',
-                          borderRadius: AppRadius.button,
-                          fontSize: 12.0,
-                        ),
-                        // const SizedBox(
-                        //   width: 64,
-                        // ),
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Obx(() {
-                                final selectedGiftId = streamingController
-                                    .selectedGift
-                                    .value['id'];
-                                final isSending =
-                                    streamingController.loadingGiftSend.value !=
-                                    -1;
-                                final selectedReceivers = streamingController
-                                    .listActiveCall
-                                    .where(
-                                      (el) =>
-                                          el['selected'] != null &&
-                                          el['selected'] == true,
-                                    )
-                                    .toList();
-                                final baseDiamonds =
-                                    int.tryParse(
-                                      streamingController
-                                          .selectedGift
-                                          .value['diamonds']
-                                          .toString(),
-                                    ) ??
-                                    0;
-                                final receiverCount = selectedReceivers.isEmpty
-                                    ? 1
-                                    : selectedReceivers.length;
-                                final totalGiftDiamonds =
-                                    baseDiamonds * receiverCount;
-                                final canSend =
-                                    selectedGiftId != 0 && !isSending;
-
-                                return rPrimaryElevatedButton(
-                                  onPressed: () async {
-                                    if (!canSend) {
-                                      return;
-                                    }
-                                    if (streamingController
-                                            .selectedGift
-                                            .value['id'] !=
-                                        0) {
-                                      List<dynamic> listReceiverIds = [];
-                                      String receiverFullNames = '';
-
-                                      int giftDiamonds = int.parse(
-                                        streamingController
-                                            .selectedGift
-                                            .value['diamonds']
-                                            .toString(),
-                                      );
-                                      List<dynamic> listReceiver =
-                                          streamingController.listActiveCall
-                                              .where(
-                                                (el) =>
-                                                    el['selected'] != null &&
-                                                    el['selected'] == true,
-                                              )
-                                              .toList();
-                                      if (listReceiver.isNotEmpty) {
-                                        giftDiamonds *= listReceiver.length;
-                                        for (
-                                          int i = 0;
-                                          i < listReceiver.length;
-                                          i++
-                                        ) {
-                                          dynamic receiverData =
-                                              listReceiver[i];
-                                          listReceiverIds.add(
-                                            receiverData['uid'],
-                                          );
-                                          if (i == listReceiver.length - 1) {
-                                            receiverFullNames +=
-                                                '${receiverData['full_name']}';
-                                          } else {
-                                            receiverFullNames +=
-                                                '${receiverData['full_name']}, ';
-                                          }
-                                        }
-                                      } else {
-                                        listReceiverIds.add(data['uid']);
-                                        receiverFullNames = data['full_name'];
-                                      }
-                                      if (authController
-                                              .profile
-                                              .value
-                                              .diamonds! <
-                                          giftDiamonds) {
-                                        Get.snackbar(
-                                          'Failed',
-                                          "You've no sufficient diamonds. Please +Recharge.",
-                                          backgroundColor: AppColors.error,
-                                          colorText: AppColors.surface,
-                                          snackPosition: SnackPosition.TOP,
-                                        );
-                                        return;
-                                      }
-                                      if (streamingController
-                                              .loadingGiftSend
-                                              .value !=
-                                          -1) {
-                                        return;
-                                      }
-
-                                      // dynamic roomSocketData = {
-                                      //   'type': 'gift',
-                                      //   'action': 'activity',
-                                      //   'uid': authController
-                                      //       .profile.value.user!.uid!,
-                                      //   'sender_uid': authController
-                                      //       .profile.value.user!.uid!,
-                                      //   // 'receiver_uid': data['uid'],
-                                      //   'receiver_uids': listReceiverIds,
-                                      //   'full_name': authController
-                                      //       .profile.value.full_name,
-                                      //   'receiver_full_name':
-                                      //       receiverFullNames,
-                                      //   'profile_image': authController
-                                      //           .profile
-                                      //           .value
-                                      //           .profile_image ??
-                                      //       authController
-                                      //           .profile.value.photo_url,
-                                      //   'level': authController
-                                      //       .profile.value.level,
-                                      //   'gift_type': streamingController
-                                      //       .selectedGift.value['gift_type']
-                                      //       .toString(),
-                                      //   'gift_id': int.parse(
-                                      //       streamingController
-                                      //           .selectedGift.value['id']
-                                      //           .toString()),
-                                      //   'gift_diamonds': giftDiamonds,
-                                      //   'diamonds': int.parse(
-                                      //       streamingController.selectedGift
-                                      //           .value['diamonds']
-                                      //           .toString()),
-                                      //   'vat': int.parse(streamingController
-                                      //       .selectedGift.value['vat']
-                                      //       .toString()),
-                                      //   'gift_image': streamingController
-                                      //       .selectedGift.value['gift_image']
-                                      //       .toString(),
-                                      //   'gif': streamingController
-                                      //       .selectedGift.value['gif']
-                                      //       .toString(),
-                                      //   'audio': streamingController
-                                      //       .selectedGift.value['audio']
-                                      //       .toString(),
-                                      //   'vvip_or_vip_preference':
-                                      //       authController.profile.value
-                                      //           .vvip_or_vip_preference,
-                                      // };
-                                      // onUpdateAction(roomSocketData);
-                                      await streamingController
-                                          .tryToSendGiftOnLiveStreaming(
-                                            channelName: streamingController
-                                                .channelName
-                                                .value,
-                                            // receiverUid: data['uid'],
-                                            giftType: streamingController
-                                                .selectedGift
-                                                .value['gift_type']
-                                                .toString(),
-                                            giftId: int.parse(
-                                              streamingController
-                                                  .selectedGift
-                                                  .value['id']
-                                                  .toString(),
-                                            ),
-                                            context: context,
-                                            totalDiamonds: giftDiamonds,
-                                            diamonds: int.parse(
-                                              streamingController
-                                                  .selectedGift
-                                                  .value['diamonds']
-                                                  .toString(),
-                                            ),
-                                            vat: int.parse(
-                                              streamingController
-                                                  .selectedGift
-                                                  .value['vat']
-                                                  .toString(),
-                                            ),
-                                            receiverFullNames:
-                                                receiverFullNames,
-                                            receiverUids: listReceiverIds,
-                                            giftImage:
-                                                streamingController
-                                                        .selectedGift
-                                                        .value['gift_image']
-                                                    as String?,
-                                            svga:
-                                                streamingController
-                                                        .selectedGift
-                                                        .value['svga']
-                                                    as String?,
-                                            gif:
-                                                streamingController
-                                                        .selectedGift
-                                                        .value['gif']
-                                                    as String?,
-                                            audio:
-                                                streamingController
-                                                        .selectedGift
-                                                        .value['audio']
-                                                    as String?,
-                                          );
-                                      // if (result) {
-                                      //   // Get.back();
-                                      //   // Navigator.of(context).pop();
-                                      // }
-                                    }
-                                  },
-                                  primaryColor: canSend
-                                      ? AppColors.warning
-                                      : AppColors.textSecondary,
-                                  buttonTextColor: AppColors.surface,
-                                  borderRadius: AppRadius.button,
-                                  buttonText: isSending
-                                      ? 'Wait...'
-                                      : selectedGiftId != 0
-                                      ? 'Send ($totalGiftDiamonds)'
-                                      : 'Send',
-                                  fontSize: 12.0,
-                                );
-                              }),
-                              const SizedBox(width: 24),
-                            ],
-                          ),
-                        ),
-                      ],
+                  children: [
+                    _giftGrid(
+                      gifts: streamingController.listAnimatedGift,
+                      emptyText: 'No animated gifts available',
                     ),
-                  ),
-          ],
+                    _giftGrid(
+                      gifts: streamingController.listNormalGift,
+                      emptyText: 'No gifts available',
+                    ),
+                  ],
+                ),
+              ),
+              _sendBar(context, candidates, receivers),
+            ],
+          ),
         ),
       );
     });
+  }
+
+  Widget _receiverSelector(List<dynamic> candidates, Set<int> receivers) {
+    final onMic = _onMicUids();
+    final allSelected =
+        candidates.length > 1 && receivers.length == candidates.length;
+    return SizedBox(
+      height: 64,
+      child: Row(
+        children: [
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(12, 8, 8, 0),
+              physics: const BouncingScrollPhysics(),
+              scrollDirection: Axis.horizontal,
+              itemCount: candidates.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 6),
+              itemBuilder: (context, index) {
+                final user = candidates[index];
+                final uid = _uidOf(user)!;
+                return _receiverAvatar(
+                  user: user,
+                  selected: receivers.contains(uid),
+                  onMic: onMic.contains(uid),
+                  onTap: () => _toggleReceiver(uid, receivers),
+                );
+              },
+            ),
+          ),
+          if (candidates.length > 1) ...[
+            Container(width: 1, height: 36, color: AppColors.divider),
+            _selectAllButton(
+              allSelected: allSelected,
+              count: candidates.length,
+              onTap: () => _toggleAll(candidates, allSelected),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _receiverAvatar({
+    required dynamic user,
+    required bool selected,
+    required bool onMic,
+    required VoidCallback onTap,
+  }) {
+    final image = user['profile_image'] ?? user['photo_url'];
+    final name = '${user['full_name'] ?? '#${user['uid']}'}';
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: SizedBox(
+        width: 44,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox.square(
+              dimension: 36,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        width: 2,
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.transparent,
+                      ),
+                    ),
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 150),
+                      opacity: selected ? 1 : 0.55,
+                      child: ClipOval(
+                        child: image == null
+                            ? Image.asset(
+                                'assets/others/person.jpg',
+                                width: 28,
+                                height: 28,
+                                fit: BoxFit.cover,
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: '$image',
+                                width: 28,
+                                height: 28,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    Container(color: AppColors.surfaceInset),
+                                errorWidget: (context, url, error) =>
+                                    Image.asset(
+                                      'assets/others/person.jpg',
+                                      fit: BoxFit.cover,
+                                    ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  if (onMic)
+                    const Positioned(
+                      bottom: -1,
+                      left: -1,
+                      child: CircleAvatar(
+                        radius: 7,
+                        backgroundColor: AppColors.accent,
+                        child: Icon(
+                          Icons.mic_rounded,
+                          size: 9,
+                          color: AppColors.textOnAccent,
+                        ),
+                      ),
+                    ),
+                  if (selected)
+                    const Positioned(
+                      top: -1,
+                      right: -1,
+                      child: CircleAvatar(
+                        radius: 7,
+                        backgroundColor: AppColors.primary,
+                        child: Icon(
+                          Icons.check_rounded,
+                          size: 10,
+                          color: AppColors.textOnPrimary,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? AppColors.primary : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _selectAllButton({
+    required bool allSelected,
+    required int count,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 8, 12, 0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: allSelected ? AppColors.primary : AppColors.surfaceInset,
+                border: Border.all(
+                  color: allSelected ? AppColors.primary : AppColors.border,
+                ),
+              ),
+              child: Icon(
+                allSelected ? Icons.done_all_rounded : Icons.groups_rounded,
+                size: 18,
+                color: allSelected
+                    ? AppColors.textOnPrimary
+                    : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'All ($count)',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: allSelected
+                    ? AppColors.primary
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tabBar() {
+    return Container(
+      height: 36,
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceInset,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: TabBar(
+        dividerColor: AppColors.transparent,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+        labelColor: AppColors.textOnPrimary,
+        unselectedLabelColor: AppColors.textSecondary,
+        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        splashBorderRadius: BorderRadius.circular(AppRadius.pill),
+        tabs: const [
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.auto_awesome, size: 14),
+                SizedBox(width: 6),
+                Text('Animated'),
+              ],
+            ),
+          ),
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.card_giftcard, size: 14),
+                SizedBox(width: 6),
+                Text('Normal'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _giftGrid({required List<dynamic> gifts, required String emptyText}) {
+    if (gifts.isEmpty) {
+      return Center(
+        child: Text(
+          emptyText,
+          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+        ),
+      );
+    }
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+      physics: const BouncingScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 0.85,
+      ),
+      itemCount: gifts.length,
+      itemBuilder: (context, index) => giftItem(
+        streamingController: streamingController,
+        authController: authController,
+        giftData: gifts[index],
+      ),
+    );
+  }
+
+  Widget _sendBar(
+    BuildContext context,
+    List<dynamic> candidates,
+    Set<int> receivers,
+  ) {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.divider)),
+      ),
+      child: Row(
+        children: [
+          _balancePill(),
+          const Spacer(),
+          Obx(() {
+            final selectedGiftId = streamingController.selectedGift['id'];
+            final isSending = streamingController.loadingGiftSend.value != -1;
+            final baseDiamonds =
+                int.tryParse(
+                  streamingController.selectedGift['diamonds'].toString(),
+                ) ??
+                0;
+            final totalGiftDiamonds = baseDiamonds * receivers.length;
+            final canSend =
+                selectedGiftId != 0 && receivers.isNotEmpty && !isSending;
+            return _sendButton(
+              context: context,
+              canSend: canSend,
+              isSending: isSending,
+              totalDiamonds: selectedGiftId != 0 && receivers.isNotEmpty
+                  ? totalGiftDiamonds
+                  : null,
+              onSend: () => _sendGift(context, candidates, receivers),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  /// Wallet balance with an inline "+" so recharge reads as part of the
+  /// balance instead of a competing primary action.
+  Widget _balancePill() {
+    return Material(
+      color: AppColors.surfaceInset,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        onTap: () => Get.snackbar(
+          'Oops',
+          "Coming Soon!",
+          backgroundColor: AppColors.warning,
+          colorText: AppColors.surface,
+          snackPosition: SnackPosition.TOP,
+        ),
+        child: Container(
+          height: 32,
+          padding: const EdgeInsets.only(left: 10, right: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset('assets/others/diamond.png', width: 14, height: 14),
+              const SizedBox(width: 5),
+              Obx(() {
+                return Text(
+                  '${authController.profile.value.diamonds ?? 0}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                );
+              }),
+              const SizedBox(width: 8),
+              Container(
+                width: 22,
+                height: 22,
+                decoration: const BoxDecoration(
+                  color: AppColors.success,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.add_rounded,
+                  size: 16,
+                  color: AppColors.textOnPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sendButton({
+    required BuildContext context,
+    required bool canSend,
+    required bool isSending,
+    required VoidCallback onSend,
+    int? totalDiamonds,
+  }) {
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 150),
+      opacity: canSend || isSending ? 1 : 0.5,
+      child: Material(
+        color: AppColors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          onTap: canSend ? onSend : null,
+          child: Ink(
+            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: canSend || isSending
+                    ? const [AppColors.primaryLight, AppColors.primary]
+                    : const [AppColors.disabled, AppColors.disabled],
+              ),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: isSending
+                  ? const [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.textOnPrimary,
+                        ),
+                      ),
+                    ]
+                  : [
+                      const Text(
+                        'Send',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textOnPrimary,
+                        ),
+                      ),
+                      if (totalDiamonds != null) ...[
+                        Container(
+                          width: 1,
+                          height: 14,
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          color: AppColors.onMediaSubtle,
+                        ),
+                        Image.asset(
+                          'assets/others/diamond.png',
+                          width: 12,
+                          height: 12,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          '$totalDiamonds',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textOnPrimary,
+                          ),
+                        ),
+                      ],
+                    ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _sendGift(
+    BuildContext context,
+    List<dynamic> candidates,
+    Set<int> receivers,
+  ) async {
+    final selectedGift = streamingController.selectedGift;
+    if (selectedGift['id'] == 0 || receivers.isEmpty) return;
+
+    final listReceiver = candidates
+        .where((user) => receivers.contains(_uidOf(user)))
+        .toList();
+    final listReceiverIds = listReceiver.map(_uidOf).toList();
+    final names = listReceiver.map((user) => '${user['full_name']}').toList();
+    // Keep the activity text short when gifting a large audience.
+    final receiverFullNames = names.length > 3
+        ? '${names.take(3).join(', ')} +${names.length - 3} more'
+        : names.join(', ');
+
+    final diamonds = int.parse(selectedGift['diamonds'].toString());
+    final giftDiamonds = diamonds * listReceiver.length;
+    if (authController.profile.value.diamonds! < giftDiamonds) {
+      Get.snackbar(
+        'Failed',
+        "You've no sufficient diamonds. Please +Recharge.",
+        backgroundColor: AppColors.error,
+        colorText: AppColors.surface,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+    if (streamingController.loadingGiftSend.value != -1) return;
+
+    await streamingController.tryToSendGiftOnLiveStreaming(
+      channelName: streamingController.channelName.value,
+      giftType: selectedGift['gift_type'].toString(),
+      giftId: int.parse(selectedGift['id'].toString()),
+      context: context,
+      totalDiamonds: giftDiamonds,
+      diamonds: diamonds,
+      vat: int.parse(selectedGift['vat'].toString()),
+      receiverFullNames: receiverFullNames,
+      receiverUids: listReceiverIds,
+      giftImage: selectedGift['gift_image'] as String?,
+      svga: selectedGift['svga'] as String?,
+      gif: selectedGift['gif'] as String?,
+      audio: selectedGift['audio'] as String?,
+    );
   }
 }
 
@@ -557,110 +652,131 @@ class giftItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: InkWell(
-        onTap: () async {
-          if (authController.profile.value.diamonds! < giftData['diamonds']) {
-            Get.snackbar(
-              'Failed',
-              "You've no sufficient diamonds. Please +Recharge.",
-              backgroundColor: AppColors.error,
-              colorText: AppColors.surface,
-              snackPosition: SnackPosition.TOP,
-            );
-            // rShowSnackBar(
-            //   context: context,
-            //   title: "You've no sufficient diamonds. Please +Recharge.",
-            //   color: AppColors.error,
-            //   durationInSeconds: 3,
-            // );
-            return;
-          }
-          streamingController.setSelectedGift(
-            giftType: giftData['svga'] != null || giftData['gif'] != null
-                ? 'animation'
-                : 'normal',
-            id: giftData['id'],
-            diamonds: giftData['diamonds'],
-            vat: giftData['vat'],
-            giftImage: giftData['gift_image'],
-            svga: giftData['svga'],
-            gif: giftData['gif'],
-            audio: giftData['audio'],
+    final isAnimated = giftData['svga'] != null || giftData['gif'] != null;
+    return GestureDetector(
+      onTap: () {
+        if (authController.profile.value.diamonds! < giftData['diamonds']) {
+          Get.snackbar(
+            'Failed',
+            "You've no sufficient diamonds. Please +Recharge.",
+            backgroundColor: AppColors.error,
+            colorText: AppColors.surface,
+            snackPosition: SnackPosition.TOP,
           );
-        },
-        child: Obx(() {
-          final selectedGift = streamingController.selectedGift;
-          final isAnimated =
-              giftData['svga'] != null || giftData['gif'] != null;
-          final isSelected =
-              selectedGift['id'] == giftData['id'] &&
-              selectedGift['gift_type'] ==
-                  (isAnimated ? 'animation' : 'normal');
-          return Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: isSelected
-                    ? Theme.of(context).primaryColor
-                    : AppColors.transparent,
-              ),
-              borderRadius: BorderRadius.circular(8.0),
-              color: AppColors.overlayLight,
+          return;
+        }
+        streamingController.setSelectedGift(
+          giftType: isAnimated ? 'animation' : 'normal',
+          id: giftData['id'],
+          diamonds: giftData['diamonds'],
+          vat: giftData['vat'],
+          giftImage: giftData['gift_image'],
+          svga: giftData['svga'],
+          gif: giftData['gif'],
+          audio: giftData['audio'],
+        );
+      },
+      child: Obx(() {
+        final selectedGift = streamingController.selectedGift;
+        final isSelected =
+            selectedGift['id'] == giftData['id'] &&
+            selectedGift['gift_type'] == (isAnimated ? 'animation' : 'normal');
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primarySoft
+                : AppColors.surfaceHighlight,
+            borderRadius: BorderRadius.circular(AppRadius.small),
+            border: Border.all(
+              width: isSelected ? 2 : 1,
+              color: isSelected ? AppColors.primary : AppColors.divider,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox.square(
-                  dimension: 46,
-                  child: AnimatedBuilder(
-                    animation:
-                        ModalRoute.of(context)?.animation ??
-                        const AlwaysStoppedAnimation<double>(1),
-                    builder: (context, _) {
-                      final route = ModalRoute.of(context);
-                      return AnimatedMediaWidget(
-                        source: AnimatedMediaSource.fromMap(
-                          giftData is Map ? giftData as Map : const {},
+          ),
+          child: Stack(
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(6, 8, 6, 2),
+                      child: AnimatedScale(
+                        duration: const Duration(milliseconds: 150),
+                        scale: isSelected ? 1.1 : 1.0,
+                        child: AnimatedBuilder(
+                          animation:
+                              ModalRoute.of(context)?.animation ??
+                              const AlwaysStoppedAnimation<double>(1),
+                          builder: (context, _) {
+                            final route = ModalRoute.of(context);
+                            return AnimatedMediaWidget(
+                              source: AnimatedMediaSource.fromMap(
+                                giftData is Map ? giftData as Map : const {},
+                              ),
+                              enableSvgaAudio:
+                                  isSelected &&
+                                  (ModalRoute.isCurrentOf(context) ?? true) &&
+                                  route?.animation?.status !=
+                                      AnimationStatus.reverse,
+                              fit: BoxFit.contain,
+                              placeholder: const Center(
+                                child: SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                        enableSvgaAudio:
-                            isSelected &&
-                            (ModalRoute.isCurrentOf(context) ?? true) &&
-                            route?.animation?.status != AnimationStatus.reverse,
-                        fit: BoxFit.contain,
-                        placeholder: const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/others/diamond.png',
+                          width: 12,
+                          height: 12,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${giftData['diamonds']}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.textPrimary,
                           ),
                         ),
-                      );
-                    },
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (isAnimated)
+                const Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Icon(
+                    Icons.play_circle_fill,
+                    size: 12,
+                    color: AppColors.premium,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      'assets/others/diamond.png',
-                      width: 18,
-                      height: 18,
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      '${giftData['diamonds']}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        }),
-      ),
+            ],
+          ),
+        );
+      }),
     );
   }
 }

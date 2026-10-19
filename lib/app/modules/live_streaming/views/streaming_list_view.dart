@@ -53,20 +53,19 @@ class StreamingListView extends StatelessWidget {
                 _livekitStreamingController.loadingBannerList.value)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16,0, 16, 0),
                   child: HomeBannerCarousel(
                     banners: _livekitStreamingController.bannerList.toList(),
                   ),
                 ),
               ),
-            if (_livekitStreamingController.bannerList.isNotEmpty)
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+      
             if (_livekitStreamingController
                 .topSlidingAgentRankingList
                 .isNotEmpty)
               const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, 20),
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 5),
                   child: SlidesTopAgentsView(),
                 ),
               ),
@@ -94,7 +93,7 @@ class StreamingListView extends StatelessWidget {
             else ...[
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 5),
                   child: Text(
                     'Live Now',
                     style: Theme.of(context).textTheme.titleLarge,

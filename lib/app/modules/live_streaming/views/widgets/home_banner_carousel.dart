@@ -72,76 +72,12 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
                         child: const Icon(Icons.broken_image_outlined),
                       ),
                     ),
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            AppColors.transparent,
-                            AppColors.overlayStrong,
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.info.withAlpha(204),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.auto_awesome,
-                              color: AppColors.premium,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Featured',
-                              style: textTheme.labelSmall?.copyWith(
-                                color: AppColors.onPrimary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                ],
                 );
               },
             ),
           ),
         ),
-        if (widget.banners.length > 1) ...[
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(widget.banners.length, (index) {
-              final isActive = _currentIndex == index;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: isActive ? 16 : 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: isActive ? AppColors.info : AppColors.black26,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              );
-            }),
-          ),
-        ],
       ],
     );
   }

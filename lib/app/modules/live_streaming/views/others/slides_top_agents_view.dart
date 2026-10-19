@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
+import 'package:doyel_live/app/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -30,49 +31,62 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
       if (list.isEmpty) {
         return const SizedBox.shrink();
       }
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CarouselSlider.builder(
-            options: CarouselOptions(
-              autoPlay:
-                  list.length > 1 && !MediaQuery.disableAnimationsOf(context),
-              height:
-                  132 +
-                  (MediaQuery.textScalerOf(context).scale(13) - 13).clamp(
-                        0,
-                        26,
-                      ) *
-                      6,
-              viewportFraction: 1.0,
-              padEnds: false,
-              enlargeCenterPage: false,
-              initialPage: 0,
-              enableInfiniteScroll: list.length > 1,
-              autoPlayInterval: const Duration(seconds: 3),
-              autoPlayAnimationDuration: const Duration(milliseconds: 700),
-              autoPlayCurve: Curves.easeOutCubic,
+      // A list retained from a dropped connection is not presented as current.
+      final reconnecting = _livekitStreamingController.isRankingReconnecting(
+        TOP_AGENCIES_UPDATE,
+      );
+      return AnimatedOpacity(
+        opacity: reconnecting ? 0.6 : 1,
+        duration: const Duration(milliseconds: 200),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CarouselSlider.builder(
+              options: CarouselOptions(
+                autoPlay:
+                    list.length > 1 && !MediaQuery.disableAnimationsOf(context),
+                height:
+                    68 +
+                    (MediaQuery.textScalerOf(context).scale(13) - 13).clamp(
+                          0,
+                          13,
+                        ) *
+                        3,
+                viewportFraction: 1.0,
+                padEnds: false,
+                enlargeCenterPage: false,
+                initialPage: 0,
+                enableInfiniteScroll: list.length > 1,
+                autoPlayInterval: const Duration(seconds: 3),
+                autoPlayAnimationDuration: const Duration(milliseconds: 700),
+                autoPlayCurve: Curves.easeOutCubic,
+              ),
+              itemCount: list.length,
+              itemBuilder: (_, index, __) {
+                return _agentCard(data: list[index], serial: index + 1);
+              },
             ),
-            itemCount: list.length,
-            itemBuilder: (_, index, __) {
-              return _agentCard(data: list[index], serial: index + 1);
-            },
-          ),
-        ],
+          ],
+        ),
       );
     });
   }
 
   Widget _agentCard({required dynamic data, required int serial}) {
     final agentName = '${data['agent_name'] ?? ''}'.trim();
-    final userId = '${data['user_id'] ?? ''}'.trim();
-    final diamonds = '${data['diamonds'] ?? 0}';
-    final topLabel = '${data['top'] ?? '-'}';
+    // Owner ID can be 0 for agencies without a linked account.
+    final rawUserId = '${data['user_id'] ?? ''}'.trim();
+    final userId = rawUserId == '0' ? '' : rawUserId;
+    // Socket rows score by current host balance; REST rows only send diamonds.
+    final diamonds = '${data['total_hosts_diamonds'] ?? data['diamonds'] ?? 0}';
+    // Prefer the server-supplied rank over the list position.
+    final rank = int.tryParse('${data['rank'] ?? ''}');
+    if (rank != null && rank > 0) serial = rank;
+    final topLabel = '${data['rank'] ?? data['top'] ?? '-'}';
     final imageUrl = '${data['logo'] ?? ''}'.trim();
     final isAppOwner = data['is_app_owner'] == true;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2),
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -90,119 +104,86 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
       child: Stack(
         children: [
           Positioned(
-            right: -24,
-            top: -24,
+            right: -20,
+            top: -20,
             child: Container(
-              width: 90,
-              height: 90,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
                 color: AppColors.white12,
-                borderRadius: BorderRadius.circular(90),
+                borderRadius: BorderRadius.circular(64),
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
                 _buildAvatar(imageUrl: imageUrl, serial: serial),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        agentName.isEmpty ? 'Unknown Agent' : agentName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.onMedia,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'ID: $userId',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.onMedia,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 6,
-                        crossAxisAlignment: WrapCrossAlignment.center,
+                      Row(
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Image.asset(
-                                'assets/others/diamond.png',
-                                height: 16,
-                              ),
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  diamonds,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.onMedia,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (isAppOwner) ...[
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.premium,
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(color: AppColors.premium),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.workspace_premium,
-                                    color: AppColors.primaryDark,
-                                    size: 12,
-                                  ),
-                                  SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      'Owner',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: AppColors.primaryDark,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                          Flexible(
+                            child: Text(
+                              agentName.isEmpty ? 'Unknown Agent' : agentName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppColors.onMedia,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
                               ),
                             ),
+                          ),
+                          if (isAppOwner) ...[
+                            const SizedBox(width: 6),
+                            _buildOwnerBadge(),
                           ],
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          if (userId.isNotEmpty) ...[
+                            Flexible(
+                              child: Text(
+                                'ID: $userId',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.onMedia,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          Image.asset('assets/others/diamond.png', height: 13),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              diamonds,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.onMedia,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 _buildTopPill(topLabel: topLabel),
               ],
             ),
@@ -212,10 +193,35 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
     );
   }
 
+  Widget _buildOwnerBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.premium,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.workspace_premium, color: AppColors.primaryDark, size: 10),
+          SizedBox(width: 3),
+          Text(
+            'Owner',
+            style: TextStyle(
+              color: AppColors.primaryDark,
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAvatar({required String imageUrl, required int serial}) {
     return SizedBox(
-      width: 68,
-      height: 68,
+      width: 50,
+      height: 50,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -226,8 +232,8 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               boxShadow: const [
                 BoxShadow(
                   color: AppColors.overlay,
-                  blurRadius: 8,
-                  offset: Offset(0, 3),
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
                 ),
               ],
             ),
@@ -240,13 +246,13 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                       child: const Icon(
                         Icons.person,
                         color: AppColors.onMedia,
-                        size: 28,
+                        size: 22,
                       ),
                     )
                   : CachedNetworkImage(
                       imageUrl: imageUrl,
-                      width: 68,
-                      height: 68,
+                      width: 50,
+                      height: 50,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const Center(
                         child: CircularProgressIndicator(
@@ -260,7 +266,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         child: const Icon(
                           Icons.person,
                           color: AppColors.onMedia,
-                          size: 28,
+                          size: 22,
                         ),
                       ),
                     ),
@@ -270,8 +276,8 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
             right: -3,
             bottom: -3,
             child: Container(
-              width: 24,
-              height: 24,
+              width: 18,
+              height: 18,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: AppColors.premium,
@@ -283,7 +289,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                 style: const TextStyle(
                   color: AppColors.primaryDark,
                   fontWeight: FontWeight.w800,
-                  fontSize: 11,
+                  fontSize: 9,
                 ),
               ),
             ),
@@ -295,10 +301,10 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
 
   Widget _buildTopPill({required String topLabel}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: AppColors.premium,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppColors.onMediaSubtle),
       ),
       child: Column(
@@ -308,17 +314,17 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
             'TOP',
             style: TextStyle(
               color: AppColors.primaryDark,
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.7,
+              letterSpacing: 0.6,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 1),
           Text(
             topLabel,
             style: const TextStyle(
               color: AppColors.primaryDark,
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w800,
             ),
           ),

@@ -79,10 +79,17 @@ xmlns:tools="http://schemas.android.com/tools">
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- <data android:scheme="https" android:host="www.example.com" android:pathPrefix="/foo" /> -->
                 <data
-                android:host="applink.doyellive.mmpvtltd.xyz"
+                android:host="biholive.com"
                 android:scheme="https"
-                android:pathPrefix="/streaming/" 
+                android:pathPrefix="/streaming"
                 />
+            </intent-filter>
+            <!-- Custom scheme used by the web fallback page: biholive://streaming?data=... -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="biholive" android:host="streaming" />
             </intent-filter>
 
         </activity>

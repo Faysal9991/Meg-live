@@ -110,6 +110,8 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
   final ScrollController _scrollController = ScrollController();
   bool _commentsVisible = true;
+  // Sound off: no remote audio is played and the local mic stays muted.
+  bool _soundOff = false, _micWasEnabled = false;
   double _commentSwipeDistance = 0;
   double? _scrollPosition;
   double get _screenGlobalWidth => MediaQuery.sizeOf(context).width;
@@ -1589,30 +1591,19 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                   top: 4,
                   right: 44,
                   child: LiveRoomIconButton(
-                    icon: LucideIcons.minimize2,
-                    label: 'Minimize live room',
-                    onPressed: () {
-                      _focusNode.unfocus();
-                      _livekitStreamingController.liveSession.minimize();
-                    },
+                    icon: _soundOff ? LucideIcons.volumeX : LucideIcons.volume2,
+                    label: _soundOff ? 'Turn sound on' : 'Turn sound off',
+                    onPressed: _toggleSoundOff,
                   ),
                 ),
-                // Top Close
+                // Top Close: asks whether to minimize or close the live
                 Positioned(
                   top: 4,
                   right: 0,
                   child: LiveRoomIconButton(
                     icon: LucideIcons.x,
                     label: 'Leave live room',
-                    // onPressed: () => Get.back(),
-                    onPressed: () {
-                      rShowAlertDialog(
-                        context: context,
-                        title: 'Close',
-                        content: 'Do you wanna close?',
-                        onConfirm: _closeStreamingEvent,
-                      );
-                    },
+                    onPressed: _showLeaveOptionsDialog,
                   ),
                 ),
 
@@ -2091,24 +2082,25 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       // Share
-                      // LiveRoomIconButton(
-                      //   icon: LucideIcons.share2,
-                      //   label: 'Share live room',
-                      //   backgroundColor: Theme.of(context).primaryColor,
-                      //   iconColor: AppColors.onMediaMuted,
-                      //   onPressed: () {
-                      //     HelperFunctions().buildDynamicLinksForLiveStreaming(
-                      //       title: _livekitStreamingController
-                      //           .broadcasterFullname
-                      //           .value,
-                      //       description: 'Is Live Now',
-                      //       image: _livekitStreamingController
-                      //           .broadcasterProfileImage
-                      //           .value,
-                      //       channelId: widget.channelName,
-                      //     );
-                      //   },
-                      // ),
+                      LiveRoomIconButton(
+                        icon: LucideIcons.share2,
+                        label: 'Share live room',
+                        backgroundColor: Theme.of(context).primaryColor,
+                        iconColor: AppColors.onMediaMuted,
+                        onPressed: () {
+                          HelperFunctions().buildDynamicLinksForLiveStreaming(
+                            title: _livekitStreamingController
+                                .broadcasterFullname
+                                .value,
+                            description: 'Is Live Now',
+                            image: _livekitStreamingController
+                                .broadcasterProfileImage
+                                .value,
+                            channelId: widget.channelName,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 8),
                       !_isHost
                           ? Container()
                           : Obx(() {
@@ -2968,7 +2960,12 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       // }
       _renderParticipants();
     })
-    ..on<TrackSubscribedEvent>((_) => _renderParticipants())
+    ..on<TrackSubscribedEvent>((event) {
+      if (_soundOff && event.publication.kind == TrackType.AUDIO) {
+        unawaited(event.publication.disable());
+      }
+      _renderParticipants();
+    })
     ..on<TrackUnsubscribedEvent>((_) => _renderParticipants())
     ..on<ParticipantConnectedEvent>((p0) {
       if (_isHost) unawaited(_syncRoomAdmins());
@@ -3339,6 +3336,34 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     }
 
     _livekitStreamingController.setRenderViewList([...userMediaTracks]);
+  }
+
+  void _showLeaveOptionsDialog() {
+    _focusNode.unfocus();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Leave live'),
+        content: const Text('Do you want to close or minimize the live?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              _livekitStreamingController.liveSession.minimize();
+            },
+            child: const Text('Minimize'),
+          ),
+          TextButton(
+            onPressed: _closeStreamingEvent,
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _closeStreamingEvent() {
@@ -4135,8 +4160,39 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
     }
   }
 
+  Future<void> _toggleSoundOff() async {
+    if (_isDisposed) return;
+    final soundOff = !_soundOff;
+    final room = _room;
+    final participant = room?.localParticipant;
+    if (soundOff) {
+      _micWasEnabled = participant?.isMicrophoneEnabled() ?? false;
+    }
+    setState(() => _soundOff = soundOff);
+    try {
+      if (room != null) {
+        for (final remote in room.remoteParticipants.values) {
+          for (final pub in remote.audioTrackPublications) {
+            soundOff ? await pub.disable() : await pub.enable();
+          }
+        }
+      }
+      if (participant != null && _micWasEnabled) {
+        await participant.setMicrophoneEnabled(!soundOff);
+        await _audioRouting.refresh();
+      }
+    } catch (e) {
+      debugPrint('Failed to toggle sound: $e');
+    }
+  }
+
   Future<void> _setMicrophoneEnabled(bool enabled) async {
     if (_isDisposed) return;
+    if (_soundOff) {
+      // Remember the requested state and apply it when sound is turned on.
+      _micWasEnabled = enabled;
+      if (enabled) return;
+    }
     final participant = _room?.localParticipant;
     if (participant == null) return;
     await participant.setMicrophoneEnabled(enabled);

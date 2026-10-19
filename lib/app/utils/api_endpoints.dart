@@ -11,7 +11,12 @@ const host = 'biholive.com';
 const kDomain = 'https://$host';
 const _baseUrl = '$kDomain/api/v1';
 
-const baseUrlAppLink = 'https://applink.doyellivekit.skyapp.name';
+// Shared live links. biholive.com must serve web_deeplink/ (assetlinks.json +
+// /streaming/ fallback page that redirects to the Play Store).
+const baseUrlAppLink = 'https://$host';
+const appLinkScheme = 'biholive';
+const kPlayStoreUrl =
+    'https://play.google.com/store/apps/details?id=com.biholive.net';
 //Auth
 const kLoginUsingFirebaseUrl = '$_baseUrl/auth/login/';
 const kLogoutUrl = '$_baseUrl/auth/logout/';

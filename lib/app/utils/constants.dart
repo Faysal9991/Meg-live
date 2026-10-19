@@ -14,6 +14,10 @@ const NOTIFY_GROUP_CHAT = 'GROUP_CHAT';
 const LOAD_GIFTS = 'load_gifts';
 const LOAD_PROFILE = 'load_profile';
 const UPDATE_PROFILE = 'update_profile';
+// Dashboard rankings pushed over the dashboard socket (complete snapshots).
+const TOP_AGENCIES_UPDATE = 'top_agencies_update';
+const TOP_HOSTS_UPDATE = 'top_hosts_update';
+const TOP_CONTRIBUTORS_UPDATE = 'top_contributors_update';
 const SEND_GIFT = 'send_gift';
 const GAME = 'game';
 const FORTUNE_WHEEL = 'fortune_wheel';

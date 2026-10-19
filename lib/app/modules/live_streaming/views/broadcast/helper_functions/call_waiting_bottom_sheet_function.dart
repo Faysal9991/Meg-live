@@ -267,7 +267,8 @@ void showCallWaitingBottomSheet({
                             ),
                           ),
                         ),
-                        if (hasLiveRoomControlAccess)
+                        if (hasLiveRoomControlAccess ||
+                            streamingController.isRoomAdmin)
                           InkWell(
                             onTap: () =>
                                 streamingController.setCallTab(tabName: 'live'),
@@ -338,6 +339,7 @@ void showCallWaitingBottomSheet({
                             return _guestLiveItem(
                               hasLiveRoomControlAccess:
                                   hasLiveRoomControlAccess,
+                              canDropFromCall: canManageRequests,
                               streamingController: streamingController,
                               data:
                                   streamingController.listActiveCall[index + 1],
@@ -518,11 +520,13 @@ class _guestLiveItem extends StatelessWidget {
     Key? key,
     required this.streamingController,
     required this.hasLiveRoomControlAccess,
+    required this.canDropFromCall,
     this.data,
     required this.onUpdateAction,
   }) : super(key: key);
   final LiveStreamingController streamingController;
   final bool hasLiveRoomControlAccess;
+  final bool canDropFromCall;
   final dynamic data;
   final Function onUpdateAction;
 
@@ -569,50 +573,53 @@ class _guestLiveItem extends StatelessWidget {
                   ),
                 )
               : Container(),
-          hasLiveRoomControlAccess
+          hasLiveRoomControlAccess || canDropFromCall
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    CircleButton(
-                      icon: data['muted']
-                          ? LucideIcons.micOff
-                          : LucideIcons.mic,
-                      iconSize: 24,
-                      minWidth: 32,
-                      minHeight: 32,
-                      iconColor: data['muted']
-                          ? AppColors.textSecondary
-                          : AppColors.info,
-                      onPressed: () {
-                        String action = 'controller';
-                        // if (_pk) {
-                        //   action = 'controller_pk';
-                        // }
-                        dynamic activeData = {
-                          // 'room_name':
-                          //     '${streamingController.channelName.value}_actions',
-                          'action': action,
-                          'uid': data['uid'],
-                          // 'full_name': data['full_name'],
-                          'profile_image': data['profile_image'],
-                          'muted': !data['muted'],
-                          'video_disabled': data['video_disabled'],
-                          // 'diamonds': data['diamonds'],
-                          // 'gift_coins': data['gift_coins'],
-                          // 'is_moderator': data['is_moderator'],
-                          // 'is_host': data['is_host'],
-                          // 'is_reseller': data['is_reseller'],
-                          // 'level': data['level'],
-                          'vvip_or_vip_preference':
-                              data['vvip_or_vip_preference'],
-                          // 'package_theme_gif': data['package_theme_gif'],
-                          // 'followers': data['followers'],
-                          // 'blocks': data['blocks'],
-                        };
-                        onUpdateAction(activeData);
-                      },
-                    ),
-                    const SizedBox(width: 16),
+                    // Room admins may only drop guests, not mute them.
+                    if (hasLiveRoomControlAccess) ...[
+                      CircleButton(
+                        icon: data['muted']
+                            ? LucideIcons.micOff
+                            : LucideIcons.mic,
+                        iconSize: 24,
+                        minWidth: 32,
+                        minHeight: 32,
+                        iconColor: data['muted']
+                            ? AppColors.textSecondary
+                            : AppColors.info,
+                        onPressed: () {
+                          String action = 'controller';
+                          // if (_pk) {
+                          //   action = 'controller_pk';
+                          // }
+                          dynamic activeData = {
+                            // 'room_name':
+                            //     '${streamingController.channelName.value}_actions',
+                            'action': action,
+                            'uid': data['uid'],
+                            // 'full_name': data['full_name'],
+                            'profile_image': data['profile_image'],
+                            'muted': !data['muted'],
+                            'video_disabled': data['video_disabled'],
+                            // 'diamonds': data['diamonds'],
+                            // 'gift_coins': data['gift_coins'],
+                            // 'is_moderator': data['is_moderator'],
+                            // 'is_host': data['is_host'],
+                            // 'is_reseller': data['is_reseller'],
+                            // 'level': data['level'],
+                            'vvip_or_vip_preference':
+                                data['vvip_or_vip_preference'],
+                            // 'package_theme_gif': data['package_theme_gif'],
+                            // 'followers': data['followers'],
+                            // 'blocks': data['blocks'],
+                          };
+                          onUpdateAction(activeData);
+                        },
+                      ),
+                      const SizedBox(width: 16),
+                    ],
                     // Cameras belong to each guest; the host cannot toggle them.
                     CircleButton(
                       icon: LucideIcons.x,

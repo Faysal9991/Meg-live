@@ -189,7 +189,6 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
         }
       },
     );
-    _livekitStreamingController.initTopAgentRankingList();
   }
 
   @override
@@ -470,13 +469,35 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                           ),
                         ),
                         Obx(() {
+                          final controller = _livekitStreamingController;
+                          final hostsLive = controller.isRankingLive(
+                            TOP_HOSTS_UPDATE,
+                          );
+                          final contributorsLive = controller.isRankingLive(
+                            TOP_CONTRIBUTORS_UPDATE,
+                          );
+                          // Socket-pushed lists are already current.
+                          if (hostsLive && contributorsLive) {
+                            return const SizedBox.shrink();
+                          }
+                          if (controller.isRankingReconnecting(
+                                TOP_HOSTS_UPDATE,
+                              ) ||
+                              controller.isRankingReconnecting(
+                                TOP_CONTRIBUTORS_UPDATE,
+                              )) {
+                            return const Text(
+                              'Reconnecting…',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          }
                           final loading =
-                              _livekitStreamingController
-                                  .loadingTopHostList
-                                  .value ||
-                              _livekitStreamingController
-                                  .loadingTopContributorList
-                                  .value;
+                              controller.loadingTopHostList.value ||
+                              controller.loadingTopContributorList.value;
                           return IconButton(
                             tooltip: 'Refresh',
                             onPressed: loading
@@ -523,6 +544,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                                   .value,
                               emptyMessage: 'No top hosts found.',
                               trailingIcon: Icons.workspace_premium,
+                              score: (profile) => profile.giftDiamonds,
                             ),
                           ),
                           Obx(
@@ -534,7 +556,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                                   .value,
                               emptyMessage: 'No top contributors found.',
                               trailingIcon: Icons.diamond_outlined,
-                              showGiftDiamonds: true,
+                              score: (profile) => profile.diamondsContributed,
                             ),
                           ),
                         ],
@@ -555,7 +577,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     required bool loading,
     required String emptyMessage,
     required IconData trailingIcon,
-    bool showGiftDiamonds = false,
+    required int Function(TopHost profile) score,
   }) {
     if (loading && profiles.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -576,27 +598,47 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     return ListView.separated(
       itemCount: profiles.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (_, index) => _buildRankingSheetItem(
-        profile: profiles[index],
-        trailingIcon: trailingIcon,
-        showGiftDiamonds: showGiftDiamonds,
-      ),
+      itemBuilder: (_, index) {
+        final profile = profiles[index];
+        return _buildRankingSheetItem(
+          profile: profile,
+          // Show the server rank; REST fallbacks may omit it.
+          rank: profile.rank > 0 ? profile.rank : index + 1,
+          score: score(profile),
+          trailingIcon: trailingIcon,
+        );
+      },
     );
   }
 
   Widget _buildRankingSheetItem({
     required TopHost profile,
+    required int rank,
+    required int score,
     required IconData trailingIcon,
-    bool showGiftDiamonds = false,
   }) {
     final hasImage =
         profile.profileImage != null && profile.profileImage!.isNotEmpty;
+    final level = profile.level is Map ? profile.level['level'] : null;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: AppNeumorphicStyles.decoration(radius: 18, compact: true),
       child: Row(
         children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '$rank',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+                color: AppColors.premium,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           CircleAvatar(
             radius: 24,
             backgroundColor: AppColors.overlayLight,
@@ -626,7 +668,10 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                 const SizedBox(height: 2),
 
                 Text(
-                  'UID #${profile.uid}',
+                  [
+                    'UID #${profile.uid}',
+                    if (level != null) 'Lv.$level',
+                  ].join('  ·  '),
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
@@ -636,34 +681,24 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
 
                 const SizedBox(height: 6),
 
-                if (showGiftDiamonds)
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.diamond,
-                        size: 15,
-                        color: AppColors.warning,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${_formatDiamonds(profile.diamondsContributed)} Diamonds',
-                        style: const TextStyle(
-                          color: AppColors.warning,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  )
-                else
-                  Text(
-                    _formatRankingSeconds(profile.liveDurationSeconds),
-                    style: const TextStyle(
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.diamond,
+                      size: 15,
                       color: AppColors.warning,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
                     ),
-                  ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_formatDiamonds(score)} Diamonds',
+                      style: const TextStyle(
+                        color: AppColors.warning,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -672,16 +707,6 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
         ],
       ),
     );
-  }
-
-  String _formatRankingSeconds(int seconds) {
-    final duration = Duration(seconds: seconds);
-    String twoDigits(int value) => value.toString().padLeft(2, '0');
-    return [
-      twoDigits(duration.inHours),
-      twoDigits(duration.inMinutes.remainder(60)),
-      twoDigits(duration.inSeconds.remainder(60)),
-    ].join(':');
   }
 
   @override
@@ -752,7 +777,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                 ],
               ),
               bottomNavigationBar: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                 child: AppCard(
                   child: CustomTabBar(
                     items: _navItems,

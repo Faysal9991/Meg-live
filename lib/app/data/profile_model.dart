@@ -4,6 +4,8 @@ import 'package:doyel_live/app/data/entry_effect_model.dart';
 
 class Profile {
   int? id, loves, diamonds, gift_diamonds;
+  // Lifetime coins bought from resellers (server-maintained, read-only).
+  int? reseller_purchased_diamonds;
   ProfileUser? user;
   List<dynamic>? followers, blocks;
   // # 'iso_code','iso3_code','phone_code','country_name'
@@ -31,6 +33,7 @@ class Profile {
     : id = json['id'],
       diamonds = json['diamonds'] ?? 0,
       gift_diamonds = json['gift_diamonds'] ?? 0,
+      reseller_purchased_diamonds = json['reseller_purchased_diamonds'] ?? 0,
       loves = json['loves'] ?? 0,
       level = json['level'],
       vvip_or_vip_preference = _parseVvipOrVipPreference(
@@ -89,10 +92,27 @@ class Profile {
     return null;
   }
 
+  /// This profile's JSON with a server [update] applied on top, keeping
+  /// fields (including nested `user` fields) the update did not include.
+  Map<String, dynamic> mergedJson(Map<String, dynamic> update) {
+    final current = toJson();
+    final merged = {...current, ...update};
+    final currentUser = current['user'];
+    final nextUser = update['user'];
+    if (currentUser is Map || nextUser is Map) {
+      merged['user'] = <String, dynamic>{
+        if (currentUser is Map) ...Map<String, dynamic>.from(currentUser),
+        if (nextUser is Map) ...Map<String, dynamic>.from(nextUser),
+      };
+    }
+    return merged;
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'diamonds': diamonds,
     'gift_diamonds': gift_diamonds,
+    'reseller_purchased_diamonds': reseller_purchased_diamonds,
     'loves': loves,
     'user': user?.toJson(),
     'level': level,
