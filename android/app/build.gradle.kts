@@ -61,7 +61,11 @@ android {
 
   buildTypes {
     getByName("debug") {
-        signingConfig = signingConfigs.getByName("release")
+        // Use the release key when key.properties is present (e.g. for
+        // Google Sign-In SHA-1); otherwise fall back to the default debug key.
+        if (keystorePath != null) {
+            signingConfig = signingConfigs.getByName("release")
+        }
     }
     getByName("release") {
         signingConfig = signingConfigs.getByName("release")
