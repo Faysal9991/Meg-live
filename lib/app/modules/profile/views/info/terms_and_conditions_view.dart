@@ -36,7 +36,7 @@ const htmlData = r"""
   <strong>Terms &amp; Conditions</strong>
 
   <p>
-    By downloading or using the Biho Live app, these Terms and Conditions
+    By downloading or using the Ringo Live app, these Terms and Conditions
     automatically apply to you. You should therefore read them carefully
     before using the app.
   </p>
@@ -51,11 +51,11 @@ const htmlData = r"""
   <p>
     The app itself, including all trademarks, copyrights, database rights,
     and other intellectual property rights related to it, belongs to
-    Biho Live or its respective licensors.
+    Ringo Live or its respective licensors.
   </p>
 
   <p>
-    Biho Live is committed to ensuring that the app is as useful,
+    Ringo Live is committed to ensuring that the app is as useful,
     reliable, and efficient as possible.
   </p>
 
@@ -66,7 +66,7 @@ const htmlData = r"""
   </p>
 
   <p>
-    The Biho Live app may store and process personal data that you provide
+    The Ringo Live app may store and process personal data that you provide
     to us in order to provide and improve the Service.
   </p>
 
@@ -79,7 +79,7 @@ const htmlData = r"""
     Jailbreaking or rooting may remove software restrictions imposed by
     the official operating system and could make your device vulnerable
     to malware, viruses, malicious programs, or other security risks.
-    It may also cause Biho Live to stop working properly.
+    It may also cause Ringo Live to stop working properly.
   </p>
 
   <div>
@@ -126,12 +126,12 @@ const htmlData = r"""
   <p><strong>Internet Connection</strong></p>
 
   <p>
-    Certain functions of Biho Live require an active internet connection.
+    Certain functions of Ringo Live require an active internet connection.
     The connection may be provided through Wi-Fi or your mobile network.
   </p>
 
   <p>
-    Biho Live cannot be held responsible if some or all features of the app
+    Ringo Live cannot be held responsible if some or all features of the app
     are unavailable because you do not have an internet connection,
     sufficient mobile data, or reliable network coverage.
   </p>
@@ -156,7 +156,7 @@ const htmlData = r"""
   <p><strong>Device Responsibility</strong></p>
 
   <p>
-    Biho Live cannot accept responsibility for problems caused by
+    Ringo Live cannot accept responsibility for problems caused by
     your device being unavailable, unsupported, damaged, out of battery,
     or unable to connect to the Service.
   </p>
@@ -174,13 +174,13 @@ const htmlData = r"""
   </p>
 
   <p>
-    Biho Live cannot guarantee that all third-party information,
+    Ringo Live cannot guarantee that all third-party information,
     services, or content will always be available, complete, accurate,
     or error-free.
   </p>
 
   <p>
-    To the extent permitted by applicable law, Biho Live shall not be
+    To the extent permitted by applicable law, Ringo Live shall not be
     responsible for losses resulting from your reliance on third-party
     information or services available through the app.
   </p>
@@ -188,7 +188,7 @@ const htmlData = r"""
   <p><strong>App Updates</strong></p>
 
   <p>
-    We may update Biho Live from time to time to improve performance,
+    We may update Ringo Live from time to time to improve performance,
     security, compatibility, features, and user experience.
   </p>
 
@@ -203,7 +203,7 @@ const htmlData = r"""
   </p>
 
   <p>
-    We do not guarantee that Biho Live will always support every
+    We do not guarantee that Ringo Live will always support every
     operating system version or device.
   </p>
 
@@ -234,7 +234,7 @@ const htmlData = r"""
   <p><strong>User Conduct</strong></p>
 
   <p>
-    You agree to use Biho Live responsibly and in accordance with
+    You agree to use Ringo Live responsibly and in accordance with
     applicable laws and these Terms and Conditions.
   </p>
 
@@ -265,7 +265,7 @@ const htmlData = r"""
   <p><strong>Virtual Items and Features</strong></p>
 
   <p>
-    Biho Live may provide virtual items, gifts, coins, diamonds,
+    Ringo Live may provide virtual items, gifts, coins, diamonds,
     subscriptions, VIP features, or other digital features.
   </p>
 

@@ -50,8 +50,7 @@ void main() {
     ]);
     await showLeaderboard(tester);
 
-    expect(controller.hostLoads, 1);
-    expect(controller.contributorLoads, 1);
+    expect(controller.fallbackChecks, 1);
     expect(find.text('Top Ranking'), findsOneWidget);
     expect(find.byType(SvgPicture), findsOneWidget);
     final second = tester.getCenter(find.byKey(const ValueKey('podium-2')));
@@ -95,8 +94,7 @@ void main() {
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, 400));
     await tester.pumpAndSettle();
-    expect(controller.contributorLoads, 2);
-    expect(controller.hostLoads, 1);
+    expect(controller.fallbackChecks, 2);
 
     await tester.tap(find.text('Top Hosts'));
     await tester.pumpAndSettle();
@@ -135,7 +133,7 @@ void main() {
     expect(find.text('No rankings yet'), findsOneWidget);
     await tester.drag(find.byType(CustomScrollView), const Offset(0, 400));
     await tester.pumpAndSettle();
-    expect(controller.hostLoads, 2);
+    expect(controller.fallbackChecks, 2);
     expect(tester.takeException(), isNull);
   });
 
@@ -183,6 +181,7 @@ TopHost _profile(
   bool longContent = false,
 }) => TopHost.fromJson({
   'uid': 100 + rank,
+  'level': longContent ? {'level': 99} : null,
   if (includeRank) 'rank': rank,
   'full_name': longContent
       ? 'A very long leaderboard display name $rank'
@@ -192,16 +191,10 @@ TopHost _profile(
 });
 
 class _LeaderboardController extends LiveStreamingController {
-  int hostLoads = 0;
-  int contributorLoads = 0;
+  int fallbackChecks = 0;
 
   @override
-  Future<void> loadTopHostList() async {
-    hostLoads++;
-  }
-
-  @override
-  Future<void> loadTopContributorList() async {
-    contributorLoads++;
+  Future<void> loadMissingRankings() async {
+    fallbackChecks++;
   }
 }

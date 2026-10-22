@@ -229,7 +229,7 @@ class HelperFunctions {
 
     String customUrl = '$baseUrlAppLink/streaming/?data=$encoded';
 
-    String desc = '$title is live on Biho Live! Join now:\n$customUrl';
+    String desc = '$title is live on Ringo Live! Join now:\n$customUrl';
 
     await SharePlus.instance.share(
       ShareParams(text: desc, subject: title),

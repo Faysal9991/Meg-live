@@ -1,5 +1,3 @@
-import 'package:doyel_live/app/utils/constants.dart';
-
 // Real Device
 // const host = '192.168.0.205:8000';
 // Android Emulator
@@ -16,7 +14,7 @@ const _baseUrl = '$kDomain/api/v1';
 const baseUrlAppLink = 'https://$host';
 const appLinkScheme = 'biholive';
 const kPlayStoreUrl =
-    'https://play.google.com/store/apps/details?id=com.biholive.net';
+    'https://play.google.com/store/apps/details?id=com.maxliveonline.org.bd';
 //Auth
 const kLoginUsingFirebaseUrl = '$_baseUrl/auth/login/';
 const kLogoutUrl = '$_baseUrl/auth/logout/';
@@ -202,14 +200,19 @@ String kWebSocketLivekitStreamingUrl({
   required String uniqueDeviceId,
   required String deviceName,
 }) {
-  deviceName = refineDeviceName(deviceName: deviceName);
+  // The dashboard route only accepts ASCII letters, digits and underscores.
+  String routeSegment(String value) {
+    final sanitized = value.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    return sanitized.isEmpty ? 'unknown' : sanitized;
+  }
+
   return _webSocketUrl(
     pathSegments: [
       'ws',
       'livekit-streaming',
       roomName.toString(),
-      uniqueDeviceId,
-      deviceName,
+      routeSegment(uniqueDeviceId),
+      routeSegment(deviceName),
     ],
     query: userId.toString(),
   );

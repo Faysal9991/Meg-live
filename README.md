@@ -1,3 +1,3 @@
-# doyel_live
+# Ringo Live
 
 Live Streaming App.

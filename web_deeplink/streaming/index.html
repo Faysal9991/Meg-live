@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Biho Live</title>
-  <meta property="og:title" content="Watch live on Biho Live">
-  <meta property="og:description" content="Tap to join the live room in the Biho Live app.">
+  <title>Ringo Live</title>
+  <meta property="og:title" content="Watch live on Ringo Live">
+  <meta property="og:description" content="Tap to join the live room in the Ringo Live app.">
   <style>
     body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
            font-family: system-ui, sans-serif; background: #111; color: #fff; text-align: center; }
@@ -15,18 +15,18 @@
 </head>
 <body>
   <div>
-    <h2>Opening Biho Live…</h2>
-    <a id="install" href="https://play.google.com/store/apps/details?id=com.biholive.net">Get Biho Live</a>
+    <h2>Opening Ringo Live…</h2>
+    <a id="install" href="https://play.google.com/store/apps/details?id=com.maxliveonline.org.bd">Get Ringo Live</a>
   </div>
   <script>
     // Reached only when Android did not hand the https link to the app
     // (app not installed, or link opened inside an in-app browser).
-    var PLAY = 'https://play.google.com/store/apps/details?id=com.biholive.net';
+    var PLAY = 'https://play.google.com/store/apps/details?id=com.maxliveonline.org.bd';
     var query = window.location.search || '';
     if (/android/i.test(navigator.userAgent)) {
       // Opens the app if installed, otherwise Chrome follows the Play Store fallback.
       window.location.href = 'intent://streaming' + query +
-        '#Intent;scheme=biholive;package=com.biholive.net;S.browser_fallback_url=' +
+        '#Intent;scheme=biholive;package=com.maxliveonline.org.bd;S.browser_fallback_url=' +
         encodeURIComponent(PLAY) + ';end';
       // Browsers without intent:// support stay on this page; send them to the store.
       setTimeout(function () { if (!document.hidden) window.location.href = PLAY; }, 2500);

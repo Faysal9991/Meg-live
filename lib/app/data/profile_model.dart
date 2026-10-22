@@ -8,6 +8,7 @@ class Profile {
   int? reseller_purchased_diamonds;
   ProfileUser? user;
   List<dynamic>? followers, blocks;
+  int? friends_count, following_count;
   // # 'iso_code','iso3_code','phone_code','country_name'
 
   String? login_type,
@@ -44,6 +45,12 @@ class Profile {
           ? ProfileUser.fromJson(json['user'])
           : null,
       followers = json['followers'] ?? <dynamic>[],
+      friends_count = _optionalSocialCount(
+        json['friends_count'] ?? json['friends'],
+      ),
+      following_count = _optionalSocialCount(
+        json['following_count'] ?? json['following'],
+      ),
       blocks = json['blocks'] ?? <dynamic>[],
       full_name = json['full_name'],
       login_type = json['login_type'],
@@ -62,6 +69,12 @@ class Profile {
       be_moderator_datetime = json['be_moderator_datetime'],
       registered_date = json['registered_date'],
       updated_date = json['updated_date'];
+
+  static int? _optionalSocialCount(dynamic value) {
+    if (value is List) return value.length;
+    final count = int.tryParse('$value');
+    return count != null && count >= 0 ? count : null;
+  }
 
   static dynamic _parseVvipOrVipPreference(dynamic value) {
     if (value == null || value == '') {
@@ -119,6 +132,8 @@ class Profile {
     'vvip_or_vip_preference': jsonEncode(vvip_or_vip_preference),
     'entry_effect': entryEffect?.toJson(),
     'followers': followers,
+    'friends_count': friends_count,
+    'following_count': following_count,
     'blocks': blocks,
     'full_name': full_name,
     'login_type': login_type,

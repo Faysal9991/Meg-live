@@ -6,7 +6,7 @@ import 'package:doyel_live/app/modules/live_streaming/views/broadcast/live_strea
 import 'package:doyel_live/app/modules/live_streaming/views/others/slides_top_agents_view.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/widgets/home_banner_carousel.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
-import 'package:doyel_live/app/widgets/live_overlay_widgets.dart';
+import 'package:doyel_live/app/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:doyel_live/app/modules/live_streaming/models/live_room_update_models.dart';
 import 'package:get/get.dart';
@@ -64,7 +64,8 @@ class StreamingListView extends StatelessWidget {
 
             if (_livekitStreamingController
                 .topSlidingAgentRankingList
-                .isNotEmpty)
+                .isNotEmpty ||
+                _livekitStreamingController.isRankingLoading(TOP_AGENCIES_UPDATE))
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(16, 8, 16, 5),
@@ -79,7 +80,7 @@ class StreamingListView extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/logos/biho.png',
+                      'assets/logos/ringo.png',
                       width: 100,
                       height: 100,
                     ),

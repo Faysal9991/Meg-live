@@ -46,10 +46,25 @@ void main() {
     expect(uri.hasPort, server.hasPort);
     expect(
       uri.path,
-      '/ws/livekit-streaming/livekit_streamings/device-id/Test%20Phone/',
+      '/ws/livekit-streaming/livekit_streamings/device_id/Test_Phone/',
     );
     expect(uri.query, '42');
     expect(uri.authority, server.authority);
+  });
+
+  test('dashboard device segments match the backend route', () {
+    final uri = Uri.parse(
+      kWebSocketLivekitStreamingUrl(
+        roomName: 'livekit_streamings',
+        userId: 202,
+        uniqueDeviceId: 'ABC-123/xyz',
+        deviceName: 'Phone (Pro) / বাংলাদেশ',
+      ),
+    );
+    expect(uri.pathSegments[3], matches(r'^[a-zA-Z0-9_]+$'));
+    expect(uri.pathSegments[4], matches(r'^[a-zA-Z0-9_]+$'));
+    expect(uri.query, '202');
+    expect(uri.query, isNot(contains('user_id=')));
   });
 
   test('chat websocket URL reuses the current server port', () {

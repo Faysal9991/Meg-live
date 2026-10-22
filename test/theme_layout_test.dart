@@ -50,7 +50,7 @@ const _items = [
 
 Widget _shell(Widget body, int selected) => Scaffold(
   appBar: AppBar(
-    title: const Text('Biho Live'),
+    title: const Text('Ringo Live'),
     actions: [
       Padding(
         padding: const EdgeInsets.only(right: 12),

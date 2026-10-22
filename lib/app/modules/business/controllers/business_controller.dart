@@ -11,6 +11,10 @@ import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:doyel_live/app/utils/drf_api_key.dart';
 
 class BusinessController extends GetxController {
+  BusinessController({Dio? dio})
+      : _dio = dio == null ? createApiDio() : configureApiDio(dio);
+
+  final Dio _dio;
   final AuthController authController = Get.find();
 
   final loadingModeratorRequest = false.obs;
@@ -274,17 +278,18 @@ class BusinessController extends GetxController {
     }
   }
 
-  void loadResellerRechargeHistoryList() async {
+  Future<void> loadResellerRechargeHistoryList() async {
     loadingResellerRechargeHistoryList.value = true;
-    final dio = createApiDio();
     try {
-      final response = await dio.get(
+      final response = await _dio.get(
         kResellerRechargeHistoryListUrl,
-        options: Options(headers: {
-          'accept': '*/*',
-          'X-Api-Key': DRF_API_KEY,
-          'Authorization': 'Token ${authController.token.value}',
-        }),
+        options: Options(
+          headers: {
+            'accept': '*/*',
+            'X-Api-Key': DRF_API_KEY,
+            'Authorization': 'Token ${authController.token.value}',
+          },
+        ),
       );
       int? statusCode = response.statusCode;
       loadingResellerRechargeHistoryList.value = false;
@@ -297,13 +302,20 @@ class BusinessController extends GetxController {
     }
   }
 
-  void tryToRechargeResellerToClient({
+  Future<void> tryToRechargeResellerToClient({
     required int customerId,
     required int diamonds,
   }) async {
     // No idempotency key on this endpoint: never allow a second submission
     // while one is in flight.
     if (loadingResellerRecharge.value) return;
+    if (customerId <= 0 || diamonds <= 0) {
+      Get.snackbar(
+        'Invalid recharge',
+        'User ID and diamonds must be positive.',
+      );
+      return;
+    }
     if (diamonds > authController.profile.value.diamonds!) {
       Get.snackbar(
         'Failed',
@@ -317,9 +329,10 @@ class BusinessController extends GetxController {
     }
     loadingResellerRecharge.value = true;
     dynamic data = {'customer_id': customerId, 'diamonds': diamonds};
-    final dio = createApiDio();
+    final resellerId = authController.profile.value.user?.uid;
+    final token = authController.token.value;
     try {
-      final response = await dio.post(
+      final response = await _dio.post(
         kResellerRechargeCreateUrl,
         options: Options(
           headers: {
@@ -330,20 +343,20 @@ class BusinessController extends GetxController {
         ),
         data: data,
       );
+      if (resellerId != authController.profile.value.user?.uid ||
+          token != authController.token.value) {
+        return;
+      }
       int? statusCode = response.statusCode;
       if (statusCode == 201) {
         final body = response.data is Map ? response.data as Map : const {};
         if (body['reseller_history'] != null) {
           resellerRechargeHistoryList.insert(0, body['reseller_history']);
         }
-        _applyRechargeProfiles(
-          body: body,
-          customerId: customerId,
-          diamonds: diamonds,
-        );
+        await _applyRechargeProfiles(body: body, customerId: customerId);
         Get.snackbar(
           'Success',
-          "You have recharged $diamonds daimonds",
+          "You have recharged $diamonds diamonds",
           backgroundColor: AppColors.success,
           colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
@@ -358,6 +371,8 @@ class BusinessController extends GetxController {
           colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
+      } else {
+        await _refreshAfterUncertainRecharge(customerId: customerId);
       }
     } on DioException catch (e) {
       final statusCode = e.response?.statusCode;
@@ -377,6 +392,7 @@ class BusinessController extends GetxController {
           colorText: AppColors.onLight,
           snackPosition: SnackPosition.BOTTOM,
         );
+        await authController.clearSessionAndGoToAuth();
       } else {
         // The transfer may have committed; establish the result from the
         // server instead of assuming success or failure.
@@ -398,11 +414,10 @@ class BusinessController extends GetxController {
 
   /// Applies the 201 profiles to the right users: `reseller_profile` to the
   /// logged-in reseller, `customer_profile` only to the searched customer.
-  void _applyRechargeProfiles({
+  Future<void> _applyRechargeProfiles({
     required Map body,
     required int customerId,
-    required int diamonds,
-  }) {
+  }) async {
     final resellerProfile = body['reseller_profile'];
     if (resellerProfile is Map &&
         _uidOf(resellerProfile) == authController.profile.value.user?.uid) {
@@ -416,22 +431,32 @@ class BusinessController extends GetxController {
     if (_uidOf(searched) != customerId) return;
     final customerProfile = body['customer_profile'];
     if (customerProfile is Map && _uidOf(customerProfile) == customerId) {
-      searched.addAll(Map<String, dynamic>.from(customerProfile));
+      profileController.searchedProfile.value = Profile.fromJson(
+        searched,
+      ).mergedJson(Map<String, dynamic>.from(customerProfile));
     } else {
-      // Backend without customer_profile: keep the previous local display.
-      searched['diamonds'] = (searched['diamonds'] ?? 0) + diamonds;
+      // Older backends omit customer_profile. Recover server values rather
+      // than inventing a wallet balance or buyer level locally.
+      final customer = await profileController.fetchProfile(userId: customerId);
+      if (customer is Map &&
+          _uidOf(customer) == customerId &&
+          _uidOf(profileController.searchedProfile) == customerId) {
+        profileController.searchedProfile.value = Profile.fromJson(
+          searched,
+        ).mergedJson(Map<String, dynamic>.from(customer));
+      }
     }
-    profileController.searchedProfile.value = searched;
   }
 
   Future<void> _refreshAfterUncertainRecharge({required int customerId}) async {
     final ProfileController profileController = Get.find();
-    loadResellerRechargeHistoryList();
+    final historyRecovery = loadResellerRechargeHistoryList();
     final ownUid = authController.profile.value.user?.uid;
     final results = await Future.wait([
       if (ownUid != null) profileController.fetchProfile(userId: ownUid),
       profileController.fetchProfile(userId: customerId),
     ]);
+    await historyRecovery;
     if (ownUid != null &&
         results.first is Map &&
         _uidOf(results.first) == ownUid) {
@@ -450,7 +475,6 @@ class BusinessController extends GetxController {
   void _applyOwnProfile(Map<String, dynamic> profileData) {
     // Partial payloads must not erase fields the response did not include.
     final merged = authController.profile.value.mergedJson(profileData);
-    authController.profile.value = Profile();
     authController.profile.value = Profile.fromJson(merged);
     authController.preferences.setString('profile', jsonEncode(merged));
   }

@@ -149,7 +149,7 @@ void main() {
     (tester) async {
       await openLogin(tester);
       const audience =
-          '976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com';
+          '1028099754767-b9nvqcl8egtdevcoegjmkcmffj6he59i.apps.googleusercontent.com';
       final payload = base64Url.encode(
         utf8.encode(
           jsonEncode({'aud': audience, 'email': 'private@example.test'}),

@@ -6,6 +6,18 @@ import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('profile social counts preserve missing values and server counts', () {
+    final unknown = Profile.fromJson({});
+    expect(unknown.friends_count, isNull);
+    expect(unknown.following_count, isNull);
+    final profile = Profile.fromJson({
+      'friends_count': 4,
+      'following': [11, 22],
+    });
+    final updated = Profile.fromJson(profile.mergedJson({'diamonds': 700}));
+    expect(updated.friends_count, 4);
+    expect(updated.following_count, 2);
+  });
   test('profile parses active entry effect from top-level response', () {
     final profile = Profile.fromJson({
       'entry_effect': {
@@ -53,6 +65,17 @@ void main() {
     expect(banner.image, contains('banner'));
     expect(host.uid, 123);
     expect(host.isAgent, isTrue);
+  });
+
+  test('dashboard rankings identify accounts by user.uid', () {
+    final host = TopHost.fromJson({
+      'id': 55,
+      'uid': 999,
+      'user': {'uid': 202},
+      'level': null,
+    });
+    expect(host.uid, 202);
+    expect(host.level, isNull);
   });
 
   test('king package state parses full response', () {

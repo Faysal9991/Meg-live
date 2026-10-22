@@ -1,11 +1,13 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.biholive.net",
+      "package_name": "com.maxliveonline.org.bd",
       "sha256_cert_fingerprints": [
-        "43:7E:5A:1F:5E:F0:6F:43:07:A2:EF:51:B8:A6:C5:89:59:75:AB:95:FE:11:B4:33:29:50:1C:37:87:93:05:2F"
+        "41:88:58:0C:D0:17:FE:48:88:61:E6:35:EA:26:11:9B:3C:1B:A2:A1:73:1D:5F:FE:87:B3:44:8B:61:D8:8A:FA"
       ]
     }
   }

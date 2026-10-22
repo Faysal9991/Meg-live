@@ -20,7 +20,7 @@ val keystorePath = keystoreProperties.getProperty("storeFile")?.let { path ->
     configuredFile
 }
 android {
-    namespace = "com.biholive.net"
+    namespace = "com.maxliveonline.org.bd"
     compileSdk = 36
     // ndkVersion = flutter.ndkVersion
     ndkVersion = "28.2.13676358"
@@ -40,7 +40,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.biholive.net"
+        applicationId = "com.maxliveonline.org.bd"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -63,6 +63,11 @@ android {
     getByName("debug") {
         // Use the release key when key.properties is present (e.g. for
         // Google Sign-In SHA-1); otherwise fall back to the default debug key.
+        if (keystorePath != null) {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+    getByName("profile") {
         if (keystorePath != null) {
             signingConfig = signingConfigs.getByName("release")
         }

@@ -72,17 +72,21 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final list =
-          _livekitStreamingController.topSlidingAgentRankingList;
+      final list = _livekitStreamingController.topSlidingAgentRankingList;
 
       if (list.isEmpty) {
+        if (_livekitStreamingController.isRankingLoading(TOP_AGENCIES_UPDATE)) {
+          return const SizedBox(
+            height: 68,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
         return const SizedBox.shrink();
       }
 
       // Do not present stale ranking data as fully current
       // while the connection is reconnecting.
-      final reconnecting =
-          _livekitStreamingController.isRankingReconnecting(
+      final reconnecting = _livekitStreamingController.isRankingReconnecting(
         TOP_AGENCIES_UPDATE,
       );
 
@@ -92,15 +96,21 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (reconnecting)
+              const Text(
+                'Reconnecting…',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
             CarouselSlider.builder(
               options: CarouselOptions(
-                autoPlay: list.length > 1 &&
-                    !MediaQuery.disableAnimationsOf(context),
-                height: 68 +
-                    (MediaQuery.textScalerOf(context)
-                                .scale(13) -
-                            13)
-                        .clamp(0, 13) *
+                autoPlay:
+                    list.length > 1 && !MediaQuery.disableAnimationsOf(context),
+                height:
+                    68 +
+                    (MediaQuery.textScalerOf(context).scale(13) - 13).clamp(
+                          0,
+                          13,
+                        ) *
                         3,
                 viewportFraction: 1.0,
                 padEnds: false,
@@ -108,8 +118,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                 initialPage: 0,
                 enableInfiniteScroll: list.length > 1,
                 autoPlayInterval: const Duration(seconds: 3),
-                autoPlayAnimationDuration:
-                    const Duration(milliseconds: 700),
+                autoPlayAnimationDuration: const Duration(milliseconds: 700),
                 autoPlayCurve: Curves.easeOutCubic,
               ),
               itemCount: list.length,
@@ -159,6 +168,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
         _bannerGradients[colorIndex % _bannerGradients.length];
 
     return Container(
+      key: ValueKey(data['id'] ?? serial),
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(

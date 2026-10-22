@@ -1,48 +1,40 @@
 {
   "project_info": {
-    "project_number": "976789308527",
-    "project_id": "biholive-a0045",
-    "storage_bucket": "biholive-a0045.firebasestorage.app"
+    "project_number": "728790055596",
+    "project_id": "max-live-af375",
+    "storage_bucket": "max-live-af375.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:976789308527:android:4e19aefee883728a46399a",
+        "mobilesdk_app_id": "1:728790055596:android:198565fba5b23037943d09",
         "android_client_info": {
-          "package_name": "com.biholive.net"
+          "package_name": "com.maxliveonline.org.bd"
         }
       },
       "oauth_client": [
         {
-          "client_id": "976789308527-tim9cljlmf9nleee5l0ombejg7t1db3d.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.biholive.net",
-            "certificate_hash": "594629220a2d1e95cd477a695dcd6b855ae99616"
-          }
-        },
-        {
-          "client_id": "976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com",
+          "client_id": "728790055596-me9hoir06brttbf41lva9onuokr4fvts.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDU7uA9rG8ILQpFs4Ih2u_kVMPGTfqboc8"
+          "current_key": "AIzaSyCIjokLJxAUnc1oDlhCVRVe9_J2pgXajfU"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com",
+              "client_id": "728790055596-me9hoir06brttbf41lva9onuokr4fvts.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "976789308527-o05g8bo8mcsi56ri8pllbdl2bfkillrm.apps.googleusercontent.com",
+              "client_id": "728790055596-hg8om9j7du05j6lpsk4n764qcs8l304u.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.biholive.net"
+                "bundle_id": "com.MaxliveMe.com"
               }
             }
           ]

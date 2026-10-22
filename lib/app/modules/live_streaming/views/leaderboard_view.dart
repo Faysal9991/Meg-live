@@ -34,13 +34,10 @@ class _LeaderboardViewState extends State<LeaderboardView> {
   @override
   void initState() {
     super.initState();
-    unawaited(widget.controller.loadTopHostList());
-    unawaited(widget.controller.loadTopContributorList());
+    unawaited(widget.controller.loadMissingRankings());
   }
 
-  Future<void> _refresh() => _selectedTab == 0
-      ? widget.controller.loadTopHostList()
-      : widget.controller.loadTopContributorList();
+  Future<void> _refresh() => widget.controller.loadMissingRankings();
 
   String _displayName(TopHost profile) =>
       profile.uid == widget.currentUserId ? 'You' : profile.fullName;
@@ -48,6 +45,12 @@ class _LeaderboardViewState extends State<LeaderboardView> {
   String _metric(TopHost profile) =>
       (_selectedTab == 0 ? profile.giftDiamonds : profile.diamondsContributed)
           .toString();
+
+  String? _levelLabel(TopHost profile) {
+    final level = profile.level;
+    final number = level is Map ? int.tryParse('${level['level']}') : null;
+    return number == null ? null : 'Lv $number';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +99,6 @@ class _LeaderboardViewState extends State<LeaderboardView> {
         child: SafeArea(
           child: Column(
             children: [
-              const SizedBox(height: _toolbarHeight + 12),
               _buildTabSwitcher(),
               const SizedBox(height: 20),
               Expanded(child: Obx(_buildContent)),
@@ -172,12 +174,13 @@ class _LeaderboardViewState extends State<LeaderboardView> {
     final profiles = _selectedTab == 0
         ? controller.topHostList
         : controller.topContributorList;
-    final loading = _selectedTab == 0
-        ? controller.loadingTopHostList.value
-        : controller.loadingTopContributorList.value;
-    final reconnecting = controller.isRankingReconnecting(
-      _selectedTab == 0 ? TOP_HOSTS_UPDATE : TOP_CONTRIBUTORS_UPDATE,
-    );
+    final type = _selectedTab == 0 ? TOP_HOSTS_UPDATE : TOP_CONTRIBUTORS_UPDATE;
+    final loading =
+        controller.isRankingLoading(type) ||
+        (_selectedTab == 0
+            ? controller.loadingTopHostList.value
+            : controller.loadingTopContributorList.value);
+    final reconnecting = controller.isRankingReconnecting(type);
 
     if (loading && profiles.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -189,7 +192,7 @@ class _LeaderboardViewState extends State<LeaderboardView> {
           profile: profiles[index],
           rank: profiles[index].rank > 0 ? profiles[index].rank : index + 1,
         ),
-    ]..sort((a, b) => a.rank.compareTo(b.rank));
+    ];
     final podium = entries.where((entry) => entry.rank <= 3).toList()
       ..sort((a, b) {
         const order = {2: 0, 1: 1, 3: 2};
@@ -245,7 +248,7 @@ class _LeaderboardViewState extends State<LeaderboardView> {
 
   // Extra space lets podium labels grow with the system text size.
   double get _podiumExtraHeight =>
-      math.max(0, MediaQuery.textScalerOf(context).scale(14) - 14) * 2.5;
+      16 + math.max(0, MediaQuery.textScalerOf(context).scale(14) - 14) * 4;
 
   Widget _buildPodium(List<_RankedProfile> entries) {
     return Padding(
@@ -341,6 +344,14 @@ class _LeaderboardViewState extends State<LeaderboardView> {
                       ),
                     ),
                   ),
+                  if (_levelLabel(entry.profile) case final label?)
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white70,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -451,15 +462,25 @@ class _LeaderboardViewState extends State<LeaderboardView> {
           _buildAvatar(entry.profile, 20),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              _displayName(entry.profile),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: isYou ? Colors.white : AppColors.textPrimary,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _displayName(entry.profile),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: isYou ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+                if (_levelLabel(entry.profile) case final label?)
+                  Text(
+                    label,
+                    style: const TextStyle(fontSize: 11, color: Colors.white70),
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: 8),

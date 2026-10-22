@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'package:doyel_live/app/theme/app_colors.dart';
-import 'dart:convert';
-import 'dart:isolate';
 
 import 'package:camera/camera.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:dio/dio.dart';
-import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/leaderboard_view.dart';
@@ -17,11 +13,7 @@ import 'package:doyel_live/app/modules/profile/controllers/profile_controller.da
 import 'package:doyel_live/app/modules/profile/views/profile_view.dart';
 // import 'package:doyel_live/app/modules/profile/views/search_view.dart';
 import 'package:doyel_live/app/utils/NetworkConnectivity.dart';
-import 'package:doyel_live/app/utils/api_client.dart';
-import 'package:doyel_live/app/utils/api_endpoints.dart';
-import 'package:doyel_live/app/utils/api_logger.dart';
 import 'package:doyel_live/app/utils/constants.dart';
-import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/firebase_functions.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/helper_functions.dart';
 import 'package:doyel_live/app/widgets/app_design_widgets.dart';
@@ -74,53 +66,8 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
 
   late NetworkConnectivity _networkConnectivity;
   StreamSubscription<dynamic>? _networkSubscription;
-
-  void _useIsolateToFetchProfile() async {
-    var recievePort = ReceivePort(); //creating new port to listen data
-    await Isolate.spawn(_fetchProfile, [
-      recievePort.sendPort,
-      _authController.token.value,
-      _authController.profile.value.user!.uid!,
-    ]); //spawing/creating new thread as isolates.
-    recievePort.listen((data) {
-      //listening data from isolate
-      if (data != null) {
-        ApiLogger.info(
-          'Profile payload received and applied to AuthController.',
-          tag: 'PROFILE DATA',
-          data: data['profile'],
-        );
-        _authController.profile.value = Profile();
-        _authController.profile.value = Profile.fromJson(data['profile']);
-        _authController.preferences.setString(
-          'profile',
-          jsonEncode(data['profile']),
-        );
-        _livekitStreamingController.liveRoomSocketBaseUrl =
-            data['websocket_base_url'];
-      }
-    });
-  }
-
-  void _useIsolateToFetchGiftList() async {
-    var recievePort = ReceivePort(); //creating new port to listen data
-    await Isolate.spawn(_fetchGiftList, [
-      recievePort.sendPort,
-      _authController.token.value,
-    ]); //spawing/creating new thread as isolates.
-    recievePort.listen((data) {
-      //listening data from isolate
-      if (data != null) {
-        // Loading gifts
-        _livekitStreamingController.listNormalGift.clear();
-        _livekitStreamingController.listAnimatedGift.clear();
-        _livekitStreamingController.listNormalGift.addAll(data['normal_gifts']);
-        _livekitStreamingController.listAnimatedGift.addAll(
-          data['animated_gifts'],
-        );
-      }
-    });
-  }
+  StreamSubscription<bool>? _internetSubscription;
+  bool _wasBackgrounded = false;
 
   @override
   void initState() {
@@ -128,104 +75,80 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
 
     WidgetsBinding.instance.addObserver(this);
     _networkConnectivity = NetworkConnectivity.instance;
-    _initializeNetworkConnectivity();
 
     _authController = Get.find();
     _livekitStreamingController = Get.find();
     _navController = Get.put(NavController());
     _profileController = Get.put(ProfileController());
-    _livekitStreamingController.startLiveRoomListAutoRefresh();
+    _initializeNetworkConnectivity();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Same fetching during internet reconnection
-      _livekitStreamingController.refreshStreamingHomeFeed();
-    });
-
-    _authController.preferences.getBool('internet', defaultValue: false).listen(
-      (bool connected) {
-        if (connected) {
-          _performDuringInternetConnection();
-        } else {
-          _livekitStreamingController.isStreamingWebSocketConnected.value =
-              false;
-        }
-      },
-    );
+    _internetSubscription = _authController.preferences
+        .getBool('internet', defaultValue: false)
+        .distinct()
+        .listen((bool connected) {
+          if (_isDisposed) return;
+          if (connected) {
+            _performDuringInternetConnection();
+          } else {
+            _livekitStreamingController.isStreamingWebSocketConnected.value =
+                false;
+          }
+        });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _networkSubscription?.cancel();
     _isDisposed = true;
-    _livekitStreamingController.stopLiveRoomListAutoRefresh();
+    _networkSubscription?.cancel();
+    _internetSubscription?.cancel();
     _navController.dispose();
     _profileController.dispose();
     super.dispose();
   }
 
   void _performDuringInternetConnection() {
+    if (_isDisposed) return;
     _checkAndForceUpdate();
-
-    if (!_livekitStreamingController.isStreamingWebSocketConnected.value) {
-      _livekitStreamingController.isStreamingWebSocketConnected.value = true;
-      // _livekitStreamingController.initLiveListStateChanges();
-      if (!isFirstTime) {
-        _livekitStreamingController.refreshStreamingHomeFeed();
-      }
-      _livekitStreamingController.initWebSocketClient();
-
-      // _initWebSocketConnectionForGlobal();
-      _navController.tryUserDeviceInfoUpdate();
-      // TODO: Need to use this
-      if (_livekitStreamingController.listNormalGift.isEmpty) {
-        _useIsolateToFetchGiftList();
-      }
-      _useIsolateToFetchProfile();
-      if (isFirstTime) {
-        isFirstTime = false;
-
-        // Loading dynamic links
-        HelperFunctions().initDynamicLinks();
-
-        getFCMDeviceToken().then((token) {
-          updateFCMDeviceToken(fcmDeviceToken: token!);
-        });
-        onFCMDeviceTokenRefresh();
-      }
+    unawaited(_livekitStreamingController.initWebSocketClient());
+    // The socket library reconnects automatically; connectivity notifications
+    // must not start another round of dashboard/profile API requests.
+    if (!isFirstTime) return;
+    isFirstTime = false;
+    unawaited(_livekitStreamingController.refreshStreamingHomeFeed());
+    unawaited(_livekitStreamingController.refreshLoggedInProfile());
+    _navController.tryUserDeviceInfoUpdate();
+    if (_livekitStreamingController.listNormalGift.isEmpty) {
+      _livekitStreamingController.fetchGiftList();
     }
+    HelperFunctions().initDynamicLinks();
+    getFCMDeviceToken().then((token) {
+      if (token != null) updateFCMDeviceToken(fcmDeviceToken: token);
+    });
+    onFCMDeviceTokenRefresh();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_isDisposed) return;
     switch (state) {
       case AppLifecycleState.resumed:
-        _isDisposed = false;
-        _livekitStreamingController.startLiveRoomListAutoRefresh();
-        // Socket events missed while paused: replace stale dashboard cards.
-        _livekitStreamingController.tryToLoadLiveRoomList();
         _initializeNetworkConnectivity();
+        unawaited(_livekitStreamingController.initWebSocketClient());
+        if (_wasBackgrounded) {
+          _wasBackgrounded = false;
+          unawaited(_livekitStreamingController.recoverDashboardState());
+        }
         _checkAndForceUpdate();
-
-        // print("app in resumed");
-        break;
-      case AppLifecycleState.inactive:
-        // print("app in inactive");
         break;
       case AppLifecycleState.paused:
-        _livekitStreamingController.stopLiveRoomListAutoRefresh();
-        // print("app in paused");
+      case AppLifecycleState.hidden:
+        _wasBackgrounded = true;
         break;
       case AppLifecycleState.detached:
-        // print("app in detached");
-        _isDisposed = true;
-        _livekitStreamingController.stopLiveRoomListAutoRefresh();
         _authController.preferences.setBool('internet', false);
-        _networkConnectivity.disposeStream();
-
         break;
-
-      case AppLifecycleState.hidden:
+      case AppLifecycleState.inactive:
         break;
     }
   }
@@ -361,7 +284,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
           child: AlertDialog(
             title: const Text('Update Required'),
             content: const Text(
-              'A new version is available on Play Store. Please update to continue using Biho Live.',
+              'A new version is available on Play Store. Please update to continue using Ringo Live.',
             ),
             actions: [
               FilledButton(
@@ -423,7 +346,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                   ? AppBar(
                       leading: Center(
                         child: Image.asset(
-                          'assets/logos/biho.png',
+                          'assets/logos/ringo.png',
                           width: 46,
                           height: 46,
                         ),
@@ -533,58 +456,5 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
         ),
       ),
     );
-  }
-}
-
-void _fetchGiftList(List<dynamic> args) async {
-  SendPort sendPort = args[0];
-  String token = args[1];
-  final dio = createApiDio();
-  try {
-    final response = await dio.get(
-      kGiftListUrl,
-      options: Options(
-        headers: {
-          'accept': '*/*',
-          'Authorization': 'Token $token',
-          'X-Api-Key': DRF_API_KEY,
-        },
-      ),
-    );
-    int? statusCode = response.statusCode;
-    if (statusCode == 200) {
-      Isolate.exit(sendPort, response.data);
-    }
-    Isolate.exit(sendPort);
-  } catch (e) {
-    // Nothing
-    Isolate.exit(sendPort);
-  }
-}
-
-void _fetchProfile(List<dynamic> args) async {
-  SendPort sendPort = args[0];
-  String token = args[1];
-  int userId = args[2];
-  final dio = createApiDio();
-  final url = kProfileRetrieveUrl(userId);
-  try {
-    final response = await dio.get(
-      url,
-      options: Options(
-        headers: {
-          'accept': '*/*',
-          'Authorization': 'Token $token',
-          'X-Api-Key': DRF_API_KEY,
-        },
-      ),
-    );
-    int? statusCode = response.statusCode;
-    if (statusCode == 200) {
-      Isolate.exit(sendPort, response.data);
-    }
-    Isolate.exit(sendPort);
-  } catch (_) {
-    Isolate.exit(sendPort);
   }
 }

@@ -47,29 +47,30 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyC9PzXA7j97u6q0JvMULrc4vx2kNtToWWk',
-    appId: '1:976789308527:web:c8e96b11f51dc1b046399a',
-    messagingSenderId: '976789308527',
-    projectId: 'biholive-a0045',
-    authDomain: 'biholive-a0045.firebaseapp.com',
-    storageBucket: 'biholive-a0045.firebasestorage.app',
-    measurementId: 'G-JX62PWCQHT',
+    apiKey: 'AIzaSyBh4S-Zys89znVombw6ymGzumq9L-HlozI',
+    appId: '1:728790055596:web:3524b168a657c219943d09',
+    messagingSenderId: '728790055596',
+    projectId: 'max-live-af375',
+    authDomain: 'max-live-af375.firebaseapp.com',
+    storageBucket: 'max-live-af375.firebasestorage.app',
+    measurementId: 'G-C75LR2P42R',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDU7uA9rG8ILQpFs4Ih2u_kVMPGTfqboc8',
-    appId: '1:976789308527:android:4e19aefee883728a46399a',
-    messagingSenderId: '976789308527',
-    projectId: 'biholive-a0045',
-    storageBucket: 'biholive-a0045.firebasestorage.app',
+    apiKey: 'AIzaSyCIjokLJxAUnc1oDlhCVRVe9_J2pgXajfU',
+    appId: '1:728790055596:android:198565fba5b23037943d09',
+    messagingSenderId: '728790055596',
+    projectId: 'max-live-af375',
+    storageBucket: 'max-live-af375.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAvDrs0TEFQ-UAiOk-1nKS1YHMuBetZtoo',
-    appId: '1:976789308527:ios:f1b9ad9b7625070146399a',
-    messagingSenderId: '976789308527',
-    projectId: 'biholive-a0045',
-    storageBucket: 'biholive-a0045.firebasestorage.app',
-    iosBundleId: 'com.biholive.net',
+    apiKey: 'AIzaSyBYUjNt6NO9Tnizm1nAr2G89TJMd4oyhqo',
+    appId: '1:728790055596:ios:b51d31929bde9f53943d09',
+    messagingSenderId: '728790055596',
+    projectId: 'max-live-af375',
+    storageBucket: 'max-live-af375.firebasestorage.app',
+    androidClientId:
+        '728790055596-7dlgcvi5c88pj79oo3sp3ggrbs8ogqr5.apps.googleusercontent.com',
+    iosBundleId: 'com.maxliveonline.org.bd',
   );
 }

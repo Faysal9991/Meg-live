@@ -1,178 +1,100 @@
-# Android Google sign-in
+# Ringo Live signing and Firebase configuration
 
-This app uses package `com.biholive.net`. Its Firebase Android app is
-`1:976789308527:android:4e19aefee883728a46399a` in project `biholive-a0045`
-(project number `976789308527`). The current `android/app/google-services.json`
-contains Android OAuth clients and this Web application client:
+Updated 22 October 2026 from the local Max Live project at
+`/Users/smtanvirhasanfaysal/project/max_Live`.
 
-```text
-976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com
-```
+## App identity
 
-On Android, `GoogleAuthService` lets the Google Sign-In plugin read this web
-client from the generated `default_web_client_id` resource. There is no separate
-Dart default client ID overriding Android's Firebase configuration.
-`--dart-define=GOOGLE_SERVER_CLIENT_ID=YOUR_WEB_CLIENT_ID.apps.googleusercontent.com`
-overrides it; an empty override uses the native configuration. The value must
-be a **Web application** OAuth
-client. Android OAuth clients register the package/certificate pair in Google
-Cloud and are not passed as `serverClientId`.
+The visible Android, iOS, and Flutter app name is **Ringo Live**. Launcher icons,
+the in-app logo, and the diamond icon use Max Live's existing artwork.
 
-This flow sends a Google **ID token** directly to
-`https://biholive.com/api/v1/auth/login/` under the legacy field
-`server_auth_code`. It does not call Firebase Authentication. The backend must
-verify the Google token's signature, expiry, issuer, and audience; its allowed
-audience must include the web client used by the installed build.
+Both native platforms use `com.maxliveonline.org.bd`, matching the imported
+Firebase registrations. Android's namespace and `MainActivity` package, iOS
+Runner and test bundle identifiers, the Play Store URL, and the local
+`web_deeplink` files have been aligned. This is a different application identity
+from the previous `com.biholive.net` build. It installs separately and cannot be
+submitted as an update to the old package's store listing.
 
-## Investigation on October 5, 2026
+The backend remains `https://biholive.com`; existing streaming URL paths and
+the `biholive` custom URL scheme remain in use. Serve the updated
+`web_deeplink/.well-known/assetlinks.json` and streaming fallback page on that
+domain for verified links to recognize the new package and certificate. These
+files have only been updated locally. For Play-distributed builds, the asset
+links file must also include the actual Play App Signing certificate if it
+differs from the imported local key.
 
-Both debug and Play Store login were reported as failing. The local keystores
-and existing debug APK were inspected with `keytool` and `apksigner`:
+## Android signing
 
-| Certificate | SHA-1 | Current JSON snapshot |
-| --- | --- | --- |
-| Local debug keystore and debug APK | `86:BB:E8:E9:DE:BE:13:13:EB:F1:C3:84:05:D5:25:BA:99:6D:FF:DA` | No matching Android OAuth client |
-| Local release keystore, alias `upload` | `82:E7:79:C4:F7:AC:3C:DB:CE:25:2D:2D:69:F7:0D:AE:21:2E:EF:48` | Matching Android OAuth client |
-| Other Android OAuth client in JSON | `59:46:29:22:0A:2D:1E:95:CD:47:7A:69:5D:CD:6B:85:5A:E9:96:16` | Present; corresponding local key not identified |
+The active Max Live release key is copied to `android/upload-keystore.jks`.
+`android/key.properties` references `../upload-keystore.jks`, relative to
+`android/app`. Both files remain ignored by Git and have owner-only permissions.
+Passwords remain in the local properties file. Debug, profile, and release
+builds use this key when the properties file is present.
 
-Debug SHA-256:
+Public certificate fingerprints:
 
 ```text
-4A:19:2C:A7:D2:00:95:0C:E9:B9:19:6A:BA:C2:1A:C0:D2:E3:6C:F0:61:AB:42:43:7D:1B:03:03:95:46:DE:39
+SHA-1:   1A:A0:29:76:6D:43:FF:A0:EB:6B:A3:9F:74:A3:25:60:03:86:9F:D9
+SHA-256: 41:88:58:0C:D0:17:FE:48:88:61:E6:35:EA:26:11:9B:3C:1B:A2:A1:73:1D:5F:FE:87:B3:44:8B:61:D8:8A:FA
 ```
 
-Local release/upload SHA-256:
+## Firebase
 
-```text
-43:7E:5A:1F:5E:F0:6F:43:07:A2:EF:51:B8:A6:C5:89:59:75:AB:95:FE:11:B4:33:29:50:1C:37:87:93:05:2F
-```
+The following files were imported from Max Live:
 
-The fingerprints supplied as the Play Store certificate match the local
-release/upload key exactly. Confirm them against **App signing key certificate**
-in Play Console's App integrity page. The upload key and the Play app signing
-key can differ; local key inspection cannot establish the certificate used by
-a Play-installed APK.
+- `android/app/google-services.json`
+- `ios/Runner/GoogleService-Info.plist`
+- `lib/firebase_options.dart`
+- `firebase.json`
 
-The former Dart default web client matched the current JSON and generated
-debug resources. Android now reads the native configuration directly, so a
-future JSON update cannot leave an older hardcoded default in Dart. This does
-not resolve server-side certificate ownership or backend audience mismatches.
-Earlier release instructions named web client
-`107414380235-s5cmfapqeosv3r63d6g51e377vp4sdkq.apps.googleusercontent.com`.
-If the backend still expects that older audience, it will reject tokens issued
-for the current client. The backend source/configuration is not in this
-workspace, so this is a condition to check, not a confirmed backend failure.
+They select project `max-live-af375`, project number `728790055596`:
 
-Live Firebase SHA registration could not be read: the existing Firebase CLI
-account received HTTP 403 `PERMISSION_DENIED` from `apps:android:sha:list`.
-Consequently, absence from the local JSON establishes a snapshot mismatch,
-not proof of the live Cloud registration state. No Android device was connected
-for runtime logs. All four existing `test/google_login_test.dart` tests passed
-with platform/backend fakes; they do not validate Google's live OAuth setup.
+| Platform | Firebase app ID |
+| --- | --- |
+| Android | `1:728790055596:android:198565fba5b23037943d09` |
+| iOS | `1:728790055596:ios:b51d31929bde9f53943d09` |
+| Web | `1:728790055596:web:3524b168a657c219943d09` |
 
-## Debug SHA registration conflict
+App startup initializes Firebase with the imported platform options. Native
+configuration files are also included in the existing Android and iOS build
+integration. No Firebase administrative credentials are copied into the app.
 
-Adding debug SHA-1 `86:BB:E8:E9:DE:BE:13:13:EB:F1:C3:84:05:D5:25:BA:99:6D:FF:DA`
-was subsequently reported to fail because another project already has an
-Android OAuth client for this SHA-1 and package name. Google requires this pair
-to be unique across Firebase and Google Cloud projects. This confirms a
-registration conflict, but does not identify the owning project or explain
-the Play Store build's failure.
+## Google sign-in
 
-Inspect Android OAuth clients in Google Cloud's APIs & Services > Credentials,
-starting with the earlier OAuth project number `107414380235`. That project is
-a lead from this app's history, not a verified owner of the conflicting client.
-Match both `com.biholive.net` and the complete debug SHA-1.
+Max Live's active Google OAuth configuration is separate from its Firebase
+project. The imported source app explicitly uses these OAuth clients:
 
-If the matching client is unused and registration should move to
-`biholive-a0045`, remove that specific SHA from the old Firebase Android app,
-then verify the corresponding Android OAuth client was removed in Cloud. For
-a client managed directly in Cloud, remove the matching Android client there.
-Only after resolving that ownership conflict, register the fingerprint in the
-current project and download the updated JSON. Retaining the old OAuth client
-requires coordinating its project's web client and the backend token audience.
+| Purpose | Client ID |
+| --- | --- |
+| Web/server token audience | `1028099754767-b9nvqcl8egtdevcoegjmkcmffj6he59i.apps.googleusercontent.com` |
+| iOS | `1028099754767-0r0lctguquljs8lkah5qa6ef1kths8cl.apps.googleusercontent.com` |
 
-Firebase also documents external-client safelisting for Firebase Authentication.
-That setting does not change this app's direct-backend token verification.
-See [Google's conflict resolution guide](https://support.google.com/firebase/answer/6401008)
-for locating the owning project and the supported resolution paths.
+`GoogleAuthService` uses this server audience on Android and iOS. iOS also has
+the matching `GIDClientID`, `GIDServerClientID`, and reversed-client callback
+scheme in `Info.plist`. `GOOGLE_SERVER_CLIENT_ID` remains available as an
+explicit build-time override. Android resolves its Android OAuth registration
+from the installed package and signing certificate; an Android OAuth client
+ID is never passed as the server client ID.
 
-## Complete the configuration
+The imported Firebase Android JSON contains a different web client,
+`728790055596-me9hoir06brttbf41lva9onuokr4fvts.apps.googleusercontent.com`, and
+no Android OAuth certificate entries. Its iOS OAuth entry refers to a different
+bundle ID. Those snapshot entries are not used to replace Max Live's active
+sign-in settings, and do not prove which registrations are currently live.
 
-1. In Firebase project `biholive-a0045`, select Android app `com.biholive.net`
-   under Project settings. Register the local debug SHA-1 and SHA-256 above.
-   Also retain the release key fingerprints and register the actual Play app
-   signing fingerprints if they differ. Verify the corresponding Android OAuth
-   clients in the same Google Cloud project as the web client. Editing a hash
-   in the local JSON does not register an OAuth client on Google's servers.
-2. If managing OAuth through Firebase, enable the Google provider in
-   Authentication > Sign-in method, then download the updated
-   `google-services.json` into `android/app/`. This app still uses its own
-   backend for the login session.
-3. Confirm the backend's allowed Google ID-token audience includes
-   `976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com`.
-   If retaining the old OAuth project, coordinate the Android registrations,
-   app's `GOOGLE_SERVER_CLIENT_ID`, and backend audience together.
-4. Rebuild and install after changing the native configuration; hot reload
-   does not update Android resources or an already published Play build:
+The app sends a Google **ID token** directly to
+`https://biholive.com/api/v1/auth/login/` under the legacy `server_auth_code`
+field. The backend must accept the imported web client as a token audience.
+It must verify the Google token's signature, issuer, audience, and expiry.
+Firebase Authentication is not part of this app's login flow.
 
-   ```sh
-   flutter build apk --debug
-   adb install -r build/app/outputs/flutter-apk/app-debug.apk
-   ```
+## Runtime verification
 
-   To inspect any APK's signing certificate:
-
-   ```sh
-   "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --print-certs /path/to/app.apk
-   ```
-
-   A Play build containing an older compiled web client needs a new app release;
-   adding a missing server-side certificate registration alone can be tested
-   against an existing build.
-5. Reproduce login while reading app diagnostics:
-
-   ```sh
-   adb logcat -v time 'flutter:I' '*:S' | rg 'GOOGLE-AUTH'
-   ```
-
-   - `canceled` after selecting an account, or `clientConfigurationError`:
-     inspect package, actual signing SHA-1, and web client registration first.
-     Credential Manager can report configuration problems as cancellation.
-   - `Google returned an ID token for audience ...`: the Google account step
-     succeeded. The audience is a public OAuth client ID; the token and other
-     account claims are not logged. Compare this ID with the backend's allowed
-     audience for the installed build.
-   - `Backend rejected login: HTTP ...`: Google returned an ID token and the
-     backend rejected the session request. Inspect backend verification and
-     the debug API logger's redacted response; HTTP status alone does not prove
-     an audience mismatch.
-   - `Login failed at device` or `session`: inspect device ID retrieval or
-     the returned session shape respectively.
-
-Verify account selection, cancellation, successful login, and retry after a
-backend/network error on both installed builds. The app stays on login until
-the backend returns a valid session. Share the `GOOGLE-AUTH` error and backend
-HTTP status rather than ID tokens or session tokens.
-
-The next repository version is `1.0.2+2`. Play requires a version code greater
-than every previously uploaded version; if `2` has already been used, set a
-higher build number before creating the upload bundle. A successful release
-build verifies compilation and signing, not live Google login. Confirm login
-using an internal Play test before rollout.
-
-## Live-room release verification
-
-Open a room, receive a reaction, and repeatedly open/dismiss gifts, viewers,
-profile, and the close dialog. Focus the comment field, expand media controls,
-and test mic/camera actions while connected. Confirm close returns to the room
-list once, including when a modal is open, then re-enter the room.
-
-The fix restores the missing room timer/reaction-controller initialization,
-normalizes optional host VIP data, reads display size during layout, and keeps
-widget controllers alive until the route finishes leaving. Async close events
-are guarded against duplicate navigation. Widget tests cover modal controls and
-login routing with platform/backend fakes; native LiveKit and Google login still
-require the signed APK check above.
-
-Reference: [Flutter Google Sign-In Android configuration and troubleshooting](https://pub.dev/packages/google_sign_in_android#troubleshooting).
+Local configuration and fake-platform tests cannot establish live OAuth
+registration, backend audience acceptance, or push delivery. On a device,
+verify Google sign-in with a build signed by the imported key, then verify
+foreground and background FCM delivery. The backend's FCM sender must use
+credentials for `max-live-af375`; credentials for the previous Firebase
+project cannot send to this project's device tokens. Backend credentials,
+Firebase Console registrations, store listings, and hosted app-link files
+were not changed by this local migration.

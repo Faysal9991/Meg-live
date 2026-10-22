@@ -13,7 +13,7 @@ class SearchView extends StatelessWidget {
         //   color: Colors.orange,
         //   size: 48.0,
         // ),
-        Image.asset('assets/logos/biho.png', width: 100, height: 100),
+        Image.asset('assets/logos/ringo.png', width: 100, height: 100),
         const SizedBox(height: 32),
         Center(
           child: Text(

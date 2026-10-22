@@ -89,7 +89,7 @@ void main() {
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
       await tester.pumpAndSettle();
 
-      expect(find.text('Live Now'), findsOneWidget);
+      expect(find.text('LIVE'), findsOneWidget);
     },
   );
 

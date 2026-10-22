@@ -35,7 +35,7 @@ class AuthView extends GetView<AuthController> {
                         child: Transform.scale(
                           scale: 1.8,
                           child: Image.asset(
-                            'assets/logos/biho.png',
+                            'assets/logos/ringo.png',
                             width: 104,
                             height: 104,
                           ),
@@ -44,7 +44,7 @@ class AuthView extends GetView<AuthController> {
                     ),
                     const SizedBox(height: 32),
                     Text(
-                      'Biho Live',
+                      'Ringo Live',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.displaySmall,
                     ),

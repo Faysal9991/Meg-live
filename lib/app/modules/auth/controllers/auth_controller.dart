@@ -293,7 +293,7 @@ class AuthController extends GetxController {
 
         // Get.snackbar(
         //   'Success',
-        //   "Welcome to Doyel Live.",
+        //   "Welcome to Ringo Live.",
         //   backgroundColor: Colors.green,
         //   colorText: Colors.white,
         //   snackPosition: SnackPosition.BOTTOM,
@@ -355,10 +355,7 @@ class AuthController extends GetxController {
       authLoading.value = false;
 
       if (statusCode == 201) {
-        preferences.clear();
-        Get.offAllNamed(Routes.AUTH);
-        token.value = '';
-        // profile.value = Profile();
+        await clearSessionAndGoToAuth();
       } else {
         Get.snackbar(
           'Failed',
@@ -377,11 +374,15 @@ class AuthController extends GetxController {
         colorText: AppColors.onLight,
         snackPosition: SnackPosition.BOTTOM,
       );
-      preferences.clear();
-      Get.offAllNamed(Routes.AUTH);
-      token.value = '';
-      // profile.value = Profile();
+      await clearSessionAndGoToAuth();
     }
+  }
+
+  Future<void> clearSessionAndGoToAuth() async {
+    token.value = '';
+    profile.value = Profile();
+    await preferences.clear();
+    Get.offAllNamed(Routes.AUTH);
   }
 
   Future<bool> tryToChangePassword({

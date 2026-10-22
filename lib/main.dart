@@ -17,6 +17,7 @@ import 'package:flutter_windowmanager_plus/flutter_windowmanager_plus.dart';
 import 'package:get/get.dart';
 
 import 'app/routes/app_pages.dart';
+import 'firebase_options.dart';
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -65,7 +66,7 @@ void main() async {
     ),
   );
 
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await notificationInitialization();
   // FCM Background
@@ -82,7 +83,7 @@ void main() async {
   HttpOverrides.global = MyHttpOverrides();
   runApp(
     GetMaterialApp(
-      title: "Biho Live",
+      title: "Ringo Live",
       builder: (context, child) => MinimizedLiveOverlay(
         session: Get.find<LiveStreamingController>().liveSession,
         child: child ?? const SizedBox.shrink(),

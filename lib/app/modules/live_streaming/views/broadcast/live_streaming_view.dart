@@ -2667,7 +2667,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       //     _livekitStreamingController.listRenderView.isEmpty) {
       if (_livekitStreamingController.listRenderView.isEmpty) {
         return Center(
-          child: Image.asset('assets/logos/biho.png', width: 100, height: 100),
+          child: Image.asset('assets/logos/ringo.png', width: 100, height: 100),
         );
       } else if (_livekitStreamingController.listRenderView.isNotEmpty &&
           _livekitStreamingController.listActiveCall.isEmpty) {

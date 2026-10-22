@@ -28,10 +28,7 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
     return Column(
       children: [
         AppCard(
-          padding: const EdgeInsets.all(6),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: CarouselSlider.builder(
+          child:  CarouselSlider.builder(
               options: CarouselOptions(
                 autoPlay:
                     widget.banners.length > 1 &&
@@ -39,7 +36,7 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
                 autoPlayInterval: const Duration(seconds: 4),
                 autoPlayAnimationDuration: const Duration(milliseconds: 700),
                 autoPlayCurve: Curves.easeInOutCubic,
-                height: 168,
+                height: 120,
                 viewportFraction: 1.0,
                 padEnds: false,
                 enlargeCenterPage: false,
@@ -76,7 +73,7 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
                 );
               },
             ),
-          ),
+        
         ),
       ],
     );

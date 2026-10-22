@@ -18,25 +18,28 @@ class GoogleLoginIdentity {
 }
 
 /// Initializes on demand so a Google configuration error cannot prevent app
-/// startup. Android reads its web OAuth client from google-services.json unless
-/// an explicit backend audience is supplied with GOOGLE_SERVER_CLIENT_ID.
+/// startup. Uses Max Live's active Google OAuth registration, which is separate
+/// from its Firebase project. GOOGLE_SERVER_CLIENT_ID can override the audience.
 class GoogleAuthService {
   static final instance = GoogleAuthService();
   static Future<void>? _initialization;
   static const _serverClientIdOverride = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
   );
-  static const _nonAndroidServerClientId =
-      '976789308527-a7ie4kfg7le4ae4aoasdpgfafg9pqcga.apps.googleusercontent.com';
+  static const defaultServerClientId =
+      '1028099754767-b9nvqcl8egtdevcoegjmkcmffj6he59i.apps.googleusercontent.com';
+  static const _iosClientId =
+      '1028099754767-0r0lctguquljs8lkah5qa6ef1kths8cl.apps.googleusercontent.com';
 
   Future<void> _initialize() async {
     final serverClientId = _serverClientIdOverride.isNotEmpty
         ? _serverClientIdOverride
-        : defaultTargetPlatform == TargetPlatform.android
-        ? null
-        : _nonAndroidServerClientId;
+        : defaultServerClientId;
     try {
       await (_initialization ??= GoogleSignIn.instance.initialize(
+        clientId: defaultTargetPlatform == TargetPlatform.iOS
+            ? _iosClientId
+            : null,
         serverClientId: serverClientId,
       ));
     } catch (_) {

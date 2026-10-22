@@ -57,7 +57,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                 const SizedBox(height: 16),
                 Center(
                   child: Image.asset(
-                    'assets/logos/biho.png',
+                    'assets/logos/ringo.png',
                     width: 130,
                     height: 130,
                   ),

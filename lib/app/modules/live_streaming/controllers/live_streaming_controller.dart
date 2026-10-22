@@ -3,7 +3,6 @@ import 'package:doyel_live/app/modules/live_streaming/services/live_room_session
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -42,11 +41,15 @@ enum HomeTabEnum {
 }
 
 class LiveStreamingController extends GetxController {
-  LiveStreamingController({Dio? dio})
-    : _dio = dio == null ? createApiDio() : configureApiDio(dio);
+  LiveStreamingController({
+    Dio? dio,
+    WebSocket Function(Uri uri, Backoff backoff)? dashboardSocketFactory,
+  }) : _dio = dio == null ? createApiDio() : configureApiDio(dio),
+       _dashboardSocketFactory = dashboardSocketFactory;
 
   final AuthController _authController = Get.find();
   final Dio _dio;
+  final WebSocket Function(Uri uri, Backoff backoff)? _dashboardSocketFactory;
   final liveSession = LiveRoomSession();
   final roomAdminIds = <int>{}.obs;
   Future<bool> Function(int uid, bool enabled)? updateRoomAdmin;
@@ -103,9 +106,7 @@ class LiveStreamingController extends GetxController {
   final callType = ''.obs;
   final RxList<dynamic> listRequestedCall = <dynamic>[].obs;
   final RxList<dynamic> listActiveCall = <dynamic>[].obs;
-  Timer? _animatedGiftLoadTimer,
-      _timerShowingMarqueeText,
-      _liveRoomListRefreshTimer;
+  Timer? _animatedGiftLoadTimer, _timerShowingMarqueeText;
 
   final showUserJoinedAnimation = false.obs,
       showGiftSendAnimation = false.obs,
@@ -136,6 +137,8 @@ class LiveStreamingController extends GetxController {
   // in-flight list snapshot taken before the removal cannot restore the card.
   final Map<String, int> _deletedLiveRoomSeq = <String, int>{};
   int _liveRoomDeleteSeq = 0;
+  int _liveRoomEventSeq = 0;
+  final Map<String, int> _liveRoomUpsertSeq = {};
 
   int get myUid => _authController.profile.value.user?.uid ?? 0;
   bool get isCurrentHost =>
@@ -173,6 +176,15 @@ class LiveStreamingController extends GetxController {
   WebSocket? webSocketClientForStreaming;
   StreamSubscription<dynamic>? _dashboardConnectionSubscription;
   StreamSubscription<dynamic>? _dashboardMessageSubscription;
+  Future<void>? _dashboardInitialization;
+  Timer? _dashboardRetryTimer;
+  Future<void>? _profileRecovery;
+  Future<List<dynamic>?>? _liveRoomRecovery;
+  Worker? _dashboardProfileWorker, _dashboardTokenWorker;
+  int _dashboardSession = 0;
+  int? _dashboardUserId;
+  String? _dashboardToken;
+  bool _dashboardStarted = false;
   final isStreamingWebSocketConnected = false.obs;
   final webSocketConnectionState = "".obs;
 
@@ -190,6 +202,9 @@ class LiveStreamingController extends GetxController {
   /// Ranking streams whose list came from the current socket connection.
   /// REST is only a fallback for servers that do not push rankings yet.
   final liveRankingTypes = <String>{}.obs;
+  final loadingRankingTypes = <String>{}.obs;
+  final _socketRankingTypes = <String>{};
+  final _rankingFallbackAttempts = <String>{};
   Timer? _rankingFallbackTimer;
   bool _rankingFallbackDue = false;
   static const _rankingSnapshotGracePeriod = Duration(seconds: 5);
@@ -268,32 +283,98 @@ class LiveStreamingController extends GetxController {
 
   @override
   void onInit() {
-    // TODO: implement onInit
     super.onInit();
+    _dashboardUserId = myUid;
+    _dashboardToken = _authController.token.value;
+    _dashboardProfileWorker = ever(_authController.profile, (_) {
+      // Some existing profile flows replace the value twice in one turn.
+      scheduleMicrotask(() {
+        if (!_isDisposed) _handleDashboardAccountChange();
+      });
+    });
+    _dashboardTokenWorker = ever(_authController.token, (_) {
+      _handleDashboardAccountChange();
+    });
   }
 
   bool isRankingLive(String type) => liveRankingTypes.contains(type);
+
+  bool isRankingLoading(String type) => loadingRankingTypes.contains(type);
 
   /// True while a ranking list is retained from a dropped socket connection.
   bool isRankingReconnecting(String type) {
     final state = webSocketConnectionState.value;
     return !isRankingLive(type) &&
-        (state == 'reconnecting' || state == 'disconnected');
+        (state == 'reconnecting' ||
+            state == 'disconnected' ||
+            state == 'disconnecting' ||
+            (_socketRankingTypes.contains(type) && isRankingLoading(type)));
+  }
+
+  void _handleDashboardAccountChange() {
+    if (_dashboardUserId == myUid &&
+        _dashboardToken == _authController.token.value) {
+      return;
+    }
+    _dashboardUserId = myUid;
+    _dashboardToken = _authController.token.value;
+    _dashboardSession++;
+    _dashboardInitialization = null;
+    _dashboardRetryTimer?.cancel();
+    _profileRecovery = null;
+    _liveRoomRecovery = null;
+    _rankingFallbackTimer?.cancel();
+    _rankingFallbackDue = false;
+    _dashboardConnectionSubscription?.cancel();
+    _dashboardMessageSubscription?.cancel();
+    final oldSocket = webSocketClientForStreaming;
+    webSocketClientForStreaming = null;
+    oldSocket?.close();
+    webSocketConnectionState.value = 'disconnected';
+    isStreamingWebSocketConnected.value = false;
+    _resetRankingStreams();
+    loadingRankingTypes.clear();
+    _socketRankingTypes.clear();
+    _rankingFallbackAttempts.clear();
+    _loadingTopAgencyFallback = false;
+    loadingTopHostList.value = false;
+    loadingTopContributorList.value = false;
+    loadingLiveRoomList.value = false;
+    loadingGfitList.value = false;
+    topSlidingAgentRankingList.clear();
+    topHostList.clear();
+    topContributorList.clear();
+    listLiveRoom.clear();
+    listFilterLiveStreams.clear();
+    listNormalGift.clear();
+    listAnimatedGift.clear();
+    _deletedLiveRoomSeq.clear();
+    _liveRoomUpsertSeq.clear();
+    liveRoomSocketBaseUrl = '';
+    _ownProfileEventSeq++;
+    _messengerController.setClearChatMessages();
+    _messengerController.setClearLastMessages();
+    if (_dashboardStarted && myUid > 0 && _dashboardToken!.isNotEmpty) {
+      unawaited(initWebSocketClient());
+    }
   }
 
   @override
   void onClose() {
+    _isDisposed = true;
+    _dashboardSession++;
+    _dashboardRetryTimer?.cancel();
+    _dashboardProfileWorker?.dispose();
+    _dashboardTokenWorker?.dispose();
     _rankingFallbackTimer?.cancel();
     _dashboardConnectionSubscription?.cancel();
     _dashboardMessageSubscription?.cancel();
     webSocketClientForStreaming?.close();
-    stopLiveRoomListAutoRefresh();
     stopLiveRoomHeartbeat();
     setClearAnimationStuffs();
     if (_timerShowingMarqueeText != null) {
       _timerShowingMarqueeText?.cancel();
     }
-    _isDisposed = true;
 
     super.onClose();
   }
@@ -341,7 +422,7 @@ class LiveStreamingController extends GetxController {
     _hostEpoch++;
     setCurrentHost(hostId);
     if (room != null && room['channel_id'] != null) {
-      _useIsolateLoadLiveStreamingList(liveData: room);
+      _applyDashboardLiveRooms(liveData: room);
     }
   }
 
@@ -488,140 +569,157 @@ class LiveStreamingController extends GetxController {
     );
   }
 
-  void initWebSocketClient() async {
-    // do nothing if already disposed
-    if (_isDisposed) {
-      return;
+  /// Coalesces calls from connectivity and lifecycle callbacks, including the
+  /// asynchronous device lookup before a socket exists.
+  Future<void> initWebSocketClient() {
+    if (_isDisposed || myUid <= 0 || _authController.token.value.isEmpty) {
+      return Future.value();
     }
+    _dashboardStarted = true;
+    if (_dashboardInitialization != null) return _dashboardInitialization!;
     if (webSocketClientForStreaming != null &&
-        webSocketConnectionState.value != 'disconnecting' &&
         webSocketConnectionState.value != 'disconnected') {
-      // print('Returned............................................');
+      return Future.value();
+    }
+    final session = _dashboardSession;
+    _dashboardRetryTimer?.cancel();
+    return _dashboardInitialization = _connectDashboard(session).whenComplete(
+      () {
+        if (session == _dashboardSession) _dashboardInitialization = null;
+      },
+    );
+  }
+
+  Future<void> _connectDashboard(int session) async {
+    final uid = myUid;
+    try {
+      final uniqueDeviceId = await _authController.getUniqueDeviceId();
+      var deviceName = 'unknown';
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        deviceName = (await deviceInfo.androidInfo).model;
+      } else if (Platform.isIOS) {
+        deviceName = (await deviceInfo.iosInfo).utsname.machine;
+      }
+      if (_isDisposed || session != _dashboardSession || uid != myUid) return;
+      final uri = Uri.parse(
+        kWebSocketLivekitStreamingUrl(
+          roomName: 'livekit_streamings',
+          userId: uid,
+          uniqueDeviceId: uniqueDeviceId,
+          deviceName: deviceName,
+        ),
+      );
+      final backoff = LinearBackoff(
+        initial: const Duration(seconds: 1),
+        increment: const Duration(seconds: 2),
+        maximum: const Duration(seconds: 30),
+      );
+      final replacingSocket = webSocketClientForStreaming != null;
+      _dashboardConnectionSubscription?.cancel();
+      _dashboardMessageSubscription?.cancel();
+      webSocketClientForStreaming?.close();
+      final socket =
+          _dashboardSocketFactory?.call(uri, backoff) ??
+          WebSocket(
+            uri,
+            backoff: backoff,
+            pingInterval: const Duration(seconds: 30),
+          );
+      webSocketClientForStreaming = socket;
+      _resetRankingStreams();
+      _dashboardConnectionSubscription = socket.connection.listen((state) {
+        if (_isDisposed || !identical(socket, webSocketClientForStreaming)) {
+          return;
+        }
+        handleDashboardConnectionState(state);
+        if (state is Connected && replacingSocket) {
+          unawaited(recoverDashboardState());
+        }
+      }, onDone: () => _scheduleDashboardRetry(socket));
+      _dashboardMessageSubscription = socket.messages.listen((message) {
+        if (_isDisposed || !identical(socket, webSocketClientForStreaming)) {
+          return;
+        }
+        handleDashboardSocketMessage(message);
+      });
+    } catch (_) {
+      if (!_isDisposed && session == _dashboardSession) {
+        webSocketConnectionState.value = 'disconnected';
+        isStreamingWebSocketConnected.value = false;
+        _scheduleDashboardRetry(webSocketClientForStreaming);
+      }
+    }
+  }
+
+  void _scheduleDashboardRetry(WebSocket? previousSocket) {
+    if (_isDisposed ||
+        !identical(previousSocket, webSocketClientForStreaming)) {
       return;
     }
-    String uniqueDeviceId = '', deviceName = '';
-    uniqueDeviceId = await _authController.getUniqueDeviceId();
-
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
-      // const androidIdPlugin = AndroidId();
-      // final String? androidId = await androidIdPlugin.getId();
-      // uniqueDeviceId = androidId!;
-
-      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-      deviceName = androidInfo.model; // e.g. "Moto G (4)"
-    } else if (Platform.isIOS) {
-      IosDeviceInfo iosDeviceInfo = await deviceInfo.iosInfo;
-      // uniqueDeviceId = iosDeviceInfo.identifierForVendor!;
-      deviceName = iosDeviceInfo.utsname.machine; // e.g. "iPod7,1"
-    }
-    deviceName = deviceName.replaceAll(' ', '_');
-
-    // Create a WebSocket client.
-    final uri = Uri.parse(
-      kWebSocketLivekitStreamingUrl(
-        roomName: 'livekit_streamings',
-        userId: _authController.profile.value.user!.uid!,
-        uniqueDeviceId: uniqueDeviceId,
-        deviceName: deviceName,
-      ),
-    );
-    // const backoff = ConstantBackoff(Duration(seconds: 1));
-    final backoff = LinearBackoff(
-      initial: const Duration(seconds: 0),
-      increment: const Duration(seconds: 1),
-      maximum: const Duration(seconds: 5),
-    );
-    // Drop listeners of a replaced socket so its frames are never processed.
-    _dashboardConnectionSubscription?.cancel();
-    _dashboardMessageSubscription?.cancel();
-    webSocketClientForStreaming?.close();
-    final socket = WebSocket(uri, backoff: backoff);
-    webSocketClientForStreaming = socket;
+    // The transport closes its streams when its own retry budget expires.
+    // Keep recovering after a long outage without introducing REST polling.
+    webSocketConnectionState.value = 'disconnected';
+    isStreamingWebSocketConnected.value = false;
+    _rankingFallbackTimer?.cancel();
+    _rankingFallbackDue = false;
     _resetRankingStreams();
-    _scheduleRankingFallback();
-
-    // Listen for changes in the connection state.
-    _dashboardConnectionSubscription = socket.connection.listen((state) {
-      // do nothing if already disposed
-      if (_isDisposed || !identical(socket, webSocketClientForStreaming)) {
+    final session = _dashboardSession;
+    _dashboardRetryTimer?.cancel();
+    _dashboardRetryTimer = Timer(const Duration(seconds: 30), () {
+      if (_isDisposed ||
+          session != _dashboardSession ||
+          !identical(previousSocket, webSocketClientForStreaming)) {
         return;
       }
-      if (state == const Connecting()) {
-        // print('connecting: the connection has not yet been established.');
-        webSocketConnectionState.value = 'connecting';
-        // isStreamingWebSocketConnected.value = false;
-      } else if (state == const Connected()) {
-        // print(
-        //     ' connected: the connection is established and communication is possible.');
-        webSocketConnectionState.value = 'connected';
-
-        isStreamingWebSocketConnected.value = true;
-      } else if (state == const Reconnecting()) {
-        // print(
-        //     ' reconnecting: the connection was lost and is in the process of being re-established.');
-        webSocketConnectionState.value = 'reconnecting';
-        // The next connection sends fresh snapshots with its own revisions.
-        _resetRankingStreams();
-
-        // isStreamingWebSocketConnected.value = false;
-      } else if (state == const Reconnected()) {
-        // print(
-        //     'reconnected: the connection was lost and has been re-established.');
-        webSocketConnectionState.value = 'reconnected';
-
-        isStreamingWebSocketConnected.value = true;
-        // Socket events are transient; drop cards ended while disconnected.
-        tryToLoadLiveRoomList();
-        // The socket does not resend the profile; recover missed updates.
-        refreshLoggedInProfile();
-        _scheduleRankingFallback();
-      } else if (state == const Disconnecting()) {
-        // print(
-        //     ' disconnecting: the connection is going through the closing handshake or the close method has been invoked.');
-        try {
-          webSocketConnectionState.value = 'disconnecting';
-
-          // isStreamingWebSocketConnected.value = false;
-        } catch (e) {
-          //
-        }
-      } else if (state == const Disconnected()) {
-        // print(
-        //     ' disconnected: the WebSocket connection has been closed or could not be established.');
-        try {
-          webSocketConnectionState.value = 'disconnected';
-          _resetRankingStreams();
-
-          // isStreamingWebSocketConnected.value = false;
-        } catch (e) {
-          //
-        }
-      }
+      unawaited(initWebSocketClient());
     });
+  }
 
-    //     connecting: the connection has not yet been established.
-    // connected: the connection is established and communication is possible.
-    // reconnecting: the connection was lost and is in the process of being re-established.
-    // reconnected: the connection was lost and has been re-established.
-    // disconnecting: the connection is going through the closing handshake or the close method has been invoked.
-    // disconnected: the WebSocket connection has been closed or could not be established.
+  @visibleForTesting
+  void handleDashboardConnectionState(Object state) {
+    if (_isDisposed) return;
+    if (state is Connected || state is Reconnected) {
+      // Each connection has its own revision sequence, even if the previous
+      // transport did not emit a disconnect notification.
+      _resetRankingStreams();
+      webSocketConnectionState.value = state is Reconnected
+          ? 'reconnected'
+          : 'connected';
+      isStreamingWebSocketConnected.value = true;
+      _scheduleRankingFallback();
+      if (state is Reconnected) unawaited(recoverDashboardState());
+      return;
+    }
+    isStreamingWebSocketConnected.value = false;
+    _rankingFallbackTimer?.cancel();
+    _rankingFallbackDue = false;
+    if (state is Connecting) {
+      webSocketConnectionState.value = 'connecting';
+    } else if (state is Reconnecting) {
+      webSocketConnectionState.value = 'reconnecting';
+    } else if (state is Disconnecting) {
+      webSocketConnectionState.value = 'disconnecting';
+    } else if (state is Disconnected) {
+      webSocketConnectionState.value = 'disconnected';
+    }
+    _resetRankingStreams();
+  }
 
-    // Listen for incoming messages.
-    _dashboardMessageSubscription = socket.messages.listen((message) {
-      // do nothing if already disposed
-      if (_isDisposed || !identical(socket, webSocketClientForStreaming)) {
-        return;
-      }
-      handleDashboardSocketMessage(message);
-    });
+  /// Delta events missed in the background need one authoritative recovery.
+  /// Rankings arrive as socket snapshots and never need a REST recovery poll.
+  Future<void> recoverDashboardState() async {
+    if (_isDisposed) return;
+    await Future.wait([refreshLoggedInProfile(), tryToLoadLiveRoomList()]);
   }
 
   /// Decodes one dashboard socket frame and dispatches it by `message.type`.
   @visibleForTesting
   void handleDashboardSocketMessage(dynamic frame) {
+    if (_isDisposed) return;
     dynamic decoded;
     try {
+      if (frame is List<int>) frame = utf8.decode(frame);
       decoded = frame is String ? jsonDecode(frame) : frame;
     } catch (_) {
       return;
@@ -641,6 +739,13 @@ class LiveStreamingController extends GetxController {
       _lastRankingRevision[type] = -1;
     }
     liveRankingTypes.clear();
+    loadingRankingTypes.assignAll(
+      _rankingListKeys.keys.where(
+        (type) =>
+            !_rankingFallbackAttempts.contains(type) ||
+            _socketRankingTypes.contains(type),
+      ),
+    );
   }
 
   void _applyRankingSnapshot(Map<dynamic, dynamic> event) {
@@ -665,13 +770,25 @@ class LiveStreamingController extends GetxController {
         topContributorList.assignAll(rows.map(TopHost.fromJson));
     }
     liveRankingTypes.add(type);
+    _socketRankingTypes.add(type);
+    loadingRankingTypes.remove(type);
+    if (liveRankingTypes.length == _rankingListKeys.length) {
+      _rankingFallbackTimer?.cancel();
+    }
   }
 
-  /// Uses REST only if this connection has not pushed a ranking snapshot
-  /// within the grace period (backend without ranking events).
+  /// Compatibility bootstrap for an older backend, once per stream/session.
+  /// Once a stream has pushed a snapshot it never falls back, even on reconnect.
   void _scheduleRankingFallback() {
     _rankingFallbackTimer?.cancel();
     _rankingFallbackDue = false;
+    if (_rankingListKeys.keys.every(
+      (type) =>
+          _socketRankingTypes.contains(type) ||
+          _rankingFallbackAttempts.contains(type),
+    )) {
+      return;
+    }
     _rankingFallbackTimer = Timer(_rankingSnapshotGracePeriod, () {
       if (_isDisposed) return;
       _rankingFallbackDue = true;
@@ -679,36 +796,54 @@ class LiveStreamingController extends GetxController {
     });
   }
 
-  /// Fetches, over REST, the rankings the socket has not delivered.
+  /// Legacy fallback is bounded to one attempt, never a dashboard refresh loop.
   Future<void> loadMissingRankings() async {
-    if (!_rankingFallbackDue) return;
+    if (_isDisposed || !_rankingFallbackDue) return;
+    final session = _dashboardSession;
+    final pending = _rankingListKeys.keys
+        .where(
+          (type) =>
+              !_socketRankingTypes.contains(type) &&
+              !_rankingFallbackAttempts.contains(type),
+        )
+        .toList();
+    _rankingFallbackAttempts.addAll(pending);
     await Future.wait([
-      if (!isRankingLive(TOP_AGENCIES_UPDATE)) loadTopAgencyListFallback(),
-      if (!isRankingLive(TOP_HOSTS_UPDATE)) loadTopHostList(),
-      if (!isRankingLive(TOP_CONTRIBUTORS_UPDATE)) loadTopContributorList(),
+      if (pending.contains(TOP_AGENCIES_UPDATE)) loadTopAgencyListFallback(),
+      if (pending.contains(TOP_HOSTS_UPDATE)) loadTopHostList(),
+      if (pending.contains(TOP_CONTRIBUTORS_UPDATE)) loadTopContributorList(),
     ]);
+    if (!_isDisposed && session == _dashboardSession) {
+      loadingRankingTypes.removeAll(pending);
+    }
   }
 
   /// Recovers the logged-in profile after missed `load_profile` events.
-  Future<void> refreshLoggedInProfile() async {
+  Future<void> refreshLoggedInProfile() {
+    if (_isDisposed || myUid <= 0 || _authController.token.value.isEmpty) {
+      return Future.value();
+    }
+    final session = _dashboardSession;
+    return _profileRecovery ??= _fetchLoggedInProfile(session).whenComplete(() {
+      if (session == _dashboardSession) _profileRecovery = null;
+    });
+  }
+
+  Future<void> _fetchLoggedInProfile(int session) async {
     final uid = myUid;
-    if (uid <= 0) return;
     final seqAtRequest = _ownProfileEventSeq;
     try {
       final response = await _dio.get(
         kProfileRetrieveUrl(uid),
         options: Options(headers: _authHeaders()),
       );
+      if (_isDisposed || session != _dashboardSession || uid != myUid) return;
       final profile = response.data is Map ? response.data['profile'] : null;
-      // A newer socket profile arrived meanwhile; it is more current.
-      if (response.statusCode != 200 ||
-          profile is! Map ||
-          seqAtRequest != _ownProfileEventSeq) {
-        return;
-      }
+      if (response.statusCode != 200 || profile is! Map) return;
       final profileData = Map<String, dynamic>.from(profile);
-      if (_profileUid(profileData) != myUid) return;
-      _applyOwnProfile(profileData);
+      if (_profileUid(profileData) != uid) return;
+      // A newer socket profile must win over an older REST response.
+      if (seqAtRequest == _ownProfileEventSeq) _applyOwnProfile(profileData);
       final socketBaseUrl = response.data['websocket_base_url'];
       if (socketBaseUrl is String && socketBaseUrl.isNotEmpty) {
         liveRoomSocketBaseUrl = socketBaseUrl;
@@ -727,8 +862,29 @@ class LiveStreamingController extends GetxController {
     // Server values win (including a lower level); absent fields are kept.
     final merged = _authController.profile.value.mergedJson(profileData)
       ..remove('type');
-    _authController.profile.value = Profile();
     _authController.profile.value = Profile.fromJson(merged);
+    final profile = _authController.profile.value;
+    if (currentHostId.value == myUid) level = profile.level;
+    for (final participants in [
+      viewers,
+      viewersTemp,
+      activeGroupCalls,
+      listActiveCall,
+    ]) {
+      var changed = false;
+      for (var index = 0; index < participants.length; index++) {
+        final participant = participants[index];
+        if (participant is Map &&
+            int.tryParse('${participant['uid']}') == myUid) {
+          participants[index] = <String, dynamic>{
+            ...Map<String, dynamic>.from(participant),
+            'level': profile.level,
+          };
+          changed = true;
+        }
+      }
+      if (changed) participants.refresh();
+    }
     _authController.preferences.setString('profile', jsonEncode(merged));
   }
 
@@ -781,7 +937,7 @@ class LiveStreamingController extends GetxController {
       // ######################################
       // Live Room
       else if (data['type'] == STREAMING) {
-        _useIsolateLoadLiveStreamingList(liveData: data);
+        _applyDashboardLiveRooms(liveData: data);
       } else if (data['type'] == DELETE_LIVE) {
         _removeEndedLiveRoom(data['channel_id']);
       } else if (data['type'] == UPDATE_CAMERA_FILTER) {
@@ -790,7 +946,7 @@ class LiveStreamingController extends GetxController {
         );
         if (liveData != null) {
           liveData['cm_flt_nm'] = data['cm_flt_nm'];
-          _useIsolateLoadLiveStreamingList(liveData: liveData);
+          _applyDashboardLiveRooms(liveData: liveData);
         }
       } else if (data['type'] == UPDATE_LIVE_PAKCAGE_THEME) {
         dynamic liveData = listLiveRoom.firstWhereOrNull(
@@ -798,7 +954,7 @@ class LiveStreamingController extends GetxController {
         );
         if (liveData != null) {
           liveData['owner_profile']['theme_gif'] = data['theme_gif'];
-          _useIsolateLoadLiveStreamingList(liveData: liveData);
+          _applyDashboardLiveRooms(liveData: liveData);
         }
       } else if (data['type'] == ALLOW_COMMENT_EMOJI_SEND) {
         dynamic liveData = listLiveRoom.firstWhereOrNull(
@@ -806,7 +962,7 @@ class LiveStreamingController extends GetxController {
         );
         if (liveData != null) {
           liveData['allow_send'] = data['allow_send'];
-          _useIsolateLoadLiveStreamingList(liveData: liveData);
+          _applyDashboardLiveRooms(liveData: liveData);
         }
       } else if (data['type'] == UPDATE_LIVE_LOCK) {
         dynamic liveData = listLiveRoom.firstWhereOrNull(
@@ -815,7 +971,7 @@ class LiveStreamingController extends GetxController {
         if (liveData != null) {
           liveData['is_locked'] = data['is_locked'];
           liveData['locked_datetime'] = data['locked_datetime'];
-          _useIsolateLoadLiveStreamingList(liveData: liveData);
+          _applyDashboardLiveRooms(liveData: liveData);
         }
       } else if (data['type'] == UPDATE_VIEWERS_COUNT) {
         dynamic liveData = listLiveRoom.firstWhereOrNull(
@@ -823,7 +979,7 @@ class LiveStreamingController extends GetxController {
         );
         if (liveData != null) {
           liveData['viewers_count'] = data['viewers_count'];
-          _useIsolateLoadLiveStreamingList(liveData: liveData);
+          _applyDashboardLiveRooms(liveData: liveData);
         }
       } else if (data['type'] == LIVE_ROOM_BLOCKS) {
         if (data['uid'] == _authController.profile.value.user!.uid!) {
@@ -863,6 +1019,7 @@ class LiveStreamingController extends GetxController {
   void _removeEndedLiveRoom(dynamic channelId) {
     final roomId = channelId?.toString();
     if (roomId == null || roomId.isEmpty) return;
+    _liveRoomUpsertSeq.remove(roomId);
     _deletedLiveRoomSeq.remove(roomId);
     _deletedLiveRoomSeq[roomId] = ++_liveRoomDeleteSeq;
     if (_deletedLiveRoomSeq.length > 50) {
@@ -1028,24 +1185,25 @@ class LiveStreamingController extends GetxController {
       return;
     }
     _loadingTopAgencyFallback = true;
-    final recievePort = ReceivePort(); //creating new port to listen data
+    final session = _dashboardSession;
     try {
-      await Isolate.spawn(_fetchTopRatedAgentList, [
-        recievePort.sendPort,
-        _authController.token.value,
-      ]); //spawing/creating new thread as isolates.
-      final data = await recievePort.first;
-      // A socket snapshot that arrived meanwhile is newer than this response.
-      if (data is Map &&
+      final response = await _dio.get(
+        kManualAgentListUrl,
+        options: Options(headers: _publicHeaders()),
+      );
+      final data = response.data;
+      if (!_isDisposed &&
+          session == _dashboardSession &&
+          response.statusCode == 200 &&
+          data is Map &&
           data['manual_agent_list'] is List &&
-          !isRankingLive(TOP_AGENCIES_UPDATE)) {
+          !_socketRankingTypes.contains(TOP_AGENCIES_UPDATE)) {
         topSlidingAgentRankingList.assignAll(data['manual_agent_list']);
       }
     } catch (_) {
-      // Keep the current list; the socket or next refresh replaces it.
+      // Keep the current list; a future socket snapshot replaces it.
     } finally {
-      recievePort.close();
-      _loadingTopAgencyFallback = false;
+      if (session == _dashboardSession) _loadingTopAgencyFallback = false;
     }
   }
 
@@ -1440,19 +1598,6 @@ class LiveStreamingController extends GetxController {
     ]);
   }
 
-  void startLiveRoomListAutoRefresh() {
-    stopLiveRoomListAutoRefresh();
-    _liveRoomListRefreshTimer = Timer.periodic(
-      const Duration(seconds: 10),
-      (_) => tryToLoadLiveRoomList(),
-    );
-  }
-
-  void stopLiveRoomListAutoRefresh() {
-    _liveRoomListRefreshTimer?.cancel();
-    _liveRoomListRefreshTimer = null;
-  }
-
   Future<void> loadBannerList() async {
     if (loadingBannerList.value) {
       return;
@@ -1482,17 +1627,23 @@ class LiveStreamingController extends GetxController {
   }
 
   Future<void> loadTopHostList() async {
-    if (loadingTopHostList.value || isRankingLive(TOP_HOSTS_UPDATE)) {
+    if (_isDisposed ||
+        loadingTopHostList.value ||
+        _socketRankingTypes.contains(TOP_HOSTS_UPDATE)) {
       return;
     }
     loadingTopHostList.value = true;
+    final session = _dashboardSession;
     try {
       final response = await _dio.get(
         kTopHostListUrl,
         options: Options(headers: _publicHeaders()),
       );
       // A socket snapshot that arrived meanwhile is newer than this response.
-      if (response.statusCode == 200 && !isRankingLive(TOP_HOSTS_UPDATE)) {
+      if (!_isDisposed &&
+          session == _dashboardSession &&
+          response.statusCode == 200 &&
+          !_socketRankingTypes.contains(TOP_HOSTS_UPDATE)) {
         topHostList.assignAll(
           _rankedProfilesFromResponse(response.data, const ['top_hosts']),
         );
@@ -1500,39 +1651,39 @@ class LiveStreamingController extends GetxController {
     } catch (_) {
       // The centralized Dio interceptor logs the failed request.
     } finally {
-      loadingTopHostList.value = false;
+      if (session == _dashboardSession) loadingTopHostList.value = false;
     }
   }
 
   Future<void> loadTopContributorList() async {
-    if (loadingTopContributorList.value ||
-        isRankingLive(TOP_CONTRIBUTORS_UPDATE)) {
+    if (_isDisposed ||
+        loadingTopContributorList.value ||
+        _socketRankingTypes.contains(TOP_CONTRIBUTORS_UPDATE)) {
       return;
     }
     loadingTopContributorList.value = true;
+    final session = _dashboardSession;
     try {
       final response = await _dio.get(
         kTopContributorListUrl,
         options: Options(headers: _publicHeaders()),
       );
-      if (response.statusCode == 200 &&
-          !isRankingLive(TOP_CONTRIBUTORS_UPDATE)) {
+      if (!_isDisposed &&
+          session == _dashboardSession &&
+          response.statusCode == 200 &&
+          !_socketRankingTypes.contains(TOP_CONTRIBUTORS_UPDATE)) {
         final contributors = _rankedProfilesFromResponse(response.data, const [
           'top_contributors',
           'top_contributor_list',
           'top_hosts',
         ]);
 
-        contributors.sort(
-          (a, b) => b.diamondsContributed.compareTo(a.diamondsContributed),
-        );
-
         topContributorList.assignAll(contributors);
       }
     } catch (_) {
       // The centralized Dio interceptor logs the failed request.
     } finally {
-      loadingTopContributorList.value = false;
+      if (session == _dashboardSession) loadingTopContributorList.value = false;
     }
   }
 
@@ -1561,20 +1712,29 @@ class LiveStreamingController extends GetxController {
 
   // Live Room
   Future<void> tryToLoadLiveRoomList() async {
-    if (loadingLiveRoomList.value) {
-      return;
-    }
-
+    if (_isDisposed) return;
+    final session = _dashboardSession;
     loadingLiveRoomList.value = true;
     try {
       await _fetchAndApplyLiveRoomList();
     } finally {
-      loadingLiveRoomList.value = false;
+      if (session == _dashboardSession) loadingLiveRoomList.value = false;
     }
   }
 
   /// Replaces the dashboard list with the server's. Returns null on failure.
-  Future<List<dynamic>?> _fetchAndApplyLiveRoomList() async {
+  Future<List<dynamic>?> _fetchAndApplyLiveRoomList() {
+    if (_isDisposed) return Future.value();
+    final session = _dashboardSession;
+    return _liveRoomRecovery ??= _fetchLiveRoomSnapshot(session).whenComplete(
+      () {
+        if (session == _dashboardSession) _liveRoomRecovery = null;
+      },
+    );
+  }
+
+  Future<List<dynamic>?> _fetchLiveRoomSnapshot(int session) async {
+    final eventSeq = _liveRoomEventSeq;
     final deleteSeq = _liveRoomDeleteSeq;
     final hostEpoch = _hostEpoch;
     try {
@@ -1583,7 +1743,9 @@ class LiveStreamingController extends GetxController {
         options: Options(headers: {'accept': '*/*'}),
       );
       final responseData = response.data;
-      if (response.statusCode != 200 ||
+      if (_isDisposed ||
+          session != _dashboardSession ||
+          response.statusCode != 200 ||
           responseData is! Map ||
           responseData['live_room_list'] is! List) {
         return null;
@@ -1592,6 +1754,17 @@ class LiveStreamingController extends GetxController {
         (responseData['live_room_list'] as List).toList(),
         deleteSeq,
       );
+      // A delayed REST snapshot must not erase rooms added/updated by socket
+      // events while the request was in flight.
+      for (final room in listLiveRoom) {
+        final id = _liveRoomId(room);
+        if ((_liveRoomUpsertSeq[id] ?? 0) > eventSeq) {
+          incomingRooms.removeWhere(
+            (candidate) => _liveRoomId(candidate) == id,
+          );
+          incomingRooms.add(room);
+        }
+      }
       _reconcileLiveRoomCollection(listLiveRoom, incomingRooms);
       _syncActiveRoomHost(
         incomingRooms.firstWhereOrNull(
@@ -1599,7 +1772,7 @@ class LiveStreamingController extends GetxController {
         ),
         hostEpoch: hostEpoch,
       );
-      _useIsolateLoadLiveStreamingList(liveData: null);
+      _applyDashboardLiveRooms(liveData: null);
       return incomingRooms;
     } catch (_) {
       // Keep the current dashboard list when a refresh fails.
@@ -1636,6 +1809,7 @@ class LiveStreamingController extends GetxController {
 
       final existingRoom = currentRooms[existingIndex];
       final incomingRoom = entry.value;
+      if (identical(existingRoom, incomingRoom)) continue;
       if (existingRoom is Map && incomingRoom is Map) {
         existingRoom
           ..clear()
@@ -2029,196 +2203,45 @@ class LiveStreamingController extends GetxController {
     return viewers;
   }
 
-  void _useIsolateLoadLiveStreamingList({
-    Map<String, dynamic>? liveData,
-  }) async {
-    var recievePort = ReceivePort(); //creating new port to listen data
-    final deleteSeq = _liveRoomDeleteSeq;
-    final hostEpoch = _hostEpoch;
-
-    await Isolate.spawn(loadLiveRoomList, [
-      recievePort.sendPort,
-      _authController.profile.value.user!.uid!,
-      channelName.value,
-      listLiveRoom.toList(),
-      liveData,
-    ]); //spawing/creating new thread as isolates.
-    late final StreamSubscription<dynamic> subscription;
-    subscription = recievePort.listen((data) {
-      //listening data from isolate
-      if (_isDisposed) {
-        subscription.cancel();
-        recievePort.close();
-        return;
+  /// Apply dashboard deltas synchronously so back-to-back socket frames cannot
+  /// race separate isolate copies and lose a room when REST polling is removed.
+  void _applyDashboardLiveRooms({Map<String, dynamic>? liveData}) {
+    if (_isDisposed) return;
+    if (liveData != null) {
+      final id = _liveRoomId(liveData);
+      if (id == null) return;
+      final room = Map<String, dynamic>.from(liveData);
+      _liveRoomUpsertSeq[id] = ++_liveRoomEventSeq;
+      listLiveRoom.removeWhere((item) => _liveRoomId(item) == id);
+      final owner = room['owner_profile'];
+      final blocks = owner is Map ? owner['blocks'] : null;
+      if (owner is Map && !(blocks is List && blocks.contains(myUid))) {
+        listLiveRoom.add(room);
       }
-      if (data != null) {
-        if (data['type'] == 'liveStreamData') {
-          // The user may have left this room while the isolate was running.
-          if (data['data']['channel_id'].toString() != channelName.value) {
-            return;
-          }
-          liveStreamData.value = {};
-          liveStreamData.value = data['data'];
-          allowCommentAndEmojiSend.value = data['data']['allow_send'] ?? true;
-          _syncActiveRoomHost(data['data'], hostEpoch: hostEpoch);
-        } else if (data['type'] == 'listLiveStreams') {
-          final incomingRooms = _withoutRoomsEndedSince(
-            (data['listLiveStreams'] as List).toList(),
-            deleteSeq,
-          );
-          _reconcileLiveRoomCollection(listLiveRoom, incomingRooms);
-          _reconcileLiveRoomCollection(
-            listFilterLiveStreams,
-            incomingRooms,
-            notifyDashboard: true,
-          );
-          subscription.cancel();
-          recievePort.close();
-        }
+      if (id == channelName.value) {
+        liveStreamData.value = room;
+        allowCommentAndEmojiSend.value = room['allow_send'] ?? true;
+        _syncActiveRoomHost(room, hostEpoch: _hostEpoch);
       }
-    });
-  }
-}
-
-void loadLiveRoomList(List<dynamic> args) {
-  SendPort sendPort = args[0];
-  dynamic uid = args[1];
-  String channelId = args[2];
-  List<dynamic> listLiveStreams = args[3];
-  dynamic data = args[4];
-
-  if (data != null) {
-    if (data['channel_id'].toString() == channelId) {
-      dynamic jsonData = {'type': 'liveStreamData', 'data': data};
-      sendPort.send(jsonData);
+    }
+    int score(dynamic room) {
+      final owner = room['owner_profile'];
+      return (int.tryParse('${room['viewers_count']}') ?? 0) +
+          (int.tryParse('${owner is Map ? owner['ranking'] : 0}') ?? 0);
     }
 
-    // Upsert by channel_id: a host handover keeps the same card.
-    listLiveStreams.removeWhere(
-      (element) =>
-          element['channel_id'].toString() == data['channel_id'].toString(),
+    final rooms = listLiveRoom.toList()
+      ..sort((a, b) {
+        final byScore = score(b).compareTo(score(a));
+        if (byScore != 0) return byScore;
+        return '${a['created_datetime'] ?? ''}'.compareTo(
+          '${b['created_datetime'] ?? ''}',
+        );
+      });
+    _reconcileLiveRoomCollection(
+      listFilterLiveStreams,
+      rooms,
+      notifyDashboard: true,
     );
-    final ownerProfile = data['owner_profile'];
-    if (ownerProfile is Map &&
-        !((ownerProfile['blocks'] as List?)?.contains(uid) ?? false)) {
-      listLiveStreams.add(data);
-    }
-  }
-
-  if (listLiveStreams.length > 1) {
-    listLiveStreams.sort(
-      (a, b) => DateTime.parse(
-        a['created_datetime'],
-      ).compareTo(DateTime.parse(b['created_datetime'])),
-    );
-    // try {
-    listLiveStreams.sort(
-      (a, b) => (b['viewers_count'] + (b['owner_profile']['ranking'] ?? 0))
-          .compareTo(a['viewers_count'] + (a['owner_profile']['ranking'] ?? 0)),
-    );
-    // } catch (e) {
-    //   print('Error : $e......................................');
-    // }
-    // listLiveStreams
-    //     .sort((a, b) => (b['viewers_count']).compareTo(a['viewers_count']));
-
-    // for (dynamic data1 in listLiveStreams.toList()) {
-    //   print(
-    //       "Serial: ${data1['owner_profile']['full_name']} ${data1['viewers_count'] + (data1['owner_profile']['ranking'] ?? 0)}");
-    // }
-  }
-
-  dynamic jsonData = {
-    'type': 'listLiveStreams',
-    'listLiveStreams': listLiveStreams,
-  };
-  Isolate.exit(sendPort, jsonData);
-}
-
-// void loadLiveStramingFirebaseList(List<dynamic> args) {
-//   // recievePort.sendPort,
-//   //   _authController.profile.value.user!.uid!,
-//   //   channelName.value,
-//   //   listQueryDocumentSpanshot,
-//   SendPort sendPort = args[0];
-//   dynamic uid = args[1];
-//   String channelName = args[2];
-//   List<QueryDocumentSnapshot<Map<String, dynamic>>>
-//       listLiveStreamsFromFirebase = args[3];
-//   List<dynamic> listLiveStreams = [];
-//   for (QueryDocumentSnapshot<Map<String, dynamic>> documentSnapshot
-//       in listLiveStreamsFromFirebase) {
-//     if (documentSnapshot.exists && documentSnapshot.data().isNotEmpty) {
-//       Map<String, dynamic> data = documentSnapshot.data();
-//       if (data['channel_id'].toString() == channelName) {
-//         dynamic jsonData = {
-//           'type': 'liveStreamData',
-//           'data': data,
-//         };
-//         sendPort.send(jsonData);
-//       }
-//       if (!data['blocks'].contains(uid)) {
-//         listLiveStreams.add(data);
-//       }
-//     }
-//   }
-//   if (listLiveStreams.length > 1) {
-//     listLiveStreams
-//         .sort((a, b) => a['creation_time'].compareTo(b['creation_time']));
-
-//     listLiveStreams.sort((a, b) => (b['viewers_count'] + (b['vvip_rank'] ?? 0))
-//         .compareTo(a['viewers_count'] + (a['vvip_rank'] ?? 0)));
-//   }
-
-//   dynamic jsonData = {
-//     'type': 'listLiveStreams',
-//     'listLiveStreams': listLiveStreams,
-//   };
-//   Isolate.exit(sendPort, jsonData);
-// }
-
-// void _sortingLiveRooms() {
-//   if (listFilterLiveStreams.length > 1) {
-//     try {
-//       listFilterLiveStreams.sort((a, b) =>
-//           DateTime.fromMillisecondsSinceEpoch(
-//                   a['creation_time'].millisecondsSinceEpoch)
-//               .toLocal()
-//               .compareTo(DateTime.fromMillisecondsSinceEpoch(
-//                       b['creation_time'].millisecondsSinceEpoch)
-//                   .toLocal()));
-//     } catch (e) {
-//       //
-//     }
-
-//     listFilterLiveStreams
-//         .sort((a, b) => (b['viewers_count']).compareTo((a['viewers_count'])));
-//   }
-// }
-
-void _fetchTopRatedAgentList(List<dynamic> args) async {
-  SendPort sendPort = args[0];
-  final dio = createApiDio();
-  try {
-    final response = await dio.get(
-      kManualAgentListUrl,
-      options: Options(
-        headers: {
-          'accept': '*/*',
-          // 'Authorization': 'Token $token',
-          'X-Api-Key': DRF_API_KEY,
-        },
-      ),
-      // queryParameters: {'list_range': 5},
-    );
-
-    int? statusCode = response.statusCode;
-    if (statusCode == 200) {
-      Isolate.exit(sendPort, response.data);
-    }
-    Isolate.exit(sendPort);
-  } catch (e) {
-    // Nothing
-    Isolate.exit(sendPort);
   }
 }

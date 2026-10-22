@@ -79,8 +79,8 @@ class SplashController extends GetxController {
 
     final installedVersion = appVersionLabel.value;
     final content = installedVersion.isEmpty
-        ? 'A new version is available on Play Store. Please update to continue using Doyel Live.'
-        : 'Installed version $installedVersion. A newer version is available on Play Store. Please update to continue using Doyel Live.';
+        ? 'A new version is available on Play Store. Please update to continue using Ringo Live.'
+        : 'Installed version $installedVersion. A newer version is available on Play Store. Please update to continue using Ringo Live.';
 
     await Get.dialog<void>(
       PopScope(

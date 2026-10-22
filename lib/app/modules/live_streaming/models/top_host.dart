@@ -74,9 +74,9 @@ class TopHost {
     final user = asMap(json['user']);
     final profileUser = asMap(profile['user']);
     final candidates = [
+      user['uid'],
       json['uid'],
       json['user_uid'],
-      user['uid'],
       json['user_id'],
       profile['uid'],
       profileUser['uid'],
