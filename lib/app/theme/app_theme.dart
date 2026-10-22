@@ -9,13 +9,13 @@ class AppTheme {
   const AppTheme._();
 
   static const ColorScheme _scheme = ColorScheme.dark(
-    primary: AppColors.pink,
+    primary: AppColors.primary,
     onPrimary: AppColors.textPrimary,
     primaryContainer: AppColors.primarySoft,
-    onPrimaryContainer: AppColors.pinkLight,
-    secondary: AppColors.cyan,
-    onSecondary: AppColors.onLight,
-    secondaryContainer: AppColors.surfaceHigh,
+    onPrimaryContainer: AppColors.primaryLight,
+    secondary: AppColors.secondary,
+    onSecondary: AppColors.textOnSecondary,
+    secondaryContainer: AppColors.secondarySoft,
     onSecondaryContainer: AppColors.textPrimary,
     tertiary: AppColors.gold,
     onTertiary: AppColors.onLight,
@@ -27,7 +27,7 @@ class AppTheme {
     surfaceContainerLowest: AppColors.bg,
     surfaceContainerLow: AppColors.surface,
     surfaceContainer: AppColors.surface,
-    surfaceContainerHigh: AppColors.surfaceHigh,
+    surfaceContainerHigh: AppColors.surfaceElevated,
     surfaceContainerHighest: AppColors.surfaceHigh,
     outline: AppColors.border,
     outlineVariant: AppColors.border,
@@ -48,7 +48,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: _scheme,
-      primaryColor: AppColors.pink,
+      primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.bg,
       canvasColor: AppColors.surface,
       cardColor: AppColors.surface,
@@ -63,9 +63,9 @@ class AppTheme {
       textTheme: textTheme,
       primaryTextTheme: textTheme,
       textSelectionTheme: const TextSelectionThemeData(
-        cursorColor: AppColors.pinkLight,
-        selectionColor: Color(0x66E0246A),
-        selectionHandleColor: AppColors.pink,
+        cursorColor: AppColors.primaryLight,
+        selectionColor: AppColors.glow,
+        selectionHandleColor: AppColors.primary,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.bg,
@@ -98,7 +98,7 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surfaceHigh,
+        backgroundColor: AppColors.surfaceElevated,
         surfaceTintColor: AppColors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.dialog),
@@ -107,8 +107,8 @@ class AppTheme {
         contentTextStyle: textTheme.bodyMedium,
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.surface,
-        modalBackgroundColor: AppColors.surface,
+        backgroundColor: AppColors.surfaceElevated,
+        modalBackgroundColor: AppColors.surfaceElevated,
         surfaceTintColor: AppColors.transparent,
         modalBarrierColor: AppColors.overlay,
         showDragHandle: true,
@@ -120,7 +120,7 @@ class AppTheme {
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: AppColors.surfaceHigh,
+        color: AppColors.surfaceElevated,
         surfaceTintColor: AppColors.transparent,
         textStyle: textTheme.bodyLarge,
         shape: RoundedRectangleBorder(
@@ -135,7 +135,7 @@ class AppTheme {
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             color: states.contains(WidgetState.selected)
-                ? AppColors.pinkLight
+                ? AppColors.primaryLight
                 : AppColors.textHint,
           ),
         ),
@@ -143,7 +143,7 @@ class AppTheme {
           (states) => TextStyle(
             fontSize: 12,
             color: states.contains(WidgetState.selected)
-                ? AppColors.pinkLight
+                ? AppColors.primaryLight
                 : AppColors.textHint,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
@@ -153,7 +153,7 @@ class AppTheme {
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.pinkLight,
+        selectedItemColor: AppColors.primaryLight,
         unselectedItemColor: AppColors.textHint,
         selectedLabelStyle: TextStyle(fontWeight: FontWeight.w700),
         unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w500),
@@ -175,19 +175,19 @@ class AppTheme {
         unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.pink,
+        backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         shape: StadiumBorder(),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.surfaceHigh,
+        backgroundColor: AppColors.surfaceElevated,
         contentTextStyle: textTheme.bodyMedium?.copyWith(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w500,
         ),
-        actionTextColor: AppColors.pinkLight,
+        actionTextColor: AppColors.primaryLight,
         insetPadding: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.control),
@@ -208,7 +208,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.pinkLight,
+          foregroundColor: AppColors.primaryLight,
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           shape: const StadiumBorder(),
         ),
@@ -221,20 +221,26 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceHigh,
-        hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+        fillColor: AppColors.surface,
+        hintStyle: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 14,
+        ),
         labelStyle: const TextStyle(color: AppColors.textSecondary),
-        floatingLabelStyle: const TextStyle(color: AppColors.pinkLight),
+        floatingLabelStyle: const TextStyle(color: AppColors.primaryLight),
         helperStyle: const TextStyle(color: AppColors.textSecondary),
         errorStyle: const TextStyle(color: AppColors.error),
         prefixIconColor: AppColors.textSecondary,
         suffixIconColor: AppColors.textSecondary,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         border: _inputBorder(BorderSide.none),
         enabledBorder: _inputBorder(BorderSide.none),
         disabledBorder: _inputBorder(BorderSide.none),
         focusedBorder: _inputBorder(
-          const BorderSide(color: AppColors.pinkLight, width: 1.5),
+          const BorderSide(color: AppColors.primaryLight, width: 1.5),
         ),
         errorBorder: _inputBorder(const BorderSide(color: AppColors.error)),
         focusedErrorBorder: _inputBorder(
@@ -244,7 +250,7 @@ class AppTheme {
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.disabled)) return AppColors.border;
-          if (states.contains(WidgetState.selected)) return AppColors.pink;
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
           return AppColors.transparent;
         }),
         checkColor: const WidgetStatePropertyAll(AppColors.textPrimary),
@@ -254,7 +260,7 @@ class AppTheme {
       radioTheme: RadioThemeData(
         fillColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? AppColors.pink
+              ? AppColors.primary
               : AppColors.textHint,
         ),
       ),
@@ -266,27 +272,27 @@ class AppTheme {
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? AppColors.pink
+              ? AppColors.primary
               : AppColors.surfaceHigh,
         ),
         trackOutlineColor: const WidgetStatePropertyAll(AppColors.border),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: AppColors.pink,
+        color: AppColors.primary,
         linearTrackColor: AppColors.surfaceHigh,
         circularTrackColor: AppColors.surfaceHigh,
       ),
       sliderTheme: const SliderThemeData(
-        activeTrackColor: AppColors.pink,
+        activeTrackColor: AppColors.primary,
         inactiveTrackColor: AppColors.surfaceHigh,
         thumbColor: AppColors.textPrimary,
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.surfaceHigh,
+        backgroundColor: AppColors.surface,
         selectedColor: AppColors.primarySoft,
         disabledColor: AppColors.surface,
         labelStyle: const TextStyle(color: AppColors.textSecondary),
-        secondaryLabelStyle: const TextStyle(color: AppColors.pinkLight),
+        secondaryLabelStyle: const TextStyle(color: AppColors.secondaryLight),
         side: const BorderSide(color: AppColors.border),
         shape: const StadiumBorder(),
       ),
@@ -300,7 +306,7 @@ class AppTheme {
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         iconColor: AppColors.textSecondary,
         textColor: AppColors.textPrimary,
-        selectedColor: AppColors.pinkLight,
+        selectedColor: AppColors.primaryLight,
         selectedTileColor: AppColors.primarySoft,
       ),
       tooltipTheme: TooltipThemeData(
@@ -322,7 +328,7 @@ class AppTheme {
     backgroundColor: WidgetStateProperty.resolveWith(
       (states) => states.contains(WidgetState.disabled)
           ? AppColors.surfaceHigh
-          : AppColors.pink,
+          : AppColors.primary,
     ),
     foregroundColor: WidgetStateProperty.resolveWith(
       (states) => states.contains(WidgetState.disabled)

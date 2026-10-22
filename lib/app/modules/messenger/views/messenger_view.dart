@@ -32,7 +32,7 @@ class MessengerView extends GetView<MessengerController> {
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                 ),
-                color: AppColors.pink,
+                color: AppColors.secondaryDark,
                 child: const Center(
                   child: Text(
                     'Messages',

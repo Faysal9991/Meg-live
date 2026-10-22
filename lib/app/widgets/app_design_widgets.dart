@@ -147,62 +147,90 @@ class PrimaryButton extends StatelessWidget {
   }
 }
 
+
 class AppIconButton extends StatelessWidget {
   const AppIconButton({
     super.key,
-    required this.icon,
+    this.icon,
+    this.image,
     required this.onPressed,
     this.tooltip,
     this.size = 48,
     this.iconSize = 21,
     this.iconColor = AppColors.textPrimary,
     this.backgroundColor = AppColors.surfaceHigh,
-  });
-  final IconData icon;
+    this.imageFit = BoxFit.cover,
+    this.imagePadding = 0,
+  }) : assert(
+         icon != null || image != null,
+         'Either icon or image must be provided.',
+       );
+
+  final IconData? icon;
+  final ImageProvider? image;
   final VoidCallback? onPressed;
   final String? tooltip;
   final double size;
   final double iconSize;
   final Color iconColor;
   final Color backgroundColor;
+  final BoxFit imageFit;
+  final double imagePadding;
 
   @override
-  Widget build(BuildContext context) => SizedBox.square(
-    dimension: size < 48 ? 48 : size,
-    child: _ControlSurface(
-      enabled: onPressed != null,
-      color: backgroundColor,
-      radius: AppRadius.pill,
-      circle: true,
-      builder: (states) {
-        // TextButton exposes its state controller on Flutter 3.32 as well,
-        // keeping the outer surface in sync with pointer and keyboard presses.
-        final button = TextButton(
-          statesController: states,
-          onPressed: onPressed,
-          style:
-              TextButton.styleFrom(
-                backgroundColor: backgroundColor,
-                foregroundColor: iconColor,
-                disabledForegroundColor: AppColors.disabled,
-                disabledBackgroundColor: AppColors.disabledBackground,
-                shape: const CircleBorder(),
-                padding: EdgeInsets.zero,
-              ).copyWith(
-                side: WidgetStateProperty.resolveWith(
-                  (states) => states.contains(WidgetState.focused)
-                      ? const BorderSide(color: AppColors.pinkLight, width: 2)
-                      : BorderSide.none,
-                ),
+  Widget build(BuildContext context) {
+    final dimension = size < 48 ? 48.0 : size;
+
+    final button = SizedBox.square(
+      dimension: dimension,
+      child: _ControlSurface(
+        enabled: onPressed != null,
+        color: backgroundColor,
+        radius: AppRadius.pill,
+        circle: true,
+        builder: (states) {
+          return TextButton(
+            statesController: states,
+            onPressed: onPressed,
+            style: TextButton.styleFrom(
+              backgroundColor: backgroundColor,
+              foregroundColor: iconColor,
+              disabledForegroundColor: AppColors.disabled,
+              disabledBackgroundColor: AppColors.disabledBackground,
+              shape: const CircleBorder(),
+              padding: EdgeInsets.zero,
+            ).copyWith(
+              side: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.focused)
+                    ? const BorderSide(
+                        color: AppColors.pinkLight,
+                        width: 2,
+                      )
+                    : BorderSide.none,
               ),
-          child: Icon(icon, size: iconSize),
-        );
-        return tooltip == null
-            ? button
-            : Tooltip(message: tooltip!, child: button);
-      },
-    ),
-  );
+            ),
+            child: image != null
+                ? Padding(
+                    padding: EdgeInsets.all(imagePadding),
+                    child: ClipOval(
+                      child: Image(
+                        image: image!,
+                        width: dimension - imagePadding * 2,
+                        height: dimension - imagePadding * 2,
+                        fit: imageFit,
+                      ),
+                    ),
+                  )
+                : Icon(icon, size: iconSize),
+          );
+        },
+      ),
+    );
+
+    return tooltip == null
+        ? button
+        : Tooltip(message: tooltip!, child: button);
+  }
 }
 
 /// The standard surface for lists, panels, packages, and navigation.

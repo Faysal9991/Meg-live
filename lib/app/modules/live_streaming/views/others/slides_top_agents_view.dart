@@ -1,3 +1,4 @@
+
 import 'package:doyel_live/app/theme/app_radius.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -17,6 +18,51 @@ class SlidesTopAgentsView extends StatefulWidget {
 class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
   late LiveStreamingController _livekitStreamingController;
 
+  // Unique deep gradients for each carousel slide.
+  // All gradients are designed to maintain clear white text.
+  static const List<List<Color>> _bannerGradients = [
+    [
+      Color(0xFF102A56),
+      Color(0xFF164E8A),
+      Color(0xFF071A35),
+    ], // Deep blue
+    [
+      Color(0xFF3B145F),
+      Color(0xFF64258A),
+      Color(0xFF210B3B),
+    ], // Deep purple
+    [
+      Color(0xFF064E4A),
+      Color(0xFF087F8C),
+      Color(0xFF042F3A),
+    ], // Deep teal
+    [
+      Color(0xFF701D32),
+      Color(0xFF9F2948),
+      Color(0xFF3D1023),
+    ], // Burgundy
+    [
+      Color(0xFF25245F),
+      Color(0xFF4146A6),
+      Color(0xFF151638),
+    ], // Indigo
+    [
+      Color(0xFF214B2B),
+      Color(0xFF327044),
+      Color(0xFF102D1A),
+    ], // Forest green
+    [
+      Color(0xFF713B16),
+      Color(0xFF9A531D),
+      Color(0xFF3B210E),
+    ], // Bronze
+    [
+      Color(0xFF16465A),
+      Color(0xFF176B83),
+      Color(0xFF0A293A),
+    ], // Ocean blue
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -26,15 +72,20 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final list = _livekitStreamingController.topSlidingAgentRankingList;
+      final list =
+          _livekitStreamingController.topSlidingAgentRankingList;
 
       if (list.isEmpty) {
         return const SizedBox.shrink();
       }
-      // A list retained from a dropped connection is not presented as current.
-      final reconnecting = _livekitStreamingController.isRankingReconnecting(
+
+      // Do not present stale ranking data as fully current
+      // while the connection is reconnecting.
+      final reconnecting =
+          _livekitStreamingController.isRankingReconnecting(
         TOP_AGENCIES_UPDATE,
       );
+
       return AnimatedOpacity(
         opacity: reconnecting ? 0.6 : 1,
         duration: const Duration(milliseconds: 200),
@@ -43,14 +94,13 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           children: [
             CarouselSlider.builder(
               options: CarouselOptions(
-                autoPlay:
-                    list.length > 1 && !MediaQuery.disableAnimationsOf(context),
-                height:
-                    68 +
-                    (MediaQuery.textScalerOf(context).scale(13) - 13).clamp(
-                          0,
-                          13,
-                        ) *
+                autoPlay: list.length > 1 &&
+                    !MediaQuery.disableAnimationsOf(context),
+                height: 68 +
+                    (MediaQuery.textScalerOf(context)
+                                .scale(13) -
+                            13)
+                        .clamp(0, 13) *
                         3,
                 viewportFraction: 1.0,
                 padEnds: false,
@@ -58,12 +108,17 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                 initialPage: 0,
                 enableInfiniteScroll: list.length > 1,
                 autoPlayInterval: const Duration(seconds: 3),
-                autoPlayAnimationDuration: const Duration(milliseconds: 700),
+                autoPlayAnimationDuration:
+                    const Duration(milliseconds: 700),
                 autoPlayCurve: Curves.easeOutCubic,
               ),
               itemCount: list.length,
               itemBuilder: (_, index, __) {
-                return _agentCard(data: list[index], serial: index + 1);
+                return _agentCard(
+                  data: list[index],
+                  serial: index + 1,
+                  colorIndex: index,
+                );
               },
             ),
           ],
@@ -72,37 +127,51 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
     });
   }
 
-  Widget _agentCard({required dynamic data, required int serial}) {
-    final agentName = '${data['agent_name'] ?? ''}'.trim();
+  Widget _agentCard({
+    required dynamic data,
+    required int serial,
+    required int colorIndex,
+  }) {
+    final agentName =
+        '${data['agent_name'] ?? ''}'.trim();
+
     // Owner ID can be 0 for agencies without a linked account.
     final rawUserId = '${data['user_id'] ?? ''}'.trim();
     final userId = rawUserId == '0' ? '' : rawUserId;
-    // Socket rows score by current host balance; REST rows only send diamonds.
-    final diamonds = '${data['total_hosts_diamonds'] ?? data['diamonds'] ?? 0}';
+
+    // Socket rows score by host balance; REST rows send diamonds.
+    final diamonds =
+        '${data['total_hosts_diamonds'] ?? data['diamonds'] ?? 0}';
+
     // Prefer the server-supplied rank over the list position.
     final rank = int.tryParse('${data['rank'] ?? ''}');
-    if (rank != null && rank > 0) serial = rank;
+    if (rank != null && rank > 0) {
+      serial = rank;
+    }
+
     final topLabel = '${data['rank'] ?? data['top'] ?? '-'}';
     final imageUrl = '${data['logo'] ?? ''}'.trim();
     final isAppOwner = data['is_app_owner'] == true;
+
+    // Every slide gets a different deep gradient.
+    // The palette repeats safely when there are more than 8 slides.
+    final gradientColors =
+        _bannerGradients[colorIndex % _bannerGradients.length];
 
     return Container(
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.card),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.agentBannerStart,
-            AppColors.agentBannerMiddle,
-            AppColors.agentBannerEnd,
-          ],
+          colors: gradientColors,
         ),
       ),
       child: Stack(
         children: [
+          // Subtle decorative circle.
           Positioned(
             right: -20,
             top: -20,
@@ -115,12 +184,20 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               ),
             ),
           ),
+
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
             child: Row(
               children: [
-                _buildAvatar(imageUrl: imageUrl, serial: serial),
+                _buildAvatar(
+                  imageUrl: imageUrl,
+                  serial: serial,
+                ),
                 const SizedBox(width: 10),
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +207,9 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         children: [
                           Flexible(
                             child: Text(
-                              agentName.isEmpty ? 'Unknown Agent' : agentName,
+                              agentName.isEmpty
+                                  ? 'Unknown Agent'
+                                  : agentName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -147,6 +226,7 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                         ],
                       ),
                       const SizedBox(height: 3),
+
                       Row(
                         children: [
                           if (userId.isNotEmpty) ...[
@@ -164,8 +244,13 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                             ),
                             const SizedBox(width: 10),
                           ],
-                          Image.asset('assets/others/diamond.png', height: 13),
+
+                          Image.asset(
+                            'assets/others/diamond.png',
+                            height: 13,
+                          ),
                           const SizedBox(width: 4),
+
                           Flexible(
                             child: Text(
                               diamonds,
@@ -183,7 +268,9 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                     ],
                   ),
                 ),
+
                 const SizedBox(width: 8),
+
                 _buildTopPill(topLabel: topLabel),
               ],
             ),
@@ -195,7 +282,10 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
 
   Widget _buildOwnerBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 6,
+        vertical: 2,
+      ),
       decoration: BoxDecoration(
         color: AppColors.premium,
         borderRadius: BorderRadius.circular(999),
@@ -203,7 +293,11 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.workspace_premium, color: AppColors.onLight, size: 10),
+          Icon(
+            Icons.workspace_premium,
+            color: AppColors.onLight,
+            size: 10,
+          ),
           SizedBox(width: 3),
           Text(
             'Owner',
@@ -218,7 +312,10 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
     );
   }
 
-  Widget _buildAvatar({required String imageUrl, required int serial}) {
+  Widget _buildAvatar({
+    required String imageUrl,
+    required int serial,
+  }) {
     return SizedBox(
       width: 50,
       height: 50,
@@ -228,7 +325,10 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
-              border: Border.all(width: 2, color: AppColors.textPrimary),
+              border: Border.all(
+                width: 2,
+                color: AppColors.textPrimary,
+              ),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(100),
@@ -247,13 +347,15 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                       width: 50,
                       height: 50,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(
+                      placeholder: (context, url) =>
+                          const Center(
                         child: CircularProgressIndicator(
                           color: AppColors.onMedia,
                           strokeWidth: 2,
                         ),
                       ),
-                      errorWidget: (_, __, ___) => Container(
+                      errorWidget: (_, __, ___) =>
+                          Container(
                         color: AppColors.overlayMedium,
                         alignment: Alignment.center,
                         child: const Icon(
@@ -265,6 +367,8 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
                     ),
             ),
           ),
+
+          // Rank indicator.
           Positioned(
             right: -3,
             bottom: -3,
@@ -275,7 +379,10 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
               decoration: BoxDecoration(
                 color: AppColors.premium,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.onMedia, width: 1.2),
+                border: Border.all(
+                  color: AppColors.onMedia,
+                  width: 1.2,
+                ),
               ),
               child: Text(
                 '$serial',
@@ -292,13 +399,20 @@ class _SlidesTopAgentsViewState extends State<SlidesTopAgentsView> {
     );
   }
 
-  Widget _buildTopPill({required String topLabel}) {
+  Widget _buildTopPill({
+    required String topLabel,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 5,
+      ),
       decoration: BoxDecoration(
         color: AppColors.premium,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.onMediaSubtle),
+        border: Border.all(
+          color: AppColors.onMediaSubtle,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

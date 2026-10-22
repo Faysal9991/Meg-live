@@ -104,7 +104,7 @@ class _ResellerRequestViewState extends State<ResellerRequestView> {
                                 onCancel: () => Navigator.of(context).pop(),
                               );
                             },
-                            primaryColor: AppColors.pink,
+                            primaryColor: AppColors.primary,
                             buttonText: 'Sent Reseller Request',
                             fontSize: 16,
                             iconData: Icons.touch_app,

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:doyel_live/app/theme/app_surface_styles.dart';
 import 'package:doyel_live/app/theme/app_colors.dart';
 import 'dart:convert';
 import 'dart:isolate';
@@ -10,7 +9,7 @@ import 'package:dio/dio.dart';
 import 'package:doyel_live/app/data/profile_model.dart';
 import 'package:doyel_live/app/modules/auth/controllers/auth_controller.dart';
 import 'package:doyel_live/app/modules/live_streaming/controllers/live_streaming_controller.dart';
-import 'package:doyel_live/app/modules/live_streaming/models/top_host.dart';
+import 'package:doyel_live/app/modules/live_streaming/views/leaderboard_view.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/broadcast/prepare_to_live_view.dart';
 import 'package:doyel_live/app/modules/live_streaming/views/streaming_list_view.dart';
 import 'package:doyel_live/app/modules/messenger/views/messenger_view.dart';
@@ -26,8 +25,7 @@ import 'package:doyel_live/app/utils/drf_api_key.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/firebase_functions.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/helper_functions.dart';
 import 'package:doyel_live/app/widgets/app_design_widgets.dart';
-import 'package:doyel_live/app/widgets/custom_tab_bar.dart';
-import 'package:eva_icons_flutter/eva_icons_flutter.dart';
+import 'package:doyel_live/app/widgets/app_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -41,13 +39,6 @@ class NavView extends StatefulWidget {
 
   @override
   State<NavView> createState() => _NavViewState();
-}
-
-String _formatDiamonds(int value) {
-  return value.toString().replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (match) => '${match[1]},',
-  );
 }
 
 Widget _loadView({required int index}) {
@@ -71,35 +62,6 @@ Widget _loadView({required int index}) {
   }
   return Container();
 }
-
-const List<CustomTabItem> _navItems = [
-  CustomTabItem(
-    label: 'Home',
-    activeIcon: EvaIcons.home,
-    inactiveIcon: EvaIcons.homeOutline,
-  ),
-  // Search is under construction and hidden from the production navigation.
-  // CustomTabItem(
-  //   label: 'Search',
-  //   activeIcon: EvaIcons.search,
-  //   inactiveIcon: EvaIcons.searchOutline,
-  // ),
-  CustomTabItem(
-    label: 'Live',
-    activeIcon: EvaIcons.video,
-    inactiveIcon: EvaIcons.videoOutline,
-  ),
-  CustomTabItem(
-    label: 'Chat',
-    activeIcon: EvaIcons.messageSquare,
-    inactiveIcon: EvaIcons.messageSquareOutline,
-  ),
-  CustomTabItem(
-    label: 'Profile',
-    activeIcon: EvaIcons.person,
-    inactiveIcon: EvaIcons.personOutline,
-  ),
-];
 
 class _NavViewState extends State<NavView> with WidgetsBindingObserver {
   late LiveStreamingController _livekitStreamingController;
@@ -431,280 +393,13 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _showTopRankingsBottomSheet() async {
-    _livekitStreamingController.loadTopHostList();
-    _livekitStreamingController.loadTopContributorList();
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) {
-        return DefaultTabController(
-          length: 2,
-          child: SafeArea(
-            child: SizedBox(
-              height: MediaQuery.of(sheetContext).size.height * 0.72,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.workspace_premium,
-                          color: AppColors.premium,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 8),
-                        const Expanded(
-                          child: Text(
-                            'Top Rankings',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        Obx(() {
-                          final controller = _livekitStreamingController;
-                          final hostsLive = controller.isRankingLive(
-                            TOP_HOSTS_UPDATE,
-                          );
-                          final contributorsLive = controller.isRankingLive(
-                            TOP_CONTRIBUTORS_UPDATE,
-                          );
-                          // Socket-pushed lists are already current.
-                          if (hostsLive && contributorsLive) {
-                            return const SizedBox.shrink();
-                          }
-                          if (controller.isRankingReconnecting(
-                                TOP_HOSTS_UPDATE,
-                              ) ||
-                              controller.isRankingReconnecting(
-                                TOP_CONTRIBUTORS_UPDATE,
-                              )) {
-                            return const Text(
-                              'Reconnecting…',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            );
-                          }
-                          final loading =
-                              controller.loadingTopHostList.value ||
-                              controller.loadingTopContributorList.value;
-                          return IconButton(
-                            tooltip: 'Refresh',
-                            onPressed: loading
-                                ? null
-                                : () {
-                                    _livekitStreamingController
-                                        .loadTopHostList();
-                                    _livekitStreamingController
-                                        .loadTopContributorList();
-                                  },
-                            icon: loading
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.refresh),
-                          );
-                        }),
-                        IconButton(
-                          tooltip: 'Close',
-                          onPressed: () => Navigator.of(sheetContext).pop(),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                    const TabBar(
-                      tabs: [
-                        Tab(text: 'Hosts'),
-                        Tab(text: 'Contributors'),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          Obx(
-                            () => _buildRankingList(
-                              profiles: _livekitStreamingController.topHostList,
-                              loading: _livekitStreamingController
-                                  .loadingTopHostList
-                                  .value,
-                              emptyMessage: 'No top hosts found.',
-                              trailingIcon: Icons.workspace_premium,
-                              score: (profile) => profile.giftDiamonds,
-                            ),
-                          ),
-                          Obx(
-                            () => _buildRankingList(
-                              profiles: _livekitStreamingController
-                                  .topContributorList,
-                              loading: _livekitStreamingController
-                                  .loadingTopContributorList
-                                  .value,
-                              emptyMessage: 'No top contributors found.',
-                              trailingIcon: Icons.diamond_outlined,
-                              score: (profile) => profile.diamondsContributed,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildRankingList({
-    required List<TopHost> profiles,
-    required bool loading,
-    required String emptyMessage,
-    required IconData trailingIcon,
-    required int Function(TopHost profile) score,
-  }) {
-    if (loading && profiles.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (profiles.isEmpty) {
-      return Center(
-        child: Text(
-          emptyMessage,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
-          ),
+  Future<void> _showTopRankings() async {
+    await Navigator.of(context, rootNavigator: true).push<void>(
+      MaterialPageRoute(
+        builder: (_) => LeaderboardView(
+          controller: _livekitStreamingController,
+          currentUserId: _authController.profile.value.user?.uid,
         ),
-      );
-    }
-
-    return ListView.separated(
-      itemCount: profiles.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (_, index) {
-        final profile = profiles[index];
-        return _buildRankingSheetItem(
-          profile: profile,
-          // Show the server rank; REST fallbacks may omit it.
-          rank: profile.rank > 0 ? profile.rank : index + 1,
-          score: score(profile),
-          trailingIcon: trailingIcon,
-        );
-      },
-    );
-  }
-
-  Widget _buildRankingSheetItem({
-    required TopHost profile,
-    required int rank,
-    required int score,
-    required IconData trailingIcon,
-  }) {
-    final hasImage =
-        profile.profileImage != null && profile.profileImage!.isNotEmpty;
-    final level = profile.level is Map ? profile.level['level'] : null;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: AppSurfaceStyles.decoration(radius: 18),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 28,
-            child: Text(
-              '$rank',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 15,
-                color: AppColors.premium,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: AppColors.overlayLight,
-            backgroundImage: hasImage
-                ? NetworkImage(profile.profileImage!)
-                : null,
-            child: hasImage ? null : const Icon(Icons.person),
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  profile.fullName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-
-                const SizedBox(height: 2),
-
-                Text(
-                  [
-                    'UID #${profile.uid}',
-                    if (level != null) 'Lv.$level',
-                  ].join('  ·  '),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.diamond,
-                      size: 15,
-                      color: AppColors.gold,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${_formatDiamonds(score)} Diamonds',
-                      style: const TextStyle(
-                        color: AppColors.gold,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          Icon(trailingIcon, color: AppColors.premium, size: 22),
-        ],
       ),
     );
   }
@@ -717,11 +412,11 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
           return true;
         },
         child: DefaultTabController(
-          length: _navItems.length,
+          length: 4,
           child: Obx(() {
             return Scaffold(
               // Keep every tab's scrollable content above the floating-style
-              // navigation card. When this is true, Scaffold intentionally
+              // navigation bar. When this is true, Scaffold intentionally
               // lays the body out behind the bottomNavigationBar.
               extendBody: false,
               appBar: _navController.pageIndex.value != LIVE_STREAM
@@ -734,7 +429,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                         ),
                       ),
                       title: const Text(
-                        'Biho Live',
+                        'Ringo Live',
                         style: TextStyle(color: AppColors.textPrimary),
                       ),
                       actions: [
@@ -742,15 +437,16 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                           padding: const EdgeInsets.only(right: 12),
                           child: AppIconButton(
                             tooltip: 'Top Hosts and Contributors',
-                            onPressed: _showTopRankingsBottomSheet,
-                            icon: Icons.workspace_premium,
+                            imagePadding: 8,
+                            onPressed: _showTopRankings,
+                            image: AssetImage("assets/others/ranking.png"),
                             iconColor: AppColors.gold,
                             size: 38,
                             iconSize: 20,
                           ),
                         ),
                       ],
-                      backgroundColor: AppColors.secondary,
+                      backgroundColor: AppColors.bg,
                     )
                   : null,
               body: Column(
@@ -777,62 +473,59 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                 ],
               ),
               bottomNavigationBar: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                child: AppCard(
-                  child: CustomTabBar(
-                    items: _navItems,
-                    selectedIndex: _navController.pageIndex.value,
-                    onTap: (index) async {
-                      if (index == _navController.pageIndex.value) {
+                padding: const EdgeInsets.only(bottom: 16),
+                child: AppBottomNav(
+                  selectedIndex: _navController.pageIndex.value,
+                  onTap: (index) async {
+                    if (index == _navController.pageIndex.value) {
+                      return;
+                    }
+
+                    // 2 is the broadcast streaming
+                    // if (index == CHATS) {
+                    //   Navigator.of(context).pushNamedAndRemoveUntil(
+                    //       Routes.CHAT, (Route<dynamic> route) => false);
+                    // } else
+
+                    if (index != LIVE_STREAM) {
+                      _navController.setPageIndex(index: index);
+                    } else {
+                      // if (_authController.showingLiveStreamingWidget.value) {
+                      //   Get.snackbar(
+                      //     'Not allowed',
+                      //     "You have to end recent streaming.",
+                      //     backgroundColor: AppColors.warning,
+                      //     colorText: AppColors.surface,
+                      //     snackPosition: SnackPosition.BOTTOM,
+                      //     duration: const Duration(seconds: 2),
+                      //   );
+                      //   return;
+                      // }
+                      // if (_authController.showingCallWidget.value) {
+                      //   Get.snackbar(
+                      //     'Not allowed',
+                      //     "You are already in call.",
+                      //     backgroundColor: AppColors.warning,
+                      //     colorText: AppColors.surface,
+                      //     snackPosition: SnackPosition.BOTTOM,
+                      //     duration: const Duration(seconds: 2),
+                      //   );
+                      //   return;
+                      // }
+                      if (_livekitStreamingController.liveSession
+                          .restoreIfActive()) {
                         return;
                       }
-
-                      // 2 is the broadcast streaming
-                      // if (index == CHATS) {
-                      //   Navigator.of(context).pushNamedAndRemoveUntil(
-                      //       Routes.CHAT, (Route<dynamic> route) => false);
-                      // } else
-
-                      if (index != LIVE_STREAM) {
-                        _navController.setPageIndex(index: index);
-                      } else {
-                        // if (_authController.showingLiveStreamingWidget.value) {
-                        //   Get.snackbar(
-                        //     'Not allowed',
-                        //     "You have to end recent streaming.",
-                        //     backgroundColor: AppColors.warning,
-                        //     colorText: AppColors.surface,
-                        //     snackPosition: SnackPosition.BOTTOM,
-                        //     duration: const Duration(seconds: 2),
-                        //   );
-                        //   return;
-                        // }
-                        // if (_authController.showingCallWidget.value) {
-                        //   Get.snackbar(
-                        //     'Not allowed',
-                        //     "You are already in call.",
-                        //     backgroundColor: AppColors.warning,
-                        //     colorText: AppColors.surface,
-                        //     snackPosition: SnackPosition.BOTTOM,
-                        //     duration: const Duration(seconds: 2),
-                        //   );
-                        //   return;
-                        // }
-                        if (_livekitStreamingController.liveSession
-                            .restoreIfActive()) {
-                          return;
-                        }
-                        await availableCameras().then(
-                          (value) => Get.to(
-                            () => PrepareToLiveView(
-                              camera: value[1],
-                              // onUpdateLiveStreamStatus: onUpdateLiveStreamStatus,
-                            ),
+                      await availableCameras().then(
+                        (value) => Get.to(
+                          () => PrepareToLiveView(
+                            camera: value[1],
+                            // onUpdateLiveStreamStatus: onUpdateLiveStreamStatus,
                           ),
-                        );
-                      }
-                    },
-                  ),
+                        ),
+                      );
+                    }
+                  },
                 ),
               ),
             );

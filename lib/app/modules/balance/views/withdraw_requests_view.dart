@@ -337,7 +337,7 @@ class _WithdrawRequestsViewState extends State<WithdrawRequestsView>
                   : _submitWithdrawRequest,
               primaryColor: _balanceController.creatingWithdrawRequest.value
                   ? AppColors.disabledBackground
-                  : AppColors.pink,
+                  : AppColors.primary,
               buttonText: _balanceController.creatingWithdrawRequest.value
                   ? 'Submitting...'
                   : 'Submit Request',

@@ -93,15 +93,7 @@ class StreamingListView extends StatelessWidget {
                 ),
               )
             else ...[
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 5),
-                  child: Text(
-                    'Live Now',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-              ),
+           
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverGrid(

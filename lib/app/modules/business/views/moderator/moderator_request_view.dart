@@ -104,7 +104,7 @@ class _ModeratorRequestViewState extends State<ModeratorRequestView> {
                                 onCancel: () => Navigator.of(context).pop(),
                               );
                             },
-                            primaryColor: AppColors.pink,
+                            primaryColor: AppColors.primary,
                             buttonText: 'Sent Moderator Request',
                             fontSize: 16,
                             iconData: Icons.touch_app,

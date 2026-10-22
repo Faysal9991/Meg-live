@@ -45,7 +45,7 @@ class MessageBubble extends StatelessWidget {
                     bottomRight: Radius.circular(30)),
             elevation: 5,
             color: senderId == uid
-                ? AppColors.pink
+                ? AppColors.secondaryDark
                 : AppColors.surfaceHigh,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),

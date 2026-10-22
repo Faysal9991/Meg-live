@@ -247,7 +247,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                                       );
                                                   Get.back();
                                                 },
-                                                primaryColor: AppColors.pink,
+                                                primaryColor: AppColors.primary,
                                                 buttonText: 'Video Live',
                                                 fontSize: 16,
                                                 iconData:
@@ -347,7 +347,7 @@ class _HostRequstViewState extends State<HostRequstView> {
                                                       );
                                                   Get.back();
                                                 },
-                                                primaryColor: AppColors.pink,
+                                                primaryColor: AppColors.primary,
                                                 buttonText: 'Video Live',
                                                 fontSize: 16,
                                                 iconData:
