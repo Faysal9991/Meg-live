@@ -141,75 +141,124 @@ class StreamingListView extends StatelessWidget {
     );
   }
 
-  Widget _buildLiveRoomCard({
-    required BuildContext context,
-    required dynamic data,
-    required bool showKingIcon,
-  }) {
-    final owner = data['owner_profile'];
-    final name = owner?['full_name']?.toString() ?? '';
-    final imageUrl = owner?['profile_image']?.toString();
-    return AppCard(
-      padding: const EdgeInsets.all(6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+Widget _buildLiveRoomCard({
+  required BuildContext context,
+  required dynamic data,
+  required bool showKingIcon,
+}) {
+  final owner = data['owner_profile'];
+  final name = owner?['full_name']?.toString() ?? '';
+  final imageUrl = owner?['profile_image']?.toString();
+
+  return AppCard(
+    padding: EdgeInsets.zero, // no outer padding so image fills the card
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: Stack(
-                fit: StackFit.expand,
+          // ── Full-card profile photo ───────────────────────────────
+          if (imageUrl == null || imageUrl.isEmpty)
+            Image.asset(
+              'assets/others/person.jpg',
+              fit: BoxFit.cover,
+            )
+          else
+            CachedNetworkImage(
+              imageUrl: imageUrl,
+              fit: BoxFit.cover,
+              placeholder: (_, __) => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              errorWidget: (_, __, ___) => Image.asset(
+                'assets/others/person.jpg',
+                fit: BoxFit.cover,
+              ),
+            ),
+
+          // Optional dark gradient at bottom for better text readability
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 70,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black54,
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ── LIVE badge (top-left) ─────────────────────────────────
+          Positioned(
+            top: 8,
+            left: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.overlayStrong,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'LIVE',
+                style: TextStyle(
+                  color: AppColors.onMedia,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ),
+
+          // ── Viewers count (top-right) ─────────────────────────────
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.overlayStrong,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (imageUrl == null || imageUrl.isEmpty)
-                    Image.asset('assets/others/person.jpg', fit: BoxFit.cover)
-                  else
-                    CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) =>
-                          const Center(child: CircularProgressIndicator()),
-                      errorWidget: (_, __, ___) => Image.asset(
-                        'assets/others/person.jpg',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  const Positioned(top: 8, left: 8, child: LiveBadge()),
-                  Positioned(
-                    right: 8,
-                    bottom: 8,
-                    child: LiveOverlayChip(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 4,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.visibility_outlined,
-                            color: AppColors.onMedia,
-                            size: 13,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${data['viewers_count'] ?? 0}',
-                            style: const TextStyle(
-                              color: AppColors.onMedia,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
+                  const Icon(
+                    Icons.people_alt_rounded,
+                    color: AppColors.onMedia,
+                    size: 13,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${data['viewers_count'] ?? 0}',
+                    style: const TextStyle(
+                      color: AppColors.onMedia,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(6, 10, 6, 6),
+
+          // ── Name + icons (bottom) ─────────────────────────────────
+          Positioned(
+            left: 8,
+            right: 8,
+            bottom: 8,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // King / Top Host icon
                 if (showKingIcon) ...[
                   const Tooltip(
                     message: 'Top Host',
@@ -221,6 +270,8 @@ class StreamingListView extends StatelessWidget {
                   ),
                   const SizedBox(width: 5),
                 ],
+
+                // VIP / VVIP gif
                 if (owner?['vvip_or_vip_gif'] != null) ...[
                   CachedNetworkImage(
                     imageUrl: owner['vvip_or_vip_gif'],
@@ -234,22 +285,25 @@ class StreamingListView extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                 ],
-                SizedBox(
-                  width: 80,
-                  height: 20,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        softWrap: false,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelLarge?.copyWith(fontSize: 14),
-                      ),
+
+                // Name – can wrap to 2 lines
+                Expanded(
+                  child: Text(
+                    name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black54,
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -258,8 +312,10 @@ class StreamingListView extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+ 
 
   bool _isTopHostLiveRoom({
     required dynamic liveRoomData,
