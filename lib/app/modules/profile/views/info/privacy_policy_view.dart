@@ -36,8 +36,8 @@ const htmlData = r"""
   <strong>Privacy Policy</strong>
 
   <p>
-    Ringo Live built the Ringo Live app as a Free app.
-    This SERVICE is provided by Ringo Live at no cost and is intended
+    DOT LIVE built the DOT LIVE app as a Free app.
+    This SERVICE is provided by DOT LIVE at no cost and is intended
     for use as is.
   </p>
 
@@ -59,7 +59,7 @@ const htmlData = r"""
   <p>
     The terms used in this Privacy Policy have the same meanings
     as in our Terms and Conditions, which are accessible through
-    Ringo Live unless otherwise defined in this Privacy Policy.
+    DOT LIVE unless otherwise defined in this Privacy Policy.
   </p>
 
   <p><strong>Information Collection and Use</strong></p>
@@ -67,7 +67,7 @@ const htmlData = r"""
   <p>
     For a better experience while using our Service, we may require
     you to provide us with certain personally identifiable information.
-    Ringo Live is a live streaming, broadcasting, social interaction,
+    DOT LIVE is a live streaming, broadcasting, social interaction,
     audio/video communication, and video conferencing application.
     The information that we request will be retained and used as
     described in this Privacy Policy.

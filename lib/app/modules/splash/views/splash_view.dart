@@ -16,10 +16,10 @@ class SplashView extends GetView<SplashController> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset('assets/logos/ringo.png', width: 100, height: 100),
+              Image.asset('assets/logos/dot_live.png', width: 100, height: 100),
               const SizedBox(height: 16),
               const Text(
-                'Ringo Live',
+                'DOT LIVE',
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 18,

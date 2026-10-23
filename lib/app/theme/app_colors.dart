@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Neon Night brand palette for Ringo Live.
+/// Neon Night brand palette for DOT LIVE.
 ///
 /// Violet carries primary actions and selection. Magenta adds live energy,
 /// while cyan and gold identify audio and premium content. Most of the screen

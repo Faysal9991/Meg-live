@@ -293,7 +293,7 @@ class AuthController extends GetxController {
 
         // Get.snackbar(
         //   'Success',
-        //   "Welcome to Ringo Live.",
+        //   "Welcome to DOT LIVE.",
         //   backgroundColor: Colors.green,
         //   colorText: Colors.white,
         //   snackPosition: SnackPosition.BOTTOM,

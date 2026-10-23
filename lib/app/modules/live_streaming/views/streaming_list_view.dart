@@ -80,7 +80,7 @@ class StreamingListView extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/logos/ringo.png',
+                      'assets/logos/dot_live.png',
                       width: 100,
                       height: 100,
                     ),

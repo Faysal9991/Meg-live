@@ -284,7 +284,7 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
           child: AlertDialog(
             title: const Text('Update Required'),
             content: const Text(
-              'A new version is available on Play Store. Please update to continue using Ringo Live.',
+              'A new version is available on Play Store. Please update to continue using DOT LIVE.',
             ),
             actions: [
               FilledButton(
@@ -346,13 +346,13 @@ class _NavViewState extends State<NavView> with WidgetsBindingObserver {
                   ? AppBar(
                       leading: Center(
                         child: Image.asset(
-                          'assets/logos/ringo.png',
+                          'assets/logos/dot_live.png',
                           width: 46,
                           height: 46,
                         ),
                       ),
                       title: const Text(
-                        'Ringo Live',
+                        'DOT LIVE',
                         style: TextStyle(color: AppColors.textPrimary),
                       ),
                       actions: [

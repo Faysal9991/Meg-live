@@ -26,6 +26,7 @@ import 'package:doyel_live/app/modules/live_streaming/views/broadcast/widgets/li
 import 'package:doyel_live/app/modules/live_streaming/views/livekit/widgets/participant_info.dart';
 import 'package:doyel_live/app/modules/nav/views/nav_view.dart';
 import 'package:doyel_live/app/modules/products/controllers/vvip_or_vip_package_controller.dart';
+import 'package:doyel_live/app/utils/api_endpoints.dart';
 import 'package:doyel_live/app/utils/constants.dart';
 import 'package:doyel_live/app/utils/firebase_stuffs/helper_functions.dart';
 import 'package:doyel_live/app/widgets/animated_media_widget.dart';
@@ -2388,7 +2389,7 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
 
         _engineName = credential['engine'];
         _roomToken = credential['token'];
-        _serverUrl = credential['server_url'];
+        _serverUrl = kLiveKitServerUrl;
         _preferredCodec = credential['codec'];
 
         final socketBaseUrl = credential['websocket_base_url']
@@ -2667,7 +2668,11 @@ class _LiveStreamingViewState extends State<LiveStreamingView>
       //     _livekitStreamingController.listRenderView.isEmpty) {
       if (_livekitStreamingController.listRenderView.isEmpty) {
         return Center(
-          child: Image.asset('assets/logos/ringo.png', width: 100, height: 100),
+          child: Image.asset(
+            'assets/logos/dot_live.png',
+            width: 100,
+            height: 100,
+          ),
         );
       } else if (_livekitStreamingController.listRenderView.isNotEmpty &&
           _livekitStreamingController.listActiveCall.isEmpty) {

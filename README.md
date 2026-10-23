@@ -1,3 +1,3 @@
-# Ringo Live
+# DOT LIVE
 
 Live Streaming App.

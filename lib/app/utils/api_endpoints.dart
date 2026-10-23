@@ -1,20 +1,15 @@
-// Real Device
-// const host = '192.168.0.205:8000';
-// Android Emulator
-// const host = '10.0.2.2:8000';
-
-// Recent
-const host = 'biholive.com';
-// const kDomain = 'http://$host';
-const kDomain = 'https://$host';
+const host = '169.58.127.58:8085';
+const kDomain = 'http://$host';
 const _baseUrl = '$kDomain/api/v1';
 
-// Shared live links. biholive.com must serve web_deeplink/ (assetlinks.json +
-// /streaming/ fallback page that redirects to the Play Store).
-const baseUrlAppLink = 'https://$host';
-const appLinkScheme = 'biholive';
+// Shared live links use the DOT LIVE app server.
+const baseUrlAppLink = kDomain;
+const appLinkScheme = 'dotlive';
 const kPlayStoreUrl =
     'https://play.google.com/store/apps/details?id=com.maxliveonline.org.bd';
+
+// DOT LIVE's LiveKit signaling endpoint.
+const kLiveKitServerUrl = 'ws://169.58.127.58:7980';
 //Auth
 const kLoginUsingFirebaseUrl = '$_baseUrl/auth/login/';
 const kLogoutUrl = '$_baseUrl/auth/logout/';

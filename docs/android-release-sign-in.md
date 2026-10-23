@@ -1,12 +1,12 @@
-# Ringo Live signing and Firebase configuration
+# DOT LIVE signing and Firebase configuration
 
 Updated 22 October 2026 from the local Max Live project at
 `/Users/smtanvirhasanfaysal/project/max_Live`.
 
 ## App identity
 
-The visible Android, iOS, and Flutter app name is **Ringo Live**. Launcher icons,
-the in-app logo, and the diamond icon use Max Live's existing artwork.
+The visible Android, iOS, and Flutter app name is **DOT LIVE**. Launcher icons
+and the in-app logo use the supplied DOT LIVE artwork.
 
 Both native platforms use `com.maxliveonline.org.bd`, matching the imported
 Firebase registrations. Android's namespace and `MainActivity` package, iOS
@@ -15,13 +15,11 @@ Runner and test bundle identifiers, the Play Store URL, and the local
 from the previous `com.biholive.net` build. It installs separately and cannot be
 submitted as an update to the old package's store listing.
 
-The backend remains `https://biholive.com`; existing streaming URL paths and
-the `biholive` custom URL scheme remain in use. Serve the updated
-`web_deeplink/.well-known/assetlinks.json` and streaming fallback page on that
-domain for verified links to recognize the new package and certificate. These
-files have only been updated locally. For Play-distributed builds, the asset
-links file must also include the actual Play App Signing certificate if it
-differs from the imported local key.
+The app API base is `http://169.58.127.58:8085`, with the API rooted at
+`/api/v1`. Live rooms connect to DOT LIVE's LiveKit endpoint at
+`ws://169.58.127.58:7980`. The shared-link fallback and `dotlive` custom URL
+scheme are configured locally; the server must host the fallback page for web
+links to work.
 
 ## Android signing
 
@@ -83,7 +81,7 @@ bundle ID. Those snapshot entries are not used to replace Max Live's active
 sign-in settings, and do not prove which registrations are currently live.
 
 The app sends a Google **ID token** directly to
-`https://biholive.com/api/v1/auth/login/` under the legacy `server_auth_code`
+`http://169.58.127.58:8085/api/v1/auth/login/` under the legacy `server_auth_code`
 field. The backend must accept the imported web client as a token audience.
 It must verify the Google token's signature, issuer, audience, and expiry.
 Firebase Authentication is not part of this app's login flow.

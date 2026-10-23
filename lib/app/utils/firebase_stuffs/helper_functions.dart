@@ -43,7 +43,7 @@ class HelperFunctions {
   void _handleMyLink(Uri? uri) {
     if (uri == null || uri.queryParameters.isEmpty) return;
 
-    // https://biholive.com/streaming/?data=... or biholive://streaming?data=...
+    // The app server URL or dotlive://streaming?data=...
     final isStreamingLink =
         uri.path.startsWith('/streaming') ||
         (uri.scheme == appLinkScheme && uri.host == 'streaming');
@@ -229,7 +229,7 @@ class HelperFunctions {
 
     String customUrl = '$baseUrlAppLink/streaming/?data=$encoded';
 
-    String desc = '$title is live on Ringo Live! Join now:\n$customUrl';
+    String desc = '$title is live on DOT LIVE! Join now:\n$customUrl';
 
     await SharePlus.instance.share(
       ShareParams(text: desc, subject: title),

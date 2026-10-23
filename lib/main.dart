@@ -83,7 +83,7 @@ void main() async {
   HttpOverrides.global = MyHttpOverrides();
   runApp(
     GetMaterialApp(
-      title: "Ringo Live",
+      title: "DOT LIVE",
       builder: (context, child) => MinimizedLiveOverlay(
         session: Get.find<LiveStreamingController>().liveSession,
         child: child ?? const SizedBox.shrink(),

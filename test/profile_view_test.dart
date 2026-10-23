@@ -137,9 +137,9 @@ void main() {
         appBar: AppBar(
           leading: Padding(
             padding: const EdgeInsets.all(8),
-            child: Image.asset('assets/logos/ringo.png'),
+            child: Image.asset('assets/logos/dot_live.png'),
           ),
-          title: const Text('Ringo Live'),
+          title: const Text('DOT LIVE'),
           actions: const [
             Padding(
               padding: EdgeInsets.only(right: 16),
@@ -162,7 +162,7 @@ void main() {
     final auth = registerProfile();
     await tester.pumpWidget(shell());
     await tester.pumpAndSettle();
-    expect(find.text('Ringo Live'), findsOneWidget);
+    expect(find.text('DOT LIVE'), findsOneWidget);
     expect(find.text('tanvir@example.com'), findsOneWidget);
     expect(find.text('ID: 8839'), findsOneWidget);
     expect(find.text('8173'), findsOneWidget);
